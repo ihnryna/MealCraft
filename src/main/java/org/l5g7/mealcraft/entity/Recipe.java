@@ -1,10 +1,13 @@
 package org.l5g7.mealcraft.entity;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -13,15 +16,19 @@ import lombok.NoArgsConstructor;
 public class Recipe {
 
     @NotNull
-    private int id;
+    private Long id;
 
+    private Long ownerUserId;
+
+    private Long baseRecipeId;
+
+    @NotBlank
     @NotNull
     private String name;
 
     @NotNull
-    private int defaultUnitId;
+    private LocalDateTime createdAt;
 
     private String imageUrl;
 
-    private int ownerUserId;
 }
