@@ -46,6 +46,25 @@ public class RecipeController {
         }
     }
 
+    @PatchMapping("/{id}")
+    public void patchRecipe(@PathVariable Long id, @RequestBody Recipe partialUpdate) {
+        for (Recipe recipe : recipes) {
+            if (recipe.getId().equals(id)) {
+                if (partialUpdate.getImageUrl() != null) {
+                    recipe.setImageUrl(partialUpdate.getImageUrl());
+                }
+                if (partialUpdate.getBaseRecipeId() != null) {
+                    recipe.setBaseRecipeId(partialUpdate.getBaseRecipeId());
+                }
+                if (partialUpdate.getOwnerUserId() != null) {
+                    recipe.setOwnerUserId(partialUpdate.getOwnerUserId());
+                }
+                return;
+            }
+        }
+        throw new EntityDoesNotExistException("Recipe", id);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteRecipe(@PathVariable Long id) {
         recipes.removeIf(recipe -> recipe.getId().equals(id));
