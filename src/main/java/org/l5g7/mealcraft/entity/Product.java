@@ -24,7 +24,6 @@ public class Product {
     @NotNull
     private Long defaultUnitId;
 
-    @NotNull
     private Long ownerUserId;
 
     private String imageUrl;
