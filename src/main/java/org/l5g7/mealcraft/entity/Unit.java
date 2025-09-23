@@ -13,7 +13,7 @@ import lombok.*;
 public class Unit {
 
     @NotNull
-    private int id;
+    private long id;
 
     @NotNull
     @NotEmpty
