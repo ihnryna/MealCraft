@@ -43,7 +43,7 @@ public class UnitController {
     }
 
     @PatchMapping("/{id}")
-    public UnitDto patchUnit(@PathVariable long id, @Valid UnitUpdateDto updates) {
+    public UnitDto patchUnit(@PathVariable long id, @RequestBody @Valid UnitUpdateDto updates) {
         return unitServiceImpl.patchUnit(id, updates);
     }
 
