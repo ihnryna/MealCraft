@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.app.units;
+package org.l5g7.mealcraft.app.units.interfaces;
 
 import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
