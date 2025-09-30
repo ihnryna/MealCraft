@@ -4,15 +4,15 @@ import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
 import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
+import org.l5g7.mealcraft.app.units.interfaces.UnitService;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.l5g7.mealcraft.app.units.UnitService;
 
 import java.util.*;
 
 @Service
-public class UnitServiceImpl implements UnitService{
+public class UnitServiceImpl implements UnitService {
 
     private final UnitRepository repository;
 
@@ -31,14 +31,14 @@ public class UnitServiceImpl implements UnitService{
     }
 
     public UnitDto createUnit(UnitCreateDto unit) {
-        Unit result = repository.create(unit);
+        Unit result = repository.create(new Unit(0, unit.getName()));
         return new UnitDto(result.getId(), result.getName());
     }
 
     public UnitDto updateUnit(Long id, UnitUpdateDto updatedUnit) {
         if (!repository.existsById(id)) throw  new EntityDoesNotExistException("Unit", id);
 
-        Unit result = repository.update(id, updatedUnit);
+        Unit result = repository.update(id, new Unit(0, updatedUnit.getName()));
         return new UnitDto(result.getId(), result.getName());
     }
 

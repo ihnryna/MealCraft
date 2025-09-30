@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.*;
 
 @Repository
-public class UnitRepository implements GeneralRepository<Unit, Long, UnitCreateDto, UnitUpdateDto> {
+public class UnitRepository implements GeneralRepository<Unit, Long> {
 
     private final List<Unit> units= new ArrayList<>();
     private Long nextId = 1L;
@@ -30,14 +30,14 @@ public class UnitRepository implements GeneralRepository<Unit, Long, UnitCreateD
     }
 
     @Override
-    public Unit create(UnitCreateDto entity) {
+    public Unit create(Unit entity) {
         Unit newUnit = new Unit(nextId++, entity.getName());
         units.add(newUnit);
         return newUnit;
     }
 
    @Override
-   public Unit update(Long id, UnitUpdateDto entity) {
+   public Unit update(Long id, Unit entity) {
        return findById(id)
                .map(toUpdate -> {
                    if (entity.getName() != null) {
