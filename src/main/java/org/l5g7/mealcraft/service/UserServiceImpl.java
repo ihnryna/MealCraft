@@ -14,7 +14,6 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private AvatarService avatarService;
 
     @Autowired
     private PasswordHasher passwordHasher;
@@ -24,10 +23,6 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
-    @Autowired
-    public void setAvatarService(AvatarService avatarService) {
-        this.avatarService = avatarService;
-    }
 
     @Override
     public List<User> getAllUsers() {
@@ -50,9 +45,6 @@ public class UserServiceImpl implements UserService {
         if (theUser.isPresent()) {
             throw new EntityAlreadyExistsException("User", user.getId());
         } else {
-            if (user.getAvatarUrl() == null || user.getAvatarUrl().isBlank()) {
-                user.setAvatarUrl(avatarService.buildDefaultAvatar(user.getUsername()));
-            }
             user.setPassword(passwordHasher.hashPassword(user.getPassword()));
             userRepository.create(user);
         }

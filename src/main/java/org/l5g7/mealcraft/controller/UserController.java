@@ -22,7 +22,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User getUser(@PathVariable Long id) {
-       return userService.getUserById(id);
+        return userService.getUserById(id);
     }
 
     @GetMapping
@@ -37,7 +37,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public void updateUser(@PathVariable Long id, @RequestBody @Valid User user) {
-        if(!id.equals(user.getId())) {
+        if (!id.equals(user.getId())) {
             throw new EntityDoesNotExistException("User", id);
         }
         userService.updateUser(user);
