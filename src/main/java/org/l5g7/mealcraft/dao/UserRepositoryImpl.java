@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public class UserRepositoryImpl implements UserRepository {
 
-    User user1 = new User(1L, "Vika", "vika@gmail.com", Role.USER, "123", "");
+    User user1 = new User(1L, "Vika", "vika@gmail.com", Role.USER, "hashed_123", "");
     User user2 = new User(2L, "Kate", "kate@gmail.com", Role.USER, "456", "");
     User user3 = new User(3L, "Angelina", "angelina@gmail.com", Role.ADMIN, "789", "");
     List<User> users = new ArrayList<User>(List.of(user1,user2,user3));
