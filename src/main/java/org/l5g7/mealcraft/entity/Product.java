@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.l5g7.mealcraft.dto.ProductDto;
 
 @Data
 @NoArgsConstructor
@@ -27,5 +28,13 @@ public class Product {
     private Long ownerUserId;
 
     private String imageUrl;
+
+    public Product(ProductDto productDto) {
+        this.id = (productDto.getId()!=null)? productDto.getId():0;
+        this.ownerUserId = productDto.getOwnerUserId();
+        this.defaultUnitId = productDto.getDefaultUnitId();
+        this.name = productDto.getName();
+        this.imageUrl = productDto.getImageUrl();
+    }
 
 }

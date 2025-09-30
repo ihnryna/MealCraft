@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.entity;
+package org.l5g7.mealcraft.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.l5g7.mealcraft.dto.RecipeDto;
 
 import java.time.LocalDateTime;
 
@@ -14,9 +13,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Recipe {
+public class RecipeDto {
 
-    @NotNull
     private Long id;
 
     private Long ownerUserId;
@@ -32,12 +30,4 @@ public class Recipe {
 
     private String imageUrl;
 
-    public Recipe(RecipeDto recipeDto) {
-        this.id = (recipeDto.getId()!=null)? recipeDto.getId():0;
-        this.ownerUserId = recipeDto.getOwnerUserId();
-        this.baseRecipeId = recipeDto.getBaseRecipeId();
-        this.name = recipeDto.getName();
-        this.createdAt = recipeDto.getCreatedAt();
-        this.imageUrl = recipeDto.getImageUrl();
-    }
 }
