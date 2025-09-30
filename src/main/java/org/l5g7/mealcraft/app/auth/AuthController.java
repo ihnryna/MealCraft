@@ -28,10 +28,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginUserDto loginUserDto, HttpServletResponse response) {
 
-        // generate JWT via AuthService
         String token = authService.login(loginUserDto);
 
-        // set token as HttpOnly cookie
         Cookie cookie = new Cookie("AUTH_TOKEN", token);
         cookie.setHttpOnly(true);
         cookie.setPath("/");

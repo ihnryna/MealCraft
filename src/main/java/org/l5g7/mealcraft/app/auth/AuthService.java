@@ -23,8 +23,6 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
-
-
     public String register(@Valid RegisterUserDto username) {
         return "User registered";
     }
@@ -40,7 +38,6 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        // ✅ Generate token here
         return jwtService.generateToken(user.getUsername());
 
     }
