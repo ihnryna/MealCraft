@@ -7,7 +7,7 @@ import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.l5g7.mealcraft.app.units.UnitService
+import org.l5g7.mealcraft.app.units.UnitService;
 
 import java.util.*;
 
