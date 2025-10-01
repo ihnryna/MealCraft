@@ -1,10 +1,8 @@
-package org.l5g7.mealcraft.controller;
+package org.l5g7.mealcraft.app.auth;
 
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.dto.LoginUserDto;
-import org.l5g7.mealcraft.dto.RegisterUserDto;
-import org.l5g7.mealcraft.service.AuthService;
-import org.springframework.validation.BindingResult;
+import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

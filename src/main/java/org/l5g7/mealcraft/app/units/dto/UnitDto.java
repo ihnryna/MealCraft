@@ -1,6 +1,5 @@
-package org.l5g7.mealcraft.entity;
+package org.l5g7.mealcraft.app.units.dto;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -10,10 +9,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Unit {
+public class UnitDto {
 
-    @NotNull
-    private long id;
+    private Long id;
 
     @NotNull
     @NotEmpty

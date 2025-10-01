@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.dto;
+package org.l5g7.mealcraft.app.auth.Dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

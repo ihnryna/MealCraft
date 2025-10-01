@@ -1,9 +1,8 @@
-package org.l5g7.mealcraft.service;
+package org.l5g7.mealcraft.app.auth;
 
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.controller.UserController;
-import org.l5g7.mealcraft.dto.LoginUserDto;
-import org.l5g7.mealcraft.dto.RegisterUserDto;
+import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.springframework.stereotype.Service;
 
 @Service
