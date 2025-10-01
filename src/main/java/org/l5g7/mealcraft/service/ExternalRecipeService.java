@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.l5g7.mealcraft.entity.Recipe;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -14,17 +15,16 @@ import java.time.LocalDateTime;
 public class ExternalRecipeService {
 
     private final RestClient defaultClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
 
-
-    public ExternalRecipeService() {
-        this.defaultClient = RestClient.create();
+    @Autowired
+    public ExternalRecipeService(RestClient defaultClient) {
+        this.defaultClient = defaultClient;
     }
 
-    public ExternalRecipeService(RestClient.Builder clientBuilder) {
-        this.defaultClient = clientBuilder
-                .baseUrl("https://www.themealdb.com/api/json/v1/1")
-                .build();
+    @Autowired
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     public Recipe getRandomRecipe() throws Exception {
