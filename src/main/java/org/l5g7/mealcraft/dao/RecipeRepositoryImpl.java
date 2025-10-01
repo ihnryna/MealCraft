@@ -34,6 +34,27 @@ public class RecipeRepositoryImpl implements RecipeRepository {
     public void create(Recipe recipe) {
         recipes.add(recipe);
     }
+    @Override
+    public boolean patch(Long id, Recipe recipe) {
+        for (Recipe r : recipes) {
+            if (r.getId().equals(recipe.getId())) {
+                if(recipe.getBaseRecipeId()!=null){
+                    r.setBaseRecipeId(recipe.getBaseRecipeId());
+                }
+                if(recipe.getName()!=null){
+                    r.setName(recipe.getName());
+                }
+                if(recipe.getOwnerUserId()!=null){
+                    r.setOwnerUserId(recipe.getOwnerUserId());
+                }
+                if(recipe.getImageUrl()!=null){
+                    r.setImageUrl(recipe.getImageUrl());
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean update(Long id, Recipe recipe) {

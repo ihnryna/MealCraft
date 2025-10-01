@@ -10,5 +10,6 @@ public interface ProductRepository {
     Optional<Product> findById(Long id);
     void create(Product product);
     boolean update(Long id, Product product);
+    boolean patch(Long id, Product product);
     boolean deleteById(Long id);
 }
