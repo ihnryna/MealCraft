@@ -7,6 +7,9 @@ import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
 import org.l5g7.mealcraft.app.units.interfaces.UnitService;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -22,7 +25,16 @@ public class UnitServiceImpl implements UnitService {
     }
 
     public List<UnitDto> getAllUnits() {
+        showUserinfo();
         return repository.findAll().stream().map(unit -> new UnitDto(unit.getId(), unit.getName())).toList();
+    }
+
+    private void showUserinfo() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            String username = auth.getName();
+            System.out.println("Authenticated user: " + username);
+        }
     }
 
     public UnitDto getUnitById(Long id) {
