@@ -30,7 +30,7 @@ public class ProductController {
         throw new EntityDoesNotExistException("Product",id);
     }
 
-    @PostMapping
+    @PutMapping
     public void createProduct(@Valid @RequestBody Product product) {
         products.add(product);
     }
