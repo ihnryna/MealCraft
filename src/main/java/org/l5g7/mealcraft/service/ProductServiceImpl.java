@@ -60,7 +60,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void patchProduct(Long id, ProductDto patch) {
-        updateProduct(id, patch);
+        Optional<Product> existing = productRepository.findById(patch.getId());
+        if (existing.isEmpty()){
+            throw new EntityDoesNotExistException("Product", id);
+        }
+        productRepository.update(id, new Product(patch));
     }
 
     @Override

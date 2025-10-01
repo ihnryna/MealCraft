@@ -13,7 +13,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     Product product1 = new Product(111L, "Egg", 1111L, 1L, null);
     Product product2 = new Product(211L, "Beetroot", 2222L, 2L, null);
-    List<Product> products = new ArrayList<Product>(List.of(product1,product2));
+    List<Product> products = new ArrayList<Product>(List.of(product1, product2));
 
 
     @Override
@@ -36,9 +36,31 @@ public class ProductRepositoryImpl implements ProductRepository {
         for (Product p : products) {
             if (p.getId().equals(product.getId())) {
                 p.setDefaultUnitId(product.getDefaultUnitId());
-                p.setOwnerUserId(product.getOwnerUserId());
                 p.setName(product.getName());
+                p.setOwnerUserId(product.getOwnerUserId());
                 p.setImageUrl(product.getImageUrl());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean patch(Long id, Product product) {
+        for (Product p : products) {
+            if (p.getId().equals(product.getId())) {
+                if (product.getDefaultUnitId() != null) {
+                    p.setDefaultUnitId(product.getDefaultUnitId());
+                }
+                if (product.getImageUrl() != null) {
+                    p.setImageUrl(product.getImageUrl());
+                }
+                if (product.getName() != null) {
+                    p.setName(product.getName());
+                }
+                if (product.getOwnerUserId() != null) {
+                    p.setOwnerUserId(product.getOwnerUserId());
+                }
                 return true;
             }
         }
