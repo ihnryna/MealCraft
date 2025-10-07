@@ -1,7 +1,5 @@
 package org.l5g7.mealcraft.app.products;
 
-import org.l5g7.mealcraft.app.units.Entity.Unit;
-import org.l5g7.mealcraft.entity.User;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
                     entity.getImageUrl()
             );
         } else {
-            throw new EntityDoesNotExistException("Product", id);
+            throw new EntityDoesNotExistException("Product", String.valueOf(id));
         }
     }
 
@@ -54,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
     public void createProduct(ProductDto productDto) {
         Optional<Product> existing = productRepository.findById(productDto.getId());
         if (existing.isPresent()) {
-            throw new EntityAlreadyExistsException("Product", productDto.getId());
+            throw new EntityAlreadyExistsException("Product", String.valueOf(productDto.getId()));
         } else {
             //Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow();
             //User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow();
@@ -73,7 +71,7 @@ public class ProductServiceImpl implements ProductService {
     public void updateProduct(Long id, ProductDto productDto) {
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()){
-            throw new EntityDoesNotExistException("Product", id);
+            throw new EntityDoesNotExistException("Product", String.valueOf(id));
         }
         /*User user = userRepository.findById(productDto.getOwnerUserId())
                 .orElseThrow(() -> new EntityDoesNotExistException("User", productDto.getOwnerUserId()));*/
@@ -94,7 +92,7 @@ public class ProductServiceImpl implements ProductService {
     public void patchProduct(Long id, ProductDto patch) {
         Optional<Product> existing = productRepository.findById(patch.getId());
         if (existing.isEmpty()){
-            throw new EntityDoesNotExistException("Product", id);
+            throw new EntityDoesNotExistException("Product", String.valueOf(id));
         }
         existing.ifPresent(product -> {
             if(patch.getName()!=null){

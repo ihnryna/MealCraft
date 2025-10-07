@@ -4,11 +4,10 @@ import jakarta.validation.Valid;
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.l5g7.mealcraft.app.auth.security.JwtService;
-import org.l5g7.mealcraft.dao.UserRepository;
-import org.l5g7.mealcraft.entity.User;
-import org.l5g7.mealcraft.service.PasswordHasher;
+import org.l5g7.mealcraft.app.user.UserRepository;
+import org.l5g7.mealcraft.app.user.User;
+import org.l5g7.mealcraft.app.user.PasswordHasher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service

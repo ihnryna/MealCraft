@@ -38,7 +38,7 @@ public class UnitServiceImpl implements UnitService {
     }
 
     public UnitDto getUnitById(Long id) {
-        Unit result = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", id));
+        Unit result = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(id)));
         return new UnitDto(result.getId(), result.getName());
     }
 
@@ -48,7 +48,7 @@ public class UnitServiceImpl implements UnitService {
     }
 
     public UnitDto updateUnit(Long id, UnitUpdateDto updatedUnit) {
-        if (!repository.existsById(id)) throw  new EntityDoesNotExistException("Unit", id);
+        if (!repository.existsById(id)) throw  new EntityDoesNotExistException("Unit", String.valueOf(id));
 
         Unit result = repository.update(id, new Unit(0, updatedUnit.getName()));
         return new UnitDto(result.getId(), result.getName());
