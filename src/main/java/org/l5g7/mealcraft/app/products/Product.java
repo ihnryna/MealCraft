@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.entity;
+package org.l5g7.mealcraft.app.products;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -7,34 +7,34 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.l5g7.mealcraft.dto.ProductDto;
+import org.l5g7.mealcraft.app.units.Entity.Unit;
+import org.l5g7.mealcraft.entity.User;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "product")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Product {
 
-    @NotNull
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @NotBlank
+    @Column(nullable = false)
     private String name;
 
-    @NotNull
-    private Long defaultUnitId;
+    /*@ManyToOne
+    private Unit defaultUnit;*/
 
-    private Long ownerUserId;
+    /*@ManyToOne
+    private User ownerUser;*/
 
     private String imageUrl;
 
     public Product(ProductDto productDto) {
         this.id = (productDto.getId()!=null)? productDto.getId():0;
-        this.ownerUserId = productDto.getOwnerUserId();
-        this.defaultUnitId = productDto.getDefaultUnitId();
+        //this.ownerUser = productDto.getOwnerUser();
+        //this.defaultUnit = productDto.getDefaultUnit();
         this.name = productDto.getName();
         this.imageUrl = productDto.getImageUrl();
     }
-
 }

@@ -1,6 +1,5 @@
-package org.l5g7.mealcraft.dao;
+/*package org.l5g7.mealcraft.app.recipes;
 
-import org.l5g7.mealcraft.entity.Recipe;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -74,4 +73,4 @@ public class RecipeRepositoryImpl implements RecipeRepository {
     public boolean deleteById(Long id) {
         return recipes.removeIf(recipe -> recipe.getId().equals(id));
     }
-}
+}*/

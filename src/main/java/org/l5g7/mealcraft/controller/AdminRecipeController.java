@@ -1,10 +1,8 @@
 package org.l5g7.mealcraft.controller;
 
-import org.l5g7.mealcraft.entity.Recipe;
-import org.l5g7.mealcraft.service.ExternalRecipeService;
+import org.l5g7.mealcraft.app.recipes.Recipe;
+import org.l5g7.mealcraft.app.recipes.ExternalRecipeService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/admin/recipes")

@@ -1,7 +1,5 @@
-package org.l5g7.mealcraft.dao;
+/*package org.l5g7.mealcraft.app.products;
 
-import org.l5g7.mealcraft.entity.Product;
-import org.l5g7.mealcraft.entity.Recipe;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -71,4 +69,4 @@ public class ProductRepositoryImpl implements ProductRepository {
     public boolean deleteById(Long id) {
         return products.removeIf(product -> product.getId().equals(id));
     }
-}
+}*/
