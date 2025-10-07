@@ -41,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
             return new ProductDto(
                     entity.getId(),
                     entity.getName(),
-                    //entity.getDefaultUnit().getId(),
+                    entity.getDefaultUnit().getId(),
                     //entity.getOwnerUser().getId,
                     entity.getImageUrl()
             );

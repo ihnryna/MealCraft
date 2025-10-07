@@ -22,19 +22,12 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    /*@ManyToOne
-    private Unit defaultUnit;*/
+    @ManyToOne
+    private Unit defaultUnit;
 
     /*@ManyToOne
     private User ownerUser;*/
 
     private String imageUrl;
 
-    public Product(ProductDto productDto) {
-        this.id = (productDto.getId()!=null)? productDto.getId():0;
-        //this.ownerUser = productDto.getOwnerUser();
-        //this.defaultUnit = productDto.getDefaultUnit();
-        this.name = productDto.getName();
-        this.imageUrl = productDto.getImageUrl();
-    }
 }

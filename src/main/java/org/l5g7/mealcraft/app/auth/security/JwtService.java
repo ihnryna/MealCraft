@@ -4,13 +4,16 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
 @Service
 public class JwtService {
-    private final String SECRET_KEY = "mySecretKeyThatIsAtLeast256BitsLongForHS256Algorithm123456789";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
+
     private final long EXPIRATION_MS = 24 * 60 * 60 * 1000; // 1 day
 
     public String generateToken(String username) {
