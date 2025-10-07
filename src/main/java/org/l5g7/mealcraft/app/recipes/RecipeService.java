@@ -1,8 +1,4 @@
-package org.l5g7.mealcraft.service;
-
-import org.l5g7.mealcraft.dto.RecipeDto;
-import org.l5g7.mealcraft.entity.Recipe;
-import org.springframework.stereotype.Service;
+package org.l5g7.mealcraft.app.recipes;
 
 import java.util.List;
 
@@ -14,9 +10,9 @@ public interface RecipeService {
         this.externalRecipeService = externalRecipeService;
     }*/
 
-    List<Recipe> getAllRecipes();
-    Recipe getRecipeById(Long id);
-    void createRecipe(Recipe recipe);
+    List<RecipeDto> getAllRecipes();
+    RecipeDto getRecipeById(Long id);
+    void createRecipe(RecipeDto recipe);
     void updateRecipe(Long id, RecipeDto recipeDto);
     void patchRecipe(Long id, RecipeDto patch);
     void deleteRecipeById(Long id);

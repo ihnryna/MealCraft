@@ -1,14 +1,11 @@
-package org.l5g7.mealcraft.service;
+package org.l5g7.mealcraft.app.recipes;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.l5g7.mealcraft.entity.Recipe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 
 @Service

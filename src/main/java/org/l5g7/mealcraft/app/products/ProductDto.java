@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.dto;
+package org.l5g7.mealcraft.app.products;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,26 +7,23 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RecipeDto {
+public class ProductDto {
 
+    @NotNull
     private Long id;
 
-    private Long ownerUserId;
-
-    private Long baseRecipeId;
-
-    @NotBlank
     @NotNull
+    @NotBlank
     private String name;
 
-    @NotNull
-    private LocalDateTime createdAt;
+    /*@NotNull
+    private Long defaultUnitId;
+
+    private Long ownerUserId;*/
 
     private String imageUrl;
 
