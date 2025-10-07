@@ -15,7 +15,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordHasher passwordHasher;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository,PasswordHasher passwordHasher) {
+    public UserServiceImpl(UserRepository userRepository, PasswordHasher passwordHasher) {
         this.userRepository = userRepository;
         this.passwordHasher = passwordHasher;
     }
@@ -36,43 +36,37 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getUserById(Long id) {
-            Optional<User> user = userRepository.findById(id);
-            if (user.isPresent()) {
-                User u = user.get();
-                return new UserResponseDto(
-                        u.getId(),
-                        u.getUsername(),
-                        u.getEmail(),
-                        u.getRole(),
-                        u.getAvatarUrl()
-                );
-            } else {
-                throw new EntityDoesNotExistException("User", String.valueOf(id));
-            }
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            User u = user.get();
+            return new UserResponseDto(
+                    u.getId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getRole(),
+                    u.getAvatarUrl()
+            );
+        } else {
+            throw new EntityDoesNotExistException("User", String.valueOf(id));
+        }
     }
 
     @Override
     public void createUser(UserRequestDto userDto) {
-        Optional<User> existing = userRepository.findByEmail((userDto.email()));
-        if (existing.isPresent()) {
-            throw new EntityAlreadyExistsException("User", userDto.email());
-        } else {
-            User newUser = User.builder().
-                    username(userDto.username()).
-                    email(userDto.email()).
-                    role(userDto.role()).
-                    password(passwordHasher.hashPassword(userDto.password())).
-                    avatarUrl(userDto.avatarUrl()).
-                    build();
-            userRepository.save(newUser);
-        }
-
+        User newUser = User.builder().
+                username(userDto.username()).
+                email(userDto.email()).
+                role(userDto.role()).
+                password(passwordHasher.hashPassword(userDto.password())).
+                avatarUrl(userDto.avatarUrl()).
+                build();
+        userRepository.save(newUser);
     }
 
     @Override
     public void updateUser(Long id, UserRequestDto user) {
         Optional<User> existing = userRepository.findById(id);
-        if(existing.isEmpty()) {
+        if (existing.isEmpty()) {
             throw new EntityDoesNotExistException("User", String.valueOf(id));
         } else {
             User userToUpdate = existing.get();
@@ -91,7 +85,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void patchUser(Long id, UserRequestDto patch) {
         Optional<User> existing = userRepository.findById(id);
-        if(existing.isEmpty()) {
+        if (existing.isEmpty()) {
             throw new EntityDoesNotExistException("User", String.valueOf(id));
         } else {
             User userToPatch = existing.get();
