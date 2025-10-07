@@ -20,10 +20,10 @@ public class ProductDto {
     @NotBlank
     private String name;
 
-    /*@NotNull
+    @NotNull
     private Long defaultUnitId;
 
-    private Long ownerUserId;*/
+   // private Long ownerUserId;
 
     private String imageUrl;
 
