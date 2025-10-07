@@ -4,12 +4,12 @@ import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
 import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
+import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.units.interfaces.UnitService;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -43,15 +43,21 @@ public class UnitServiceImpl implements UnitService {
     }
 
     public UnitDto createUnit(UnitCreateDto unit) {
-        Unit result = repository.create(new Unit(0, unit.getName()));
+        Unit result = repository.save(Unit.builder()
+                        .name(unit.getName())
+                        .build());
         return new UnitDto(result.getId(), result.getName());
     }
 
     public UnitDto updateUnit(Long id, UnitUpdateDto updatedUnit) {
-        if (!repository.existsById(id)) throw  new EntityDoesNotExistException("Unit", String.valueOf(id));
+        Unit unit = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", id));
 
-        Unit result = repository.update(id, new Unit(0, updatedUnit.getName()));
-        return new UnitDto(result.getId(), result.getName());
+        if (updatedUnit.getName() != null) {
+            unit.setName(updatedUnit.getName());
+        }
+
+        Unit savedUnit = repository.save(unit);
+        return new UnitDto(savedUnit.getId(), savedUnit.getName());
     }
 
     public UnitDto patchUnit(Long id, UnitUpdateDto updates) {

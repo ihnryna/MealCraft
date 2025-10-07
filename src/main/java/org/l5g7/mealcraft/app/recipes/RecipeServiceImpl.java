@@ -52,23 +52,19 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public void createRecipe(RecipeDto recipeDto) {
-        Optional<Recipe> existing = recipeRepository.findById(recipeDto.getId());
-        if (existing.isPresent()) {
-            throw new EntityAlreadyExistsException("Recipe", String.valueOf(recipeDto.getId()));
-        } else {
-            //User user = userRepository.findById(recipeDto.getOwnerUserId()).orElseThrow();
-            Recipe baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                    .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
+        //User user = userRepository.findById(recipeDto.getOwnerUserId()).orElseThrow();
+        Recipe baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
+                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", recipeDto.getBaseRecipeId()));
 
-            Recipe entity = Recipe.builder()
-                    .name(recipeDto.getName())
-                    //.ownerUser(user)
-                    .imageUrl(recipeDto.getImageUrl())
-                    .baseRecipe(baseRecipe)
-                    .createdAt(recipeDto.getCreatedAt())
-                    .build();
-            recipeRepository.save(entity);
-        }
+        Recipe entity = Recipe.builder()
+                .name(recipeDto.getName())
+                //.ownerUser(user)
+                .imageUrl(recipeDto.getImageUrl())
+                .baseRecipe(baseRecipe)
+                .createdAt(recipeDto.getCreatedAt())
+                .build();
+        recipeRepository.save(entity);
+
     }
 
     @Override
@@ -94,21 +90,21 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public void patchRecipe(Long id, RecipeDto patch) {
         Optional<Recipe> existing = recipeRepository.findById(patch.getId());
-        if (existing.isEmpty()){
-            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
+        if (existing.isEmpty()) {
+            throw new EntityDoesNotExistException("Recipe", id);
         }
         existing.ifPresent(recipe -> {
-            if(patch.getName()!=null){
+            if (patch.getName() != null) {
                 recipe.setName(patch.getName());
             }
-            if(patch.getImageUrl()!=null){
+            if (patch.getImageUrl() != null) {
                 recipe.setImageUrl(patch.getImageUrl());
             }
             /*if(patch.getOwnerUser()!=null){
                 recipe.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
                         .orElseThrow(() -> new EntityDoesNotExistException("User", patch.getOwnerUserId())));
             }*/
-            if(patch.getBaseRecipeId()!=null){
+            if (patch.getBaseRecipeId() != null) {
                 recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
                         .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(patch.getBaseRecipeId()))));
             }

@@ -19,16 +19,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getAllProducts(){
+    public List<ProductDto> getAllProducts() {
         List<Product> entities = productRepository.findAll();
 
         return entities.stream().map(entity -> ProductDto.builder()
-                        .id(entity.getId())
-                        .name(entity.getName())
-                        //.defaultUnitId(entity.getDefaultUnit().getId())
-                        //.ownerUserId(entity.getOwnerUser().getId())
-                        .imageUrl(entity.getImageUrl())
-                        .build()).toList();
+                .id(entity.getId())
+                .name(entity.getName())
+                //.defaultUnitId(entity.getDefaultUnit().getId())
+                //.ownerUserId(entity.getOwnerUser().getId())
+                .imageUrl(entity.getImageUrl())
+                .build()).toList();
     }
 
     @Override
@@ -39,7 +39,7 @@ public class ProductServiceImpl implements ProductService {
             return new ProductDto(
                     entity.getId(),
                     entity.getName(),
-                    //entity.getDefaultUnit().getId(),
+                    entity.getDefaultUnit().getId(),
                     //entity.getOwnerUser().getId,
                     entity.getImageUrl()
             );
@@ -57,21 +57,13 @@ public class ProductServiceImpl implements ProductService {
             //Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow();
             //User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow();
 
-            Product entity = Product.builder()
-                    .name(productDto.getName())
-                    .imageUrl(productDto.getImageUrl())
-                    //.defaultUnit(unit)
-                    //.ownerUser(user)
-                    .build();
-            productRepository.save(entity);
-        }
     }
 
     @Override
     public void updateProduct(Long id, ProductDto productDto) {
         Optional<Product> existing = productRepository.findById(id);
-        if (existing.isEmpty()){
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+        if (existing.isEmpty()) {
+            throw new EntityDoesNotExistException("Product", id);
         }
         /*User user = userRepository.findById(productDto.getOwnerUserId())
                 .orElseThrow(() -> new EntityDoesNotExistException("User", productDto.getOwnerUserId()));*/
@@ -91,14 +83,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void patchProduct(Long id, ProductDto patch) {
         Optional<Product> existing = productRepository.findById(patch.getId());
-        if (existing.isEmpty()){
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+        if (existing.isEmpty()) {
+            throw new EntityDoesNotExistException("Product", id);
         }
         existing.ifPresent(product -> {
-            if(patch.getName()!=null){
+            if (patch.getName() != null) {
                 product.setName(patch.getName());
             }
-            if(patch.getImageUrl()!=null){
+            if (patch.getImageUrl() != null) {
                 product.setImageUrl(patch.getImageUrl());
             }
             /*if(patch.getDefaultUnit() != null){
