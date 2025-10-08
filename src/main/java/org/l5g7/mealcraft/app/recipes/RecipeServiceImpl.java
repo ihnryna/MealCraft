@@ -1,8 +1,5 @@
 package org.l5g7.mealcraft.app.recipes;
 
-import org.l5g7.mealcraft.app.products.Product;
-import org.l5g7.mealcraft.app.products.ProductDto;
-import org.l5g7.mealcraft.entity.User;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +46,7 @@ public class RecipeServiceImpl implements RecipeService {
                     entity.getImageUrl()
             );
         } else {
-            throw new EntityDoesNotExistException("Recipe", id);
+            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
         }
     }
 
@@ -74,12 +71,12 @@ public class RecipeServiceImpl implements RecipeService {
     public void updateRecipe(Long id, RecipeDto recipeDto) {
         Optional<Recipe> existing = recipeRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Recipe", id);
+            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
         }
         /*User user = userRepository.findById(recipeDto.getOwnerUserId())
                 .orElseThrow(() -> new EntityDoesNotExistException("User", recipeDto.getOwnerUserId()));*/
         Recipe baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", recipeDto.getBaseRecipeId()));
+                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
 
         existing.ifPresent(recipe -> {
             recipe.setName(recipeDto.getName());
@@ -109,7 +106,7 @@ public class RecipeServiceImpl implements RecipeService {
             }*/
             if (patch.getBaseRecipeId() != null) {
                 recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("Recipe", patch.getBaseRecipeId())));
+                        .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(patch.getBaseRecipeId()))));
             }
             recipeRepository.save(recipe);
         });

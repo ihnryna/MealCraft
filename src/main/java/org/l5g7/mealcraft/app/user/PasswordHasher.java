@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.service;
+package org.l5g7.mealcraft.app.user;
 
 import org.springframework.stereotype.Component;
 

@@ -38,7 +38,7 @@ public class UnitServiceImpl implements UnitService {
     }
 
     public UnitDto getUnitById(Long id) {
-        Unit result = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", id));
+        Unit result = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(id)));
         return new UnitDto(result.getId(), result.getName());
     }
 

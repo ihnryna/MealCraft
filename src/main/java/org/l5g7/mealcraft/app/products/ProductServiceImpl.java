@@ -1,7 +1,5 @@
 package org.l5g7.mealcraft.app.products;
 
-import org.l5g7.mealcraft.app.units.Entity.Unit;
-import org.l5g7.mealcraft.entity.User;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,21 +44,18 @@ public class ProductServiceImpl implements ProductService {
                     entity.getImageUrl()
             );
         } else {
-            throw new EntityDoesNotExistException("Product", id);
+            throw new EntityDoesNotExistException("Product", String.valueOf(id));
         }
     }
 
     @Override
     public void createProduct(ProductDto productDto) {
-        //Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow();
-        //User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow();
-        Product entity = Product.builder()
-                .name(productDto.getName())
-                .imageUrl(productDto.getImageUrl())
-                //.defaultUnit(unit)
-                //.ownerUser(user)
-                .build();
-        productRepository.save(entity);
+        Optional<Product> existing = productRepository.findById(productDto.getId());
+        if (existing.isPresent()) {
+            throw new EntityAlreadyExistsException("Product", String.valueOf(productDto.getId()));
+        } else {
+            //Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow();
+            //User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow();
 
     }
 
