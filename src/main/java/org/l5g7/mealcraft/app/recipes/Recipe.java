@@ -5,8 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.user.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "recipe")
@@ -17,8 +20,8 @@ public class Recipe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /*@ManyToOne
-    private User ownerUser;*/
+    @ManyToOne
+    private User ownerUser;
 
     @ManyToOne
     private Recipe baseRecipe;
@@ -32,12 +35,11 @@ public class Recipe {
 
     private String imageUrl;
 
-    /*public Recipe(RecipeDto recipeDto) {
-        this.id = (recipeDto.getId()!=null)? recipeDto.getId():0;
-        this.ownerUser = recipeDto.getOwnerUserId();
-        this.baseRecipe = recipeDto.getBaseRecipeId();
-        this.name = recipeDto.getName();
-        this.createdAt = recipeDto.getCreatedAt();
-        this.imageUrl = recipeDto.getImageUrl();
-    }*/
+    @ManyToMany
+    @JoinTable(
+            name = "recipe_product",
+            joinColumns = @JoinColumn(name = "recipe_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private List<Product> ingredients;
 }

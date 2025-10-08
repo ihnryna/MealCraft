@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.l5g7.mealcraft.app.products.ProductDto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -22,7 +24,7 @@ public class RecipeDto {
     @NotNull
     private String name;
 
-    //private Long ownerUserId;
+    private Long ownerUserId;
 
     private Long baseRecipeId;
 
@@ -30,5 +32,7 @@ public class RecipeDto {
     private LocalDateTime createdAt;
 
     private String imageUrl;
+
+    private List<Long> ingredientsId;
 
 }

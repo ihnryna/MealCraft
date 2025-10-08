@@ -5,6 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.l5g7.mealcraft.app.recipes.Recipe;
+import org.l5g7.mealcraft.app.units.Entity.Unit;
+import org.l5g7.mealcraft.app.user.User;
+
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -21,9 +26,11 @@ public class Product {
     @ManyToOne
     private Unit defaultUnit;
 
-    /*@ManyToOne
-    private User ownerUser;*/
+    @ManyToOne
+    private User ownerUser;
 
     private String imageUrl;
 
+    @ManyToMany(mappedBy = "ingredients")
+    private List<Recipe> recipes;
 }
