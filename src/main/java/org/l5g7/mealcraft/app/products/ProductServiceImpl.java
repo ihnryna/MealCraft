@@ -63,8 +63,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void createProduct(ProductDto productDto) {
-        Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow();
-        User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow();
+        Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(productDto.getDefaultUnitId())));
+        User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
         Product entity = Product.builder()
                 .name(productDto.getName())
                 .imageUrl(productDto.getImageUrl())
@@ -128,9 +128,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void addProductToRecipe(Long productId, Long recipeId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(productId)));
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("Recipe not found"));
+                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeId)));
 
         recipe.getIngredients().add(product);
         recipeRepository.save(recipe);
