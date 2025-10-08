@@ -50,7 +50,7 @@ public class UnitServiceImpl implements UnitService {
     }
 
     public UnitDto updateUnit(Long id, UnitUpdateDto updatedUnit) {
-        Unit unit = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", id));
+        Unit unit = repository.findById(id).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(id)));
 
         if (updatedUnit.getName() != null) {
             unit.setName(updatedUnit.getName());

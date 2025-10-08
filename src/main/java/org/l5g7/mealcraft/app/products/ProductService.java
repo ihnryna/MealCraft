@@ -10,6 +10,7 @@ public interface ProductService {
     void updateProduct(Long id, ProductDto productDto);
     void patchProduct(Long id, ProductDto patch);
     void deleteProductById(Long id);
+    void addProductToRecipe(Long productId, Long recipeId);
 
 }
 

@@ -23,7 +23,7 @@ public class ProductDto {
     @NotNull
     private Long defaultUnitId;
 
-   // private Long ownerUserId;
+    private Long ownerUserId;
 
     private String imageUrl;
 

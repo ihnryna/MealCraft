@@ -1,5 +1,9 @@
 package org.l5g7.mealcraft.app.recipes;
 
+import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.user.User;
+import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,38 +16,60 @@ import java.util.Optional;
 public class RecipeServiceImpl implements RecipeService {
 
     private final RecipeRepository recipeRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public RecipeServiceImpl(RecipeRepository recipeRepository) {
+    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository) {
         this.recipeRepository = recipeRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
     public List<RecipeDto> getAllRecipes() {
         List<Recipe> entities = recipeRepository.findAll();
 
-        return entities.stream().map(entity -> RecipeDto.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                //.ownerUserId(entity.getOwnerUser().getId())
-                .baseRecipeId(entity.getBaseRecipe().getId())
-                .createdAt(entity.getCreatedAt())
-                .imageUrl(entity.getImageUrl())
-                .build()).toList();
+        return entities.stream().map(entity -> {
+            List<Long> ingredientsId = (entity.getIngredients() != null)
+                    ? entity.getIngredients().stream()
+                    .map(Product::getId)
+                    .toList()
+                    : List.of();
+
+            return RecipeDto.builder()
+                    .id(entity.getId())
+                    .name(entity.getName())
+                    .ownerUserId(entity.getOwnerUser().getId())
+                    .baseRecipeId(entity.getBaseRecipe().getId())
+                    .createdAt(entity.getCreatedAt())
+                    .imageUrl(entity.getImageUrl())
+                    .ingredientsId(ingredientsId)
+                    .build();
+        }).toList();
     }
 
     @Override
     public RecipeDto getRecipeById(Long id) {
         Optional<Recipe> recipe = recipeRepository.findById(id);
+
         if (recipe.isPresent()) {
             Recipe entity = recipe.get();
+
+            List<Long> ingredientsId = entity.getIngredients() != null
+                    ? entity.getIngredients().stream()
+                    .map(Product::getId)
+                    .toList()
+                    : List.of();
+
             return new RecipeDto(
                     entity.getId(),
                     entity.getName(),
-                    //entity.getOwnerUser().getId(),
+                    entity.getOwnerUser().getId(),
                     entity.getBaseRecipe().getId(),
                     entity.getCreatedAt(),
-                    entity.getImageUrl()
+                    entity.getImageUrl(),
+                    ingredientsId
             );
         } else {
             throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
@@ -52,16 +78,23 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public void createRecipe(RecipeDto recipeDto) {
-        //User user = userRepository.findById(recipeDto.getOwnerUserId()).orElseThrow();
+        User user = userRepository.findById(recipeDto.getOwnerUserId()).orElseThrow();
         Recipe baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", recipeDto.getBaseRecipeId()));
+                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
+
+        List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
+
+        if (ingredients.size() != recipeDto.getIngredientsId().size()) {
+            throw new RuntimeException("One or more products not found");
+        }
 
         Recipe entity = Recipe.builder()
                 .name(recipeDto.getName())
-                //.ownerUser(user)
+                .ownerUser(user)
                 .imageUrl(recipeDto.getImageUrl())
                 .baseRecipe(baseRecipe)
                 .createdAt(recipeDto.getCreatedAt())
+                .ingredients(ingredients)
                 .build();
         recipeRepository.save(entity);
 
@@ -73,16 +106,20 @@ public class RecipeServiceImpl implements RecipeService {
         if (existing.isEmpty()) {
             throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
         }
-        /*User user = userRepository.findById(recipeDto.getOwnerUserId())
-                .orElseThrow(() -> new EntityDoesNotExistException("User", recipeDto.getOwnerUserId()));*/
+        User user = userRepository.findById(recipeDto.getOwnerUserId())
+                .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(recipeDto.getOwnerUserId())));
         Recipe baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
                 .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
 
+
         existing.ifPresent(recipe -> {
+            List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
+
             recipe.setName(recipeDto.getName());
-            //recipe.setOwnerUser(user);
+            recipe.setOwnerUser(user);
             recipe.setImageUrl(recipeDto.getImageUrl());
             recipe.setBaseRecipe(baseRecipe);
+            recipe.setIngredients(ingredients);
             recipeRepository.save(recipe);
         });
     }
@@ -91,7 +128,7 @@ public class RecipeServiceImpl implements RecipeService {
     public void patchRecipe(Long id, RecipeDto patch) {
         Optional<Recipe> existing = recipeRepository.findById(patch.getId());
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Recipe", id);
+            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
         }
         existing.ifPresent(recipe -> {
             if (patch.getName() != null) {
@@ -100,10 +137,21 @@ public class RecipeServiceImpl implements RecipeService {
             if (patch.getImageUrl() != null) {
                 recipe.setImageUrl(patch.getImageUrl());
             }
-            /*if(patch.getOwnerUser()!=null){
+            if(patch.getIngredientsId() != null){
+                List<Long> ingredientsId = recipe.getIngredients() != null
+                        ? recipe.getIngredients().stream()
+                        .map(Product::getId)
+                        .toList()
+                        : List.of();
+
+                List<Product> ingredients = productRepository.findAllById(patch.getIngredientsId());
+
+                recipe.setIngredients(ingredients);
+            }
+            if(patch.getOwnerUserId()!=null){
                 recipe.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("User", patch.getOwnerUserId())));
-            }*/
+                        .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(patch.getOwnerUserId()))));
+            }
             if (patch.getBaseRecipeId() != null) {
                 recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
                         .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(patch.getBaseRecipeId()))));
