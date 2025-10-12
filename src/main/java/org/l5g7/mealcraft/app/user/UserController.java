@@ -1,8 +1,13 @@
 package org.l5g7.mealcraft.app.user;
 
 import jakarta.validation.Valid;
+import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.ExternalRecipe;
+import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.ExternalRecipeService;
+import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 

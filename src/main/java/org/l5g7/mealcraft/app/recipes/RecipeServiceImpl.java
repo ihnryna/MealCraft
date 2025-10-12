@@ -4,8 +4,9 @@ import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
-import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
+import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.ExternalRecipe;
+import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +19,14 @@ public class RecipeServiceImpl implements RecipeService {
     private final RecipeRepository recipeRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final RecipeProvider recipeProvider;
 
     @Autowired
-    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository) {
+    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider) {
         this.recipeRepository = recipeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.recipeProvider = recipeProvider;
     }
 
     @Override
@@ -163,5 +166,16 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public void deleteRecipeById(Long id) {
         recipeRepository.deleteById(id);
+    }
+
+    @Override
+    public RecipeDto getRandomRecipe() throws Exception {
+        ExternalRecipe externalRecipe = recipeProvider.getRandomRecipe();
+
+        return RecipeDto.builder()
+                .id(externalRecipe.id())
+                .name(externalRecipe.name())
+                .imageUrl(externalRecipe.imageUrl())
+                .build();
     }
 }

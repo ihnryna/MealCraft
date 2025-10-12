@@ -1,14 +1,10 @@
 package org.l5g7.mealcraft.app.recipes;
 
+import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.ExternalRecipeService;
+
 import java.util.List;
 
 public interface RecipeService {
-
-    /*private final ExternalRecipeService externalRecipeService;
-
-    public RecipeService(ExternalRecipeService externalRecipeService) {
-        this.externalRecipeService = externalRecipeService;
-    }*/
 
     List<RecipeDto> getAllRecipes();
     RecipeDto getRecipeById(Long id);
@@ -16,6 +12,7 @@ public interface RecipeService {
     void updateRecipe(Long id, RecipeDto recipeDto);
     void patchRecipe(Long id, RecipeDto patch);
     void deleteRecipeById(Long id);
+    RecipeDto getRandomRecipe() throws Exception;
 
 }
 
