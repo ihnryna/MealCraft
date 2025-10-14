@@ -6,9 +6,8 @@
         </encoder>
     </appender>
 
-    <appender name="MyAppender" class="org.l5g7.mealcraft.logging.MyAppender">
-        <append>true</append>
-        <layout class="org.l5g7.mealcraft.logging.FancyLayout"/>
+    <appender name="MyAppender" class="org.l5g7.mealcraft.logging.MealcraftFileAppender">
+        <layout class="org.l5g7.mealcraft.logging.MealcraftLayout"/>
     </appender>
 
     <root level="info">

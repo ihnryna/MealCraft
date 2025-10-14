@@ -9,7 +9,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
-public class FancyLayout extends LayoutBase<ILoggingEvent> {
+public class MealcraftLayout extends LayoutBase<ILoggingEvent> {
 
 
     private static final DateTimeFormatter TIMESTAMP_FORMATTER =
