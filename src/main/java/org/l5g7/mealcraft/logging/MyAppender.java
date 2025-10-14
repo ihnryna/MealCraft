@@ -8,13 +8,16 @@ import lombok.Setter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Setter
 public class MyAppender extends AppenderBase<ILoggingEvent> {
 
     private String file;
     private FancyLayout layout;
+    private FileWriter writer;
 
     @Override
     protected void append(ILoggingEvent iLoggingEvent) {
@@ -22,22 +25,26 @@ public class MyAppender extends AppenderBase<ILoggingEvent> {
 
         String logMessage = layout.doLayout(iLoggingEvent);
         try (FileWriter writer = new FileWriter(file, true)) {
-            writer.write(LocalDateTime.now() + " " + logMessage);
+            writer.write(logMessage);
         } catch (IOException e) {
-            addError("Помилка запису логу у файл " + file, e);
+            addError(file, e);
         }
     }
 
     @Override
     public void start() {
-        new File("logs").mkdirs();
         if (this.layout == null) {
-            addError("Layout не встановлено!");
+            addError("No Layout!");
             return;
         }
-        if (this.file == null) {
-            addError("File не встановлено!");
-            return;
+
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+        file = "logs/mealcraft-log-" + timestamp + ".log";
+        new java.io.File("logs").mkdirs();
+        try {
+            writer = new FileWriter(file, true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         super.start();
     }
