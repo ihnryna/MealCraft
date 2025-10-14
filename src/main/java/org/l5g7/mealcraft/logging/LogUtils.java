@@ -6,19 +6,33 @@ import org.slf4j.*;
 public class LogUtils {
     private static final Logger log = LoggerFactory.getLogger(MealCraftApplication.class);
 
-    public static void logInfo() {
-        log.info("MEALCRAFT successfully started!");
-        MDC.put("user", "iryna");
-        try {
-            log.info("Start processing request");
-            log.info("Request processed successfully");
-            Marker CRITICAL = MarkerFactory.getMarker("BIG_BOB");
-            log.warn(CRITICAL, "Something critical happened!");
+    public static void logInfo(String message) {
+        log.info(message);
+    }
 
-        } finally {
-            MDC.remove("user");
-        }
-        log.warn("Something looks off...");
-        log.error("Oops! Critical error!");
+    public static void logMDC(String key, String value) {
+        MDC.put(key, value);
+    }
+
+    public static void logRemoveKey(String key) {
+        MDC.remove(key);
+    }
+
+    public static void logWarn(String message) {
+        log.warn(message);
+    }
+
+    public static void logWarn(String message, String warnType) {
+        Marker marker = MarkerFactory.getMarker(warnType);
+        log.warn(marker, message);
+    }
+
+    public static void logError(String message) {
+        log.error(message);
+    }
+
+    public static void logError(String message, String errorType) {
+        Marker marker = MarkerFactory.getMarker(errorType);
+        log.error(marker, message);
     }
 }

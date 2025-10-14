@@ -11,7 +11,6 @@ public class MealCraftApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(MealCraftApplication.class, args);
-        LogUtils.logInfo();
     }
 
 }
