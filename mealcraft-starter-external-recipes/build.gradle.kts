@@ -5,7 +5,7 @@ plugins {
 
 group = "org.l5g7.mealcraft"
 version = "0.0.1-SNAPSHOT"
-description = "mealcraft-external-recipes-starter"
+description = "mealcraft-starter-external-recipes"
 
 java {
 	toolchain { languageVersion.set(JavaLanguageVersion.of(17)) }
@@ -21,6 +21,7 @@ dependencies {
 
 	compileOnly("org.springframework:spring-web:6.1.12")
 	compileOnly("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-
+	testImplementation("org.springframework.boot:spring-boot-starter-test:3.5.5")
+	testImplementation("org.junit.platform:junit-platform-launcher:1.13.4")
 
 }

@@ -5,8 +5,8 @@ import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
-import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.ExternalRecipe;
-import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.RecipeProvider;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

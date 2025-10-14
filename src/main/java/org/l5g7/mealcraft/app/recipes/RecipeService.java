@@ -1,6 +1,6 @@
 package org.l5g7.mealcraft.app.recipes;
 
-import org.l5g7.mealcraft.mealcraftexternalrecipesstarter.ExternalRecipeService;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
 
 import java.util.List;
 

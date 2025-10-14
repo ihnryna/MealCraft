@@ -38,7 +38,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation:3.5.5")
     implementation("io.jsonwebtoken:jjwt:0.13.0")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation(project(":mealcraft-external-recipes-starter"))
+    implementation(project(":mealcraft-starter-external-recipes"))
 }
 
 tasks.withType<Test> {

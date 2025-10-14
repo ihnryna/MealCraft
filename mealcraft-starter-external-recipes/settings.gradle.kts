@@ -1,0 +1,1 @@
+rootProject.name = "mealcraft-starter-external-recipes"

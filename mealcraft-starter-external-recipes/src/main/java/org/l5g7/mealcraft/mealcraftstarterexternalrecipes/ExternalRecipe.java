@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.mealcraftexternalrecipesstarter;
+package org.l5g7.mealcraft.mealcraftstarterexternalrecipes;
 
 public record ExternalRecipe(
         Long id,
