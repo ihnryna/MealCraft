@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.l5g7.mealcraft.app.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,8 +20,14 @@ import java.util.Collections;
 @Component
 public class JwtCookieFilter extends OncePerRequestFilter {
 
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
+
     @Autowired
-    private  JwtService jwtService;
+    public JwtCookieFilter(JwtService jwtService, UserRepository userRepository) {
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -33,6 +40,11 @@ public class JwtCookieFilter extends OncePerRequestFilter {
                     String token = cookie.getValue();
                     if (jwtService.validateToken(token)) {
                         String username = jwtService.getUsernameFromToken(token);
+
+                        if (username == null || userRepository.findByUsername(username).isEmpty()) {
+                            filterChain.doFilter(request, response);
+                            return;
+                        }
 
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(
