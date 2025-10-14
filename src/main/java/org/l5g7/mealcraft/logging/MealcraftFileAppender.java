@@ -5,18 +5,16 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import lombok.Setter;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Setter
-public class MyAppender extends AppenderBase<ILoggingEvent> {
+public class MealcraftFileAppender extends AppenderBase<ILoggingEvent> {
 
     private String file;
-    private FancyLayout layout;
+    private MealcraftLayout layout;
     private FileWriter writer;
 
     @Override
