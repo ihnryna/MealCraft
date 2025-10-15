@@ -1,6 +1,9 @@
 package org.l5g7.mealcraft.app.user;
 
 import jakarta.validation.Valid;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
