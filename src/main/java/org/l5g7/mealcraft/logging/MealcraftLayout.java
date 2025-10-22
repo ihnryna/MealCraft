@@ -32,9 +32,12 @@ public class MealcraftLayout extends LayoutBase<ILoggingEvent> {
                     .map(Marker::getName)
                     .collect(Collectors.joining(","));
 
-            if (markers.contains("CRITICAL")) emoji = "🔥";
-            else if (markers.contains("WARN")) emoji = "⚠️";
-            else if (markers.contains("INFO")) emoji = "ℹ️";
+            for (LogMarker logMarker : LogMarker.values()) {
+                if (markers.contains(logMarker.getMarkerName())) {
+                    emoji = logMarker.getEmoji();
+                    break;
+                }
+            }
         }
 
         String message = iLoggingEvent.getFormattedMessage();

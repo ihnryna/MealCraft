@@ -32,11 +32,14 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())               // <-- вимкнути CSRF
                 .headers(h -> h.frameOptions(f -> f.sameOrigin())) // для H2 console
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/api/**").permitAll()   // або .authenticated() якщо вже є логін
-                        .anyRequest().permitAll()
+                        .requestMatchers("/auth/register").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
+                        .anyRequest().authenticated()
                 )
+                .addFilterBefore(jwtCookieFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults());
         return http.build();
     }
