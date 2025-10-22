@@ -39,7 +39,7 @@ public class ProductServiceImpl implements ProductService {
                 .id(entity.getId())
                 .name(entity.getName())
                 .defaultUnitId(entity.getDefaultUnit().getId())
-                .ownerUserId(entity.getOwnerUser().getId())
+                .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
                 .imageUrl(entity.getImageUrl())
                 .build()).toList();
     }
@@ -64,13 +64,20 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void createProduct(ProductDto productDto) {
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(productDto.getDefaultUnitId())));
-        User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
         Product entity = Product.builder()
                 .name(productDto.getName())
                 .imageUrl(productDto.getImageUrl())
                 .defaultUnit(unit)
-                .ownerUser(user)
                 .build();
+        if(productDto.getOwnerUserId()!=null){
+            User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
+            entity = Product.builder()
+                    .name(productDto.getName())
+                    .imageUrl(productDto.getImageUrl())
+                    .defaultUnit(unit)
+                    .ownerUser(user)
+                    .build();
+        }
         productRepository.save(entity);
     }
 

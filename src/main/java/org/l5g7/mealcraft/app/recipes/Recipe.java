@@ -9,6 +9,7 @@ import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.user.User;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -31,7 +32,7 @@ public class Recipe {
 
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     private String imageUrl;
 

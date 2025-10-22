@@ -10,6 +10,7 @@ import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,9 +83,12 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public void createRecipe(RecipeDto recipeDto) {
         User user = userRepository.findById(recipeDto.getOwnerUserId()).orElseThrow();
-        Recipe baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
-
+        Recipe baseRecipe = null;
+        if(recipeDto.getBaseRecipeId()!=null){
+            baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
+                    .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
+        }
+        
         List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
 
         if (ingredients.size() != recipeDto.getIngredientsId().size()) {
@@ -96,7 +100,7 @@ public class RecipeServiceImpl implements RecipeService {
                 .ownerUser(user)
                 .imageUrl(recipeDto.getImageUrl())
                 .baseRecipe(baseRecipe)
-                .createdAt(recipeDto.getCreatedAt())
+                .createdAt(new Date())
                 .ingredients(ingredients)
                 .build();
         recipeRepository.save(entity);

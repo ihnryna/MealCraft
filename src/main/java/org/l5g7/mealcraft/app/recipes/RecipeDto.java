@@ -6,9 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.l5g7.mealcraft.app.products.ProductDto;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -29,7 +29,7 @@ public class RecipeDto {
     private Long baseRecipeId;
 
   //  @NotNull
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     private String imageUrl;
 
