@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.5.5"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.springdoc.openapi-gradle-plugin") version "1.9.0" //плагінн додає задачу generateOpenApiDocs
 }
 
 group = "org.L5-G7"
@@ -38,8 +39,26 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation:3.5.5")
     implementation("io.jsonwebtoken:jjwt:0.13.0")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation(project(":mealcraft-starter-external-recipes"))
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+// налаштування плагіна для генерації OpenAPI документації
+openApi {
+    apiDocsUrl.set("http://localhost:8080/v3/api-docs")
+    outputDir.set(file("$projectDir/openapi"))
+    outputFileName.set("mealcraft-openapi.json")
+}
+
+// Ми робимо таск 'build' залежним від 'generateOpenApiDocs'.
+// Це гарантує, що документація буде згенерована перед тим, як проєкт спакується в .jar.
+//Якщо генерація документації впаде, весь 'build' зупиниться.
+// Це запобіжник, який не дає зламаній доці потрапити у збірку.
+tasks.named("build") {
+    dependsOn("generateOpenApiDocs")
+}
+

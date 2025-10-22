@@ -28,7 +28,7 @@ public class RecipeDto {
 
     private Long baseRecipeId;
 
-    @NotNull
+  //  @NotNull
     private LocalDateTime createdAt;
 
     private String imageUrl;
