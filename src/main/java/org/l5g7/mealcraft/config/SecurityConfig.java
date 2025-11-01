@@ -30,14 +30,16 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain security(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())               // <-- вимкнути CSRF
+                .csrf(AbstractHttpConfigurer::disable)               // <-- вимкнути CSRF
                 .headers(h -> h.frameOptions(f -> f.sameOrigin())) // для H2 console
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/login").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().hasAnyRole("ADMIN", "USER")
+
                 )
                 .addFilterBefore(jwtCookieFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults());
