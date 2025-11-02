@@ -44,6 +44,12 @@ body {
     width: 40px;
     height: 40px;
     margin-left: 40px;
+    border-radius: 20%;
+    transition: transform 0.3s ease;
+}
+
+.craft-icon:hover {
+    transform: scale(1.2);
 }
 
 .header-right {
@@ -99,8 +105,25 @@ body {
     padding: 10px;
 }
 
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    margin-bottom: 8px;
+}
+
+.checked {
+    text-decoration: line-through;
+    color: gray;
+}
+
+
 .content {
     grid-area: content;
     padding: 20px;
     overflow-y: auto;
 }
+
