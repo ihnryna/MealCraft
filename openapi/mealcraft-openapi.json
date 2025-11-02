@@ -715,23 +715,13 @@
           "auth-controller"
         ],
         "operationId": "logout",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "string"
+                  "type": "object"
                 }
               }
             }
@@ -870,8 +860,7 @@
             "enum": [
               "ADMIN",
               "USER"
-            ],
-            "minLength": 1
+            ]
           },
           "avatarUrl": {
             "type": "string"

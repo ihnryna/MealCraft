@@ -6,12 +6,14 @@ import jakarta.validation.Valid;
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,15 +36,26 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginUserDto loginUserDto, HttpServletResponse response) {
 
-        String token = authService.login(loginUserDto);
+        try {
+            String token = authService.login(loginUserDto);
 
-        Cookie cookie = new Cookie(authToken, token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60); // 1 day
-        response.addCookie(cookie);
+            Cookie cookie = new Cookie(authToken, token);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(24 * 60 * 60); // 1 day
+            response.addCookie(cookie);
 
-        return ResponseEntity.ok("Logged in successfully");
+            return ResponseEntity.ok("Logged in successfully");
+        } catch (RuntimeException e) {
+            String errorMsg;
+            if (e.getMessage().equals("User not found") || e.getMessage().equals("Invalid password")) {
+                errorMsg = "Wrong login or password";
+            } else {
+                errorMsg = "Internal error";
+            }
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", errorMsg));
+        }
     }
 
     @PostMapping("/logout")
