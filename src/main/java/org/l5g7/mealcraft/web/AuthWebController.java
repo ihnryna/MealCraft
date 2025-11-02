@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.app.auth.web;
+package org.l5g7.mealcraft.web;
 
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -53,7 +53,8 @@ public class AuthWebController {
         } catch (Exception e) {
             model.addAttribute("error", "No such user");
             model.addAttribute("email", email);
-            return "redirect:/mealcraft/login?error=true&email=" + email;        }
+            return "redirect:/mealcraft/login?error=true&email=" + email;
+        }
     }
 }
 

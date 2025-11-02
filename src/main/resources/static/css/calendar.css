@@ -1,0 +1,34 @@
+.calendar {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.calendar th, .calendar td {
+    border: 1px solid #ccc;
+    width: 14.28%;
+    height: 100px;
+    text-align: right;
+    vertical-align: top;
+    padding: 5px;
+    position: relative;
+}
+
+.day-cell {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.day-cell:hover {
+    background-color: #f0f0f0;
+}
+
+/* для додаткового контенту всередині дня */
+.day-cell .events {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    font-size: 0.8em;
+    color: #555;
+}
