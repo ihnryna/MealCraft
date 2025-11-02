@@ -22,7 +22,13 @@ public class AuthWebController {
     }
 
     @GetMapping("/login")
-    public String showLoginPage() {
+    public String showLoginPage(@RequestParam(required = false) String error,
+                                @RequestParam(required = false) String email,
+                                Model model) {
+        if (error != null)
+            model.addAttribute("error", "No such user");
+        if (email != null)
+            model.addAttribute("email", email);
         return "login";
     }
 
@@ -46,8 +52,8 @@ public class AuthWebController {
 
         } catch (Exception e) {
             model.addAttribute("error", "No such user");
-            return "login";
-        }
+            model.addAttribute("email", email);
+            return "redirect:/mealcraft/login?error=true&email=" + email;        }
     }
 }
 
