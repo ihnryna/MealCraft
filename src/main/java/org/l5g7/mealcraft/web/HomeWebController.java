@@ -1,6 +1,12 @@
 package org.l5g7.mealcraft.web;
 
 import org.l5g7.mealcraft.app.shoppingItem.ShoppingItemDto;
+import org.l5g7.mealcraft.app.user.User;
+import org.l5g7.mealcraft.logging.LogUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -8,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestClient;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -16,6 +23,12 @@ import java.util.*;
 
 @Controller
 public class HomeWebController {
+
+    private final RestClient internalApiClient;
+
+    public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
+        this.internalApiClient = internalApiClient;
+    }
 
     @GetMapping("/mealcraft/home")
     public String showHome(Model model) {
@@ -42,6 +55,7 @@ public class HomeWebController {
         }
 
 
+        //TODO: fix anonymousUser
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         model.addAttribute("username", username);
@@ -51,11 +65,13 @@ public class HomeWebController {
         model.addAttribute("weeks", weeks);
         model.addAttribute("title", "MealCraft — Головна");
 
-        //TODO: change to actual shoppingItems from db
-        ShoppingItemDto[] shoppingItems = {new ShoppingItemDto(1L,1L,"egg",1L,1L,3,true),
-                new ShoppingItemDto(2L,1L,"milk",2L,1L,3,true),
-                new ShoppingItemDto(3L,1L,"bread",3L,1L,3,false)};
+        //TODO: change to actual userId from db
+        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
+                .uri("/shopping-items/getUserShoppingItems/{id}", 2L)
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {});
 
+        List<ShoppingItemDto> shoppingItems = response.getBody();
 
         model.addAttribute("shoppingItems", shoppingItems);
 
@@ -64,10 +80,12 @@ public class HomeWebController {
 
     @PostMapping("/mealcraft/shopping/toggle")
     public String toggleChecked(@RequestParam Long id) {
-        /*shoppingItemRepository.findById(id).ifPresent(item -> {
-            item.setChecked(!item.isChecked());
-            shoppingItemRepository.save(item);
-        });*/
+        ShoppingItemDto dto = new ShoppingItemDto();
+        dto.setStatus(true);
+        internalApiClient.patch()
+                .uri("/shopping-items/toggle/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
         return "redirect:/mealcraft/home";
     }
 }
