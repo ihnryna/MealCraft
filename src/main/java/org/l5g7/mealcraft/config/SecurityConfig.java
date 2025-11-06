@@ -37,6 +37,18 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/static/**").permitAll()
+                        .requestMatchers(
+                                "/css/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/templates/**"
+                        ).permitAll()
+                        .requestMatchers("/mealcraft/login", "/mealcraft/register").permitAll()
+                        //.requestMatchers("/mealcraft/**").hasAnyRole("ADMIN","USER")
+                        .requestMatchers("/mealcraft/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().hasAnyRole("ADMIN", "USER")
 

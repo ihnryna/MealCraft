@@ -3,6 +3,7 @@ package org.l5g7.mealcraft.app.user;
 import jakarta.persistence.*;
 import lombok.*;
 import org.l5g7.mealcraft.app.notification.Notification;
+import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.enums.Role;
 
 import java.util.List;
