@@ -1,4 +1,30 @@
 <div th:fragment="content">
-    <h2>Shopping items</h2>
-    <p>Here you can manage all shopping items.</p>
+    <h2 th:text="${title}">Users</h2>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>User owner id</th>
+            <th>Product id</th>
+            <th>Required qty</th>
+            <th>Status</th>
+            <th>Unit name</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="s : ${data}">
+            <td th:text="${s.id}"></td>
+            <td th:text="${s.name}"></td>
+            <td th:text="${s.userOwnerId}"></td>
+            <td th:text="${s.productId}"></td>
+            <td th:text="${s.requiredQty}"></td>
+            <td th:text="${s.status}"></td>
+            <td th:text="${s.unitName}"></td>
+        </tr>
+        </tbody>
+    </table>
+
 </div>

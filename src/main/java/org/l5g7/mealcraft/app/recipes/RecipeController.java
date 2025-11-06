@@ -20,6 +20,11 @@ public class RecipeController {
         this.recipeService = recipeService;
     }
 
+    @GetMapping
+    public List<RecipeDto> getAllRecipes() {
+        return recipeService.getAllRecipes();
+    }
+
     @GetMapping("/{id}")
     public RecipeDto getRecipe(@PathVariable Long id) {
        return recipeService.getRecipeById(id);

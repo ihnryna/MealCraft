@@ -1,4 +1,31 @@
 <div th:fragment="content">
-  <h2>Products</h2>
-  <p>Here you can manage all products.</p>
+  <h2 th:text="${title}">Users</h2>
+
+  <table class="table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Default unit id</th>
+      <th>User owner id</th>
+      <th>Image</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="p : ${data}">
+      <td th:text="${p.id}"></td>
+      <td th:text="${p.name}"></td>
+      <td th:text="${p.defaultUnitId}"></td>
+      <td th:text="${p.ownerUserId}"></td>
+      <td>
+        <img th:if="${p.imageUrl != null}"
+             th:src="${p.imageUrl}"
+             alt="product image"
+             height="50">
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
 </div>

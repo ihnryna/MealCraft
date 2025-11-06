@@ -1,5 +1,7 @@
 package org.l5g7.mealcraft.app.notification;
 
+import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
@@ -20,6 +22,18 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationServiceImpl(NotificationRepository notificationRepository, UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    public List<NotificationResponseDto> getAllNotifications() {
+        List<Notification> entities = notificationRepository.findAll();
+
+        return entities.stream().map(entity -> NotificationResponseDto.builder()
+                .id(entity.getId())
+                .text(entity.getText())
+                .createdAt(String.valueOf(entity.getCreatedAt()))
+                .userId(entity.getUser().getId())
+                .build()).toList();
     }
 
     @Override
