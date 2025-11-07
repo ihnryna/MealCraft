@@ -47,8 +47,7 @@ public class SecurityConfig {
                                 "/templates/**"
                         ).permitAll()
                         .requestMatchers("/mealcraft/login", "/mealcraft/register").permitAll()
-                        //.requestMatchers("/mealcraft/**").hasAnyRole("ADMIN","USER")
-                        .requestMatchers("/mealcraft/**").permitAll()
+                        .requestMatchers("/mealcraft/**").hasAnyRole("ADMIN","USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().hasAnyRole("ADMIN", "USER")
 
