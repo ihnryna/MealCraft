@@ -9,4 +9,8 @@ public class PasswordHasher {
         //тут заюзаємо який алгоритм хешування
         return "hashed_" + password;
     }
+
+    public boolean matches(String rawPassword, String hashedPassword) {
+        return hashedPassword.equals(hashPassword(rawPassword));
+    }
 }

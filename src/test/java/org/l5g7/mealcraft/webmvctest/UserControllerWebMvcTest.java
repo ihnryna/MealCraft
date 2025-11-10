@@ -2,6 +2,9 @@ package org.l5g7.mealcraft.webmvctest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.l5g7.mealcraft.app.auth.security.JwtCookieFilter;
 import org.l5g7.mealcraft.app.user.UserController;
 import org.l5g7.mealcraft.app.user.UserRequestDto;
@@ -13,10 +16,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -56,8 +61,10 @@ class UserControllerWebMvcTest {
 
         when(userService.getUserById(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/users/{id}", 1))
+        mockMvc.perform(get("/users/{id}", 1)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.username", is("vika")))
                 .andExpect(jsonPath("$.email", is("vika@mealcraft.org")))
@@ -69,7 +76,7 @@ class UserControllerWebMvcTest {
     }
 
     @Test
-    void getAllUsers_returns200_andJsonArray_withAllFields() throws Exception {
+    void getAllUsers_returns200_andArray() throws Exception {
         List<UserResponseDto> list = List.of(
                 UserResponseDto.builder()
                         .id(1L)
@@ -88,25 +95,32 @@ class UserControllerWebMvcTest {
         );
         when(userService.getAllUsers()).thenReturn(list);
 
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/users")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()", is(2)))
                 .andExpect(jsonPath("$[0].id", is(1)))
                 .andExpect(jsonPath("$[0].username", is("vika")))
                 .andExpect(jsonPath("$[0].email", is("vika@example.com")))
                 .andExpect(jsonPath("$[0].role", is("ADMIN")))
                 .andExpect(jsonPath("$[0].avatarUrl", nullValue()))
+                .andExpect(jsonPath("$.password").doesNotExist())
+
                 .andExpect(jsonPath("$[1].id", is(2)))
                 .andExpect(jsonPath("$[1].username", is("ira")))
                 .andExpect(jsonPath("$[1].email", is("ira@example.com")))
                 .andExpect(jsonPath("$[1].role", is("USER")))
-                .andExpect(jsonPath("$[1].avatarUrl", nullValue()));
+                .andExpect(jsonPath("$[1].avatarUrl", nullValue()))
+                .andExpect(jsonPath("$.password").doesNotExist());
+
 
         verify(userService).getAllUsers();
     }
 
     @Test
-    void postUser_withValidPayload_returns200() throws Exception {
+    void postUser_withValidPayload_returns200_andDelegatesToService() throws Exception {
         UserRequestDto request = UserRequestDto.builder()
                 .username("vika")
                 .email("vika@mealcraft.org")
@@ -116,7 +130,8 @@ class UserControllerWebMvcTest {
                 .build();
 
         mockMvc.perform(post("/users")
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
@@ -124,7 +139,7 @@ class UserControllerWebMvcTest {
     }
 
     @Test
-    void putUser_withValidPayload_returns200() throws Exception {
+    void putUser_withValidPayload_returns200_andDelegatesToService() throws Exception {
         UserRequestDto update = UserRequestDto.builder()
                 .username("ira")
                 .email("ira@mealcraft.org")
@@ -134,7 +149,8 @@ class UserControllerWebMvcTest {
                 .build();
 
         mockMvc.perform(put("/users/{id}", 1)
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk());
 
@@ -142,8 +158,8 @@ class UserControllerWebMvcTest {
     }
 
     @Test
-    void patchUser_withValidPayload_returns200() throws Exception {
-        UserRequestDto patch = UserRequestDto.builder()
+    void patchUser_withValidPayload_returns200_andDelegatesToService() throws Exception {
+        UserRequestDto patchDto = UserRequestDto.builder()
                 .username("ira")
                 .email("ira@mealcraft.org")
                 .password("ira_pass")
@@ -152,288 +168,161 @@ class UserControllerWebMvcTest {
                 .build();
 
         mockMvc.perform(patch("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(patch)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchDto)))
                 .andExpect(status().isOk());
 
-        verify(userService).patchUser(1L, patch);
+        verify(userService).patchUser(1L, patchDto);
     }
 
     @Test
-    void deleteUser_returns200() throws Exception {
-        mockMvc.perform(delete("/users/{id}", 5))
+    void deleteUser_returns200_andDelegatesToService() throws Exception {
+        mockMvc.perform(delete("/users/{id}", 5)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         verify(userService).deleteUserById(5L);
     }
 
-    @Test
-    void postUser_withBlankUsername_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("") // username blank
-                .email("vika@mealcraft.org")
-                .password("vika123")
-                .role(Role.ADMIN)
-                .avatarUrl(null)
-                .build();
-
+    @ParameterizedTest
+    @MethodSource("invalidPostRequests")
+    void postUser_withInvalidData_returns400_andDoesNotCallService(UserRequestDto invalid) throws Exception {
         mockMvc.perform(post("/users")
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService);
     }
 
-    @Test
-    void postUser_withBlankEmail_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("vika")
-                .email("") // email blank
-                .password("vika123")
-                .role(Role.ADMIN)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void postUser_withInvalidEmail_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("vika")
-                .email("email") // email not correct
-                .password("vika123")
-                .role(Role.ADMIN)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void postUser_withBlankPassword_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("vika")
-                .email("vika@mealcraft.org")
-                .password("") // password blank
-                .role(Role.ADMIN)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void postUser_withNullRole_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("vika")
-                .email("vika@mealcraft.org")
-                .password("vika123")
-                .role(null) // role null
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void putUser_withBlankUsername_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("") // username blank
-                .email("ira@mealcraft.org")
-                .password("ira_pass")
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
+    @ParameterizedTest
+    @MethodSource("invalidPutRequests")
+    void putUser_withInvalidData_returns400_andDoesNotCallService(UserRequestDto invalid) throws Exception {
         mockMvc.perform(put("/users/{id}", 1)
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService);
     }
 
-    @Test
-    void putUser_withBlankEmail_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("") // email blank
-                .password("ira_pass")
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(put("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void putUser_withInvalidEmail_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("ira_at_mealcraft") // email not correct
-                .password("ira_pass")
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(put("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void putUser_withBlankPassword_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("ira@mealcraft.org")
-                .password("") // password blank
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(put("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void putUser_withNullRole_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("ira@mealcraft.org")
-                .password("ira_pass")
-                .role(null) // role null
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(put("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void patchUser_withBlankUsername_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("") // username blank
-                .email("ira@mealcraft.org")
-                .password("ira_pass")
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
+    @ParameterizedTest
+    @MethodSource("invalidPatchRequests")
+    void patchUser_withInvalidData_returns400_andDoesNotCallService(UserRequestDto invalid) throws Exception {
         mockMvc.perform(patch("/users/{id}", 1)
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService);
     }
 
-    @Test
-    void patchUser_withBlankEmail_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("") // email blank
-                .password("ira_pass")
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(patch("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
+    static Stream<Arguments> invalidPostRequests() {
+        return Stream.of(
+                Arguments.of(UserRequestDto.builder()
+                        .username("")
+                        .email("vika@mealcraft.org")
+                        .password("vika123")
+                        .role(Role.ADMIN)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("vika")
+                        .email("")
+                        .password("vika123")
+                        .role(Role.ADMIN)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("vika")
+                        .email("invalid-email")
+                        .password("vika123")
+                        .role(Role.ADMIN)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("vika")
+                        .email("vika@mealcraft.org")
+                        .password("")
+                        .role(Role.ADMIN)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("vika")
+                        .email("vika@mealcraft.org")
+                        .password("vika123")
+                        .role(null)
+                        .build())
+        );
     }
 
-    @Test
-    void patchUser_withInvalidEmail_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("ira@@mealcraft.org") // email not correct
-                .password("ira_pass")
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(patch("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
+    static Stream<Arguments> invalidPutRequests() {
+        return Stream.of(
+                Arguments.of(UserRequestDto.builder()
+                        .username("")
+                        .email("ira@mealcraft.org")
+                        .password("ira123")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("")
+                        .password("ira123")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("ira_at_mealcraft")
+                        .password("ira123")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("ira@mealcraft.org")
+                        .password("")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("ira@mealcraft.org")
+                        .password("ira123")
+                        .role(null)
+                        .build())
+        );
     }
 
-    @Test
-    void patchUser_withBlankPassword_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("ira@mealcraft.org")
-                .password("") // password blank
-                .role(Role.USER)
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(patch("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void patchUser_withNullRole_returns400() throws Exception {
-        UserRequestDto invalid = UserRequestDto.builder()
-                .username("ira")
-                .email("ira@mealcraft.org")
-                .password("ira_pass")
-                .role(null) // role null
-                .avatarUrl(null)
-                .build();
-
-        mockMvc.perform(patch("/users/{id}", 1)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
+    static Stream<Arguments> invalidPatchRequests() {
+        return Stream.of(
+                Arguments.of(UserRequestDto.builder()
+                        .username("")
+                        .email("ira@mealcraft.org")
+                        .password("ira123")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("")
+                        .password("ira123")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("ira@@mealcraft.org")
+                        .password("ira123")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("ira@mealcraft.org")
+                        .password("")
+                        .role(Role.USER)
+                        .build()),
+                Arguments.of(UserRequestDto.builder()
+                        .username("ira")
+                        .email("ira@mealcraft.org")
+                        .password("ira123")
+                        .role(null)
+                        .build())
+        );
     }
 }
