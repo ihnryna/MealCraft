@@ -168,7 +168,7 @@ class UserIntegrationTest {
     }
 
     @Test
-    void updateUser_put_updatesUsernameEmailPasswordRoleAvatar_returns200() {
+    void updateUser_returns200_andUpdates() {
         User u = User.builder()
                 .username("vika")
                 .email("vika@mealcraft.org")
@@ -209,7 +209,7 @@ class UserIntegrationTest {
     }
 
     @Test
-    void patchUser_updatesPasswordRoleAvatar_preservesUsernameEmail_returns200() {
+    void patchUser_returns200_andPartiallyUpdates() {
         User u = User.builder()
                 .username("vika")
                 .email("vika@mealcraft.org")
