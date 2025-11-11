@@ -15,6 +15,17 @@
                 <a href="/mealcraft/settings">Settings</a>
                 <a href="/mealcraft/profile">Profile</a>
                 <a href="/logout">Logout</a>
+                <div th:if="${#authorization.expression('hasRole(''ROLE_PREMIUM_USER'')')}"
+                     class="color-strip">
+                    <form method="post" action="/mealcraft/user/color" class="color-options">
+                        <button name="color" value="#ff6b6b" class="color-dot" style="background:#ff6b6b"></button>
+                        <button name="color" value="#ffd93d" class="color-dot" style="background:#ffd93d"></button>
+                        <button name="color" value="#6bcB77" class="color-dot" style="background:#6bcB77"></button>
+                        <button name="color" value="#4d96ff" class="color-dot" style="background:#4d96ff"></button>
+                        <button name="color" value="#c77dff" class="color-dot" style="background:#c77dff"></button>
+                        <button name="color" value="#222" class="color-dot" style="background:#222"></button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

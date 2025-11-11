@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@RequestMapping("/mealcraft")
+@RequestMapping("/mealcraft/admin")
 public class AdminPageWebController {
 
     private final RestClient internalApiClient;
@@ -39,7 +39,7 @@ public class AdminPageWebController {
         this.internalApiClient = internalApiClient;
     }
 
-    @GetMapping("/admin-page")
+    @GetMapping("/home")
     public String showHome(Model model) {
         return loadUsers(model);
     }
