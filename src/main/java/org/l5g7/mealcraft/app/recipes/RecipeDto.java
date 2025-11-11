@@ -17,7 +17,6 @@ import java.util.List;
 @Builder
 public class RecipeDto {
 
-    @NotNull
     private Long id;
 
     @NotBlank
