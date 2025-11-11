@@ -1,10 +1,6 @@
 package org.l5g7.mealcraft.app.user;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +24,6 @@ public class UserController {
         return userService.getUserById(id);
     }
 
-    @PreAuthorize("permitAll()")
     @GetMapping
     public List<UserResponseDto> getAllUsers() {
         return userService.getAllUsers();

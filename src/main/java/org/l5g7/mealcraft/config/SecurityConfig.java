@@ -49,10 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/mealcraft/login", "/mealcraft/register").permitAll()
                         .requestMatchers("/mealcraft/**").hasAnyRole("ADMIN","USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/users").permitAll()// для тестування spring-security
                         .anyRequest().hasAnyRole("ADMIN", "USER")
-
-
                 )
                 .addFilterBefore(jwtCookieFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults());
