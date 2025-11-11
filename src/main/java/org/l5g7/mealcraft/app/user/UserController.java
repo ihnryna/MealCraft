@@ -1,5 +1,6 @@
 package org.l5g7.mealcraft.app.user;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -26,6 +28,7 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @PreAuthorize("permitAll()")
     @GetMapping
     public List<UserResponseDto> getAllUsers() {
         return userService.getAllUsers();
@@ -45,6 +48,7 @@ public class UserController {
     public void patchUser(@PathVariable Long id, @RequestBody @Valid UserRequestDto user) {
         userService.patchUser(id, user);
     }
+
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {

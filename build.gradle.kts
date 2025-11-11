@@ -43,6 +43,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    testImplementation("org.springframework.security:spring-security-test:6.5.6")
 
 
 }
