@@ -16,6 +16,11 @@ public class NotificationController {
         this.notificationService = notificationService;
     }
 
+    @GetMapping
+    public List<NotificationResponseDto> getAllNotifications() {
+        return notificationService.getAllNotifications();
+    }
+
     @GetMapping("/getUserNotifications/{id}")
     public List<NotificationResponseDto> getUserNotifications(@PathVariable Long id) {
         return notificationService.getUserNotifications(id);

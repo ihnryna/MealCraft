@@ -1,5 +1,6 @@
 package org.l5g7.mealcraft.web;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/mealcraft")
@@ -35,6 +38,7 @@ public class AuthWebController {
     @PostMapping("/login")
     public String doLogin(@RequestParam String email,
                           @RequestParam String password,
+                          HttpServletResponse servletResponse,
                           Model model) {
         try {
             LoginUserDto dto = new LoginUserDto();
@@ -47,9 +51,13 @@ public class AuthWebController {
                     .retrieve()
                     .toBodilessEntity();
 
+            List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+            if (setCookies != null) {
+                servletResponse.addHeader(HttpHeaders.SET_COOKIE, setCookies.get(0));
+            }
+
             // наскільки я розумію, якщо не HttpStatus.OK, то ми випадаємо по Exception (RestClient автоматично кидає Exception при будь-якому статусі >= 400)
             return "redirect:/mealcraft/home";
-
         } catch (Exception e) {
             model.addAttribute("error", "No such user");
             model.addAttribute("email", email);

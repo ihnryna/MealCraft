@@ -31,7 +31,7 @@ public class DataInitializer {
                         .email("admin@mealcraft.org")
                         .password(encoder.hashPassword("admin123"))
                         .role(Role.ADMIN)
-                        .avatarUrl(null)
+                        .avatarUrl("https://images.unsplash.com/photo-1495745966610-2a67f2297e5e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGhvdG9ncmFwaGVyfGVufDB8fDB8fHww&fm=jpg&q=60&w=3000")
                         .build();
 
                 User user = User.builder()

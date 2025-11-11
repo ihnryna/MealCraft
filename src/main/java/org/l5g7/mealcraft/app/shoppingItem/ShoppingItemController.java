@@ -16,6 +16,12 @@ public class ShoppingItemController {
         this.shoppingItemService = shoppingItemService;
     }
 
+    @GetMapping
+    public List<ShoppingItemDto> getAllShoppingItem() {
+        return shoppingItemService.getAllShoppingItems();
+    }
+
+
     @GetMapping("/{id}")
     public ShoppingItemDto getShoppingItem(@PathVariable Long id) {
        return shoppingItemService.getShoppingItemById(id);
