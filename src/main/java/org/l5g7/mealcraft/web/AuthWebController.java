@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +60,16 @@ public class AuthWebController {
             }
 
             // наскільки я розумію, якщо не HttpStatus.OK, то ми випадаємо по Exception (RestClient автоматично кидає Exception при будь-якому статусі >= 400)
+
+            /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            System.out.println(auth.getAuthorities());
+            if(auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
+                return "redirect:/mealcraft/admin/home";
+            } else {*/
+
             return "redirect:/mealcraft/home";
+
+
         } catch (Exception e) {
             model.addAttribute("error", "No such user");
             model.addAttribute("email", email);

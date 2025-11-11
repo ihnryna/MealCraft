@@ -10,7 +10,7 @@
     <!-- Font -->
     <link href="https://fonts.cdnfonts.com/css/public-pixel" rel="stylesheet">
 </head>
-<body>
+<body th:data-premium-color="${session.themeColor} ?: '#222'">
 <div class="layout">
 
     <!-- Header -->
@@ -25,7 +25,13 @@
         <table class="calendar">
             <thead>
             <tr>
-                <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
             </tr>
             </thead>
             <tbody>
@@ -40,6 +46,12 @@
     </main>
 
 
+    <script>
+        document.documentElement.style.setProperty(
+            "--premium-color",
+            document.body.dataset.premiumColor
+        );
+    </script>
 </div>
 </body>
 </html>

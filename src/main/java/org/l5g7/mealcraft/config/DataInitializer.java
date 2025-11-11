@@ -42,8 +42,17 @@ public class DataInitializer {
                         .avatarUrl(null)
                         .build();
 
+                User premiumUser = User.builder()
+                        .username("ira")
+                        .email("ira@mealcraft.org")
+                        .password(encoder.hashPassword("ira123"))
+                        .role(Role.PREMIUM_USER)
+                        .avatarUrl(null)
+                        .build();
+
                 userRepository.save(admin);
                 userRepository.save(user);
+                userRepository.save(premiumUser);
 
                 LogUtils.logInfo("Default users created: admin & user");
                 LogUtils.logInfo(user.getId()+"");
