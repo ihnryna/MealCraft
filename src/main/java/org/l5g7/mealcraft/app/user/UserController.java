@@ -1,15 +1,13 @@
 package org.l5g7.mealcraft.app.user;
 
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -45,6 +43,7 @@ public class UserController {
     public void patchUser(@PathVariable Long id, @RequestBody @Valid UserRequestDto user) {
         userService.patchUser(id, user);
     }
+
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
