@@ -34,7 +34,7 @@ class SecurityTests {
 
 
     @Test
-    void anonymous_can_get_all_users() throws Exception {
+    void anonymous_can_get_to_public_address() throws Exception {
         mockMvc.perform(get("/mealcraft/login"))
                 .andExpect(status().isOk());
     }
