@@ -6,10 +6,8 @@ import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
-import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -53,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
                     entity.getId(),
                     entity.getName(),
                     entity.getDefaultUnit().getId(),
-                    entity.getOwnerUser().getId(),
+                    entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null,
                     entity.getImageUrl()
             );
         } else {
@@ -69,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrl(productDto.getImageUrl())
                 .defaultUnit(unit)
                 .build();
-        if(productDto.getOwnerUserId()!=null){
+        if (productDto.getOwnerUserId() != null) {
             User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
             entity = Product.builder()
                     .name(productDto.getName())
@@ -87,8 +85,14 @@ public class ProductServiceImpl implements ProductService {
         if (existing.isEmpty()) {
             throw new EntityDoesNotExistException("Product", String.valueOf(id));
         }
-        User user = userRepository.findById(productDto.getOwnerUserId())
-                .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
+        User user;
+        if (productDto.getOwnerUserId() != null) {
+            user = userRepository.findById(productDto.getOwnerUserId())
+                    .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
+        } else {
+            user = null;
+        }
+
 
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId())
                 .orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(productDto.getDefaultUnitId())));
@@ -115,13 +119,13 @@ public class ProductServiceImpl implements ProductService {
             if (patch.getImageUrl() != null) {
                 product.setImageUrl(patch.getImageUrl());
             }
-            if(patch.getDefaultUnitId() != null){
+            if (patch.getDefaultUnitId() != null) {
                 product.setDefaultUnit(unitRepository.findById(patch.getDefaultUnitId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(patch.getDefaultUnitId()))));
+                        .orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(patch.getDefaultUnitId()))));
             }
-            if(patch.getOwnerUserId()!=null){
+            if (patch.getOwnerUserId() != null) {
                 product.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
-                .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(patch.getOwnerUserId()))));
+                        .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(patch.getOwnerUserId()))));
             }
             productRepository.save(product);
         });

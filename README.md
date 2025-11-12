@@ -76,3 +76,4 @@ To run the project locally, follow these steps.
     -   **Username**: `sa`
     -   **Password**: `sa`
 -   **Application Properties**: The main configuration is located in the `src/main/resources/application.properties` file.
+-   **Swagger**: You can access the at: `http://localhost:8080/swagger-ui/index.html`
