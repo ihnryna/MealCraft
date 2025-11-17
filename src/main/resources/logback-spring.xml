@@ -10,6 +10,18 @@
         <layout class="org.l5g7.mealcraft.logging.MealcraftLayout"/>
     </appender>
 
+    <appender name="EXCEPTIONS" class="org.l5g7.mealcraft.logging.ExceptionFileAppender"/>
+
+    <appender name="PERFORMANCE" class="org.l5g7.mealcraft.logging.PerformanceFileAppender"/>
+
+    <logger name="exceptionLogger" level="ERROR" additivity="false">
+        <appender-ref ref="EXCEPTIONS"/>
+    </logger>
+
+    <logger name="performanceLogger" level="INFO" additivity="false">
+        <appender-ref ref="PERFORMANCE"/>
+    </logger>
+
     <root level="info">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="MyAppender" />
