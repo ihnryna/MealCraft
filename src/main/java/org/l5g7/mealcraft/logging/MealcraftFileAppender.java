@@ -22,8 +22,8 @@ public class MealcraftFileAppender extends AppenderBase<ILoggingEvent> {
         if (!isStarted()) return;
 
         String logMessage = layout.doLayout(iLoggingEvent);
-        try (FileWriter writer = new FileWriter(file, true)) {
-            writer.write(logMessage);
+        try (FileWriter writerToFile = new FileWriter(file, true)) {
+            writerToFile.write(logMessage);
         } catch (IOException e) {
             addError(file, e);
         }
@@ -42,7 +42,8 @@ public class MealcraftFileAppender extends AppenderBase<ILoggingEvent> {
         try {
             writer = new FileWriter(file, true);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            addError("Failed to initialize writer for logs in file: " + file, e);
+            return;
         }
         super.start();
     }

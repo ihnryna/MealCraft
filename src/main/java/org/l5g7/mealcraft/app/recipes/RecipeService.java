@@ -1,8 +1,6 @@
 package org.l5g7.mealcraft.app.recipes;
-
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
-
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public interface RecipeService {
 
@@ -12,7 +10,7 @@ public interface RecipeService {
     void updateRecipe(Long id, RecipeDto recipeDto);
     void patchRecipe(Long id, RecipeDto patch);
     void deleteRecipeById(Long id);
-    RecipeDto getRandomRecipe() throws Exception;
+    RecipeDto getRandomRecipe() throws NoSuchElementException;
 
 }
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -21,6 +22,7 @@ public class RecipeServiceImpl implements RecipeService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final RecipeProvider recipeProvider;
+    private static final String ENTITY_NAME = "Recipe";
 
     @Autowired
     public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider) {
@@ -76,7 +78,7 @@ public class RecipeServiceImpl implements RecipeService {
                     ingredientsId
             );
         } else {
-            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
         }
     }
 
@@ -92,13 +94,13 @@ public class RecipeServiceImpl implements RecipeService {
         Recipe baseRecipe = null;
         if(recipeDto.getBaseRecipeId()!=null){
             baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                    .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
+                    .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(recipeDto.getBaseRecipeId())));
         }
         
         List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
 
         if (ingredients.size() != recipeDto.getIngredientsId().size()) {
-            throw new RuntimeException("One or more products not found");
+            throw new NoSuchElementException("One or more products not found");
         }
 
         Recipe entity = Recipe.builder()
@@ -117,7 +119,7 @@ public class RecipeServiceImpl implements RecipeService {
     public void updateRecipe(Long id, RecipeDto recipeDto) {
         Optional<Recipe> existing = recipeRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
         }
 
         User user;
@@ -131,7 +133,7 @@ public class RecipeServiceImpl implements RecipeService {
         Recipe baseRecipe;
         if(recipeDto.getBaseRecipeId()!=null){
             baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                    .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeDto.getBaseRecipeId())));
+                    .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(recipeDto.getBaseRecipeId())));
         } else {
             baseRecipe = null;
         }
@@ -152,7 +154,7 @@ public class RecipeServiceImpl implements RecipeService {
     public void patchRecipe(Long id, RecipeDto patch) {
         Optional<Recipe> existing = recipeRepository.findById(patch.getId());
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Recipe", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
         }
         existing.ifPresent(recipe -> {
             if (patch.getName() != null) {
@@ -178,7 +180,7 @@ public class RecipeServiceImpl implements RecipeService {
             }
             if (patch.getBaseRecipeId() != null) {
                 recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(patch.getBaseRecipeId()))));
+                        .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(patch.getBaseRecipeId()))));
             }
             recipeRepository.save(recipe);
         });
@@ -190,7 +192,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public RecipeDto getRandomRecipe() throws Exception {
+    public RecipeDto getRandomRecipe() throws NoSuchElementException {
         ExternalRecipe externalRecipe = recipeProvider.getRandomRecipe();
 
         return RecipeDto.builder()

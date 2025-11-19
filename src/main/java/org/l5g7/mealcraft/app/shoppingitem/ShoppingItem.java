@@ -1,16 +1,12 @@
-package org.l5g7.mealcraft.app.shoppingItem;
+package org.l5g7.mealcraft.app.shoppingitem;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.user.User;
-
-import java.util.List;
 
 @Entity
 @Data @NoArgsConstructor @AllArgsConstructor @Builder

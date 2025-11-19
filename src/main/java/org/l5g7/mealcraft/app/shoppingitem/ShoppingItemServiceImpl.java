@@ -1,20 +1,14 @@
-package org.l5g7.mealcraft.app.shoppingItem;
+package org.l5g7.mealcraft.app.shoppingitem;
 
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
-import org.l5g7.mealcraft.app.recipes.Recipe;
-import org.l5g7.mealcraft.app.recipes.RecipeDto;
-import org.l5g7.mealcraft.app.recipes.RecipeRepository;
-import org.l5g7.mealcraft.app.recipes.RecipeService;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
-import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +18,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     private final ShoppingItemRepository shoppingItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private static final String ENTITY_NAME_PRODUCT = "Product";
 
     @Autowired
     public ShoppingItemServiceImpl(ShoppingItemRepository shoppingItemRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider) {
@@ -36,8 +31,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     public List<ShoppingItemDto> getAllShoppingItems() {
         List<ShoppingItem> entities = shoppingItemRepository.findAll();
 
-        return entities.stream().map(entity -> {
-            return ShoppingItemDto.builder()
+        return entities.stream().map(entity -> ShoppingItemDto.builder()
                     .id(entity.getId())
                     .name(entity.getProduct().getName())
                     .userOwnerId(entity.getUserOwner().getId())
@@ -45,16 +39,14 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                     .requiredQty(entity.getRequiredQty())
                     .status(entity.getStatus())
                     .unitName(entity.getProduct().getDefaultUnit().getName())
-                    .build();
-        }).toList();
+                    .build()).toList();
     }
 
     @Override
     public List<ShoppingItemDto> getUserShoppingItems(Long userId) {
         List<ShoppingItem> entities = shoppingItemRepository.findByUserOwnerId(userId);
 
-        return entities.stream().map(entity -> {
-            return ShoppingItemDto.builder()
+        return entities.stream().map(entity -> ShoppingItemDto.builder()
                     .id(entity.getId())
                     .name(entity.getProduct().getName())
                     .userOwnerId(entity.getUserOwner().getId())
@@ -62,8 +54,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                     .requiredQty(entity.getRequiredQty())
                     .status(entity.getStatus())
                     .unitName(entity.getProduct().getDefaultUnit().getName())
-                    .build();
-        }).toList();
+                    .build()).toList();
     }
 
     @Override
@@ -92,7 +83,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         User user = userRepository.findById(shoppingItemDto.getUserOwnerId())
                 .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(shoppingItemDto.getUserOwnerId())));
         Product product = productRepository.findById(shoppingItemDto.getProductId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(shoppingItemDto.getProductId())));
+                .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
 
 
         ShoppingItem entity = ShoppingItem.builder()
@@ -116,7 +107,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         User user = userRepository.findById(shoppingItemDto.getUserOwnerId())
                 .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(shoppingItemDto.getUserOwnerId())));
         Product product = productRepository.findById(shoppingItemDto.getProductId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(shoppingItemDto.getProductId())));
+                .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
 
         existing.ifPresent(shoppingItem -> {
             shoppingItem.setProduct(product);
@@ -142,7 +133,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
             }
             if (patch.getProductId() != null) {
                 shoppingItem.setProduct(productRepository.findById(patch.getProductId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(patch.getProductId()))));
+                        .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(patch.getProductId()))));
             }
             if (patch.getUserOwnerId() != null) {
                 shoppingItem.setUserOwner(userRepository.findById(patch.getUserOwnerId())

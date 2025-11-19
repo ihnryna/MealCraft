@@ -52,6 +52,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponseDto getUserByUsername(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            User u = user.get();
+            return new UserResponseDto(
+                    u.getId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getRole(),
+                    u.getAvatarUrl()
+            );
+        } else {
+            throw new EntityDoesNotExistException("User", String.valueOf(username));
+        }
+    }
+
+
+    @Override
     public void createUser(UserRequestDto userDto) {
         User newUser = User.builder().
                 username(userDto.username()).
