@@ -7,8 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.user.User;
-
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 

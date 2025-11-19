@@ -1,32 +1,21 @@
 package org.l5g7.mealcraft.web;
 
 import jakarta.validation.constraints.NotNull;
-import org.l5g7.mealcraft.app.notification.Notification;
 import org.l5g7.mealcraft.app.notification.NotificationResponseDto;
-import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
-import org.l5g7.mealcraft.app.shoppingItem.ShoppingItemDto;
-import org.l5g7.mealcraft.app.units.Entity.Unit;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
 import org.l5g7.mealcraft.app.user.UserResponseDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClient;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -34,6 +23,11 @@ import java.util.List;
 public class AdminPageWebController {
 
     private final RestClient internalApiClient;
+
+    private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
+    private static final String TITLE = "title";
+    private static final String ADMIN_PAGE = "admin-page";
+
 
     public AdminPageWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
         this.internalApiClient = internalApiClient;
@@ -58,9 +52,9 @@ public class AdminPageWebController {
 
         List<UserResponseDto> data = response.getBody();
         model.addAttribute("data", data);
-        model.addAttribute("fragmentToLoad", "fragments/users :: content");
-        model.addAttribute("title", "Users");
-        return "admin-page";
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/users :: content");
+        model.addAttribute(TITLE, "Users");
+        return ADMIN_PAGE;
     }
 
     @GetMapping("/recipe")
@@ -72,9 +66,9 @@ public class AdminPageWebController {
 
         List<RecipeDto> data = response.getBody();
         model.addAttribute("data", data);
-        model.addAttribute("fragmentToLoad", "fragments/recipes :: content");
-        model.addAttribute("title", "Recipes");
-        return "admin-page";
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
+        model.addAttribute(TITLE, "Recipes");
+        return ADMIN_PAGE;
     }
 
     @GetMapping("/product")
@@ -86,9 +80,9 @@ public class AdminPageWebController {
 
         List<ProductDto> data = response.getBody();
         model.addAttribute("data", data);
-        model.addAttribute("fragmentToLoad", "fragments/products :: content");
-        model.addAttribute("title", "Products");
-        return "admin-page";
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/products :: content");
+        model.addAttribute(TITLE, "Products");
+        return ADMIN_PAGE;
     }
 
     @GetMapping("/notification")
@@ -100,9 +94,9 @@ public class AdminPageWebController {
 
         List<NotificationResponseDto> data = response.getBody();
         model.addAttribute("data", data);
-        model.addAttribute("fragmentToLoad", "fragments/notifications :: content");
-        model.addAttribute("title", "Notifications");
-        return "admin-page";
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/notifications :: content");
+        model.addAttribute(TITLE, "Notifications");
+        return ADMIN_PAGE;
     }
 
     @GetMapping("/shopping-item")
@@ -114,9 +108,9 @@ public class AdminPageWebController {
 
         List<ShoppingItemDto> data = response.getBody();
         model.addAttribute("data", data);
-        model.addAttribute("fragmentToLoad", "fragments/shopping-items :: content");
-        model.addAttribute("title", "Shopping items");
-        return "admin-page";
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/shopping-items :: content");
+        model.addAttribute(TITLE, "Shopping items");
+        return ADMIN_PAGE;
     }
 
     @GetMapping("/unit")
@@ -128,9 +122,9 @@ public class AdminPageWebController {
 
         List<UnitDto> data = response.getBody();
         model.addAttribute("data", data);
-        model.addAttribute("fragmentToLoad", "fragments/units :: content");
-        model.addAttribute("title", "Units");
-        return "admin-page";
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/units :: content");
+        model.addAttribute(TITLE, "Units");
+        return ADMIN_PAGE;
     }
 
 

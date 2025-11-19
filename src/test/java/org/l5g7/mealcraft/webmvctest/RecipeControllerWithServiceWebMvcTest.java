@@ -43,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         )
 )
 @Import({RecipeServiceImpl.class})
+@SuppressWarnings("java:S5786")
 public class RecipeControllerWithServiceWebMvcTest {
     @Autowired
     private MockMvc mockMvc;

@@ -2,8 +2,8 @@ package org.l5g7.mealcraft.config;
 
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
-import org.l5g7.mealcraft.app.shoppingItem.ShoppingItem;
-import org.l5g7.mealcraft.app.shoppingItem.ShoppingItemRepository;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.PasswordHasher;
