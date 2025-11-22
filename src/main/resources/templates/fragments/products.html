@@ -1,6 +1,8 @@
 <div th:fragment="content">
   <h2 th:text="${title}">Users</h2>
 
+  <a th:href="@{/mealcraft/admin/product/new}">+ Add product</a>
+
   <table class="table">
     <thead>
     <tr>
@@ -9,6 +11,7 @@
       <th>Default unit id</th>
       <th>User owner id</th>
       <th>Image</th>
+      <th>Action</th>
     </tr>
     </thead>
 
@@ -21,8 +24,14 @@
       <td>
         <img th:if="${p.imageUrl != null}"
              th:src="${p.imageUrl}"
-             alt="product"
+             alt="product image"
              height="50">
+      </td>
+      <td>
+        <a th:href="@{|/mealcraft/admin/product/edit/${p.id}|}">Edit</a>
+        |
+        <a th:href="@{|/mealcraft/admin/product/delete/${p.id}|}"
+           onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
       </td>
     </tr>
     </tbody>

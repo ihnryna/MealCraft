@@ -6,6 +6,7 @@ import org.l5g7.mealcraft.app.units.dto.UnitDto;
 import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.units.interfaces.UnitService;
+import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogUtils;
 import org.l5g7.mealcraft.logging.LogMarker;
@@ -56,6 +57,12 @@ public class UnitServiceImpl implements UnitService {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
         try {
+
+            if (repository.existsByNameIgnoreCase(unit.getName())) {
+                LogUtils.logWarn("Unit already exists: " + unit.getName(), LogMarker.WARN.getMarkerName());
+                throw new EntityAlreadyExistsException("Unit", unit.getName());
+            }
+
             Unit result = repository.save(Unit.builder()
                     .name(unit.getName())
                     .build());
@@ -76,6 +83,11 @@ public class UnitServiceImpl implements UnitService {
             });
 
             if (updatedUnit.getName() != null) {
+                if (repository.existsByNameIgnoreCaseAndIdNot(updatedUnit.getName(), id)) {
+                    LogUtils.logWarn("Unit name already in use: " + updatedUnit.getName(), LogMarker.WARN.getMarkerName());
+                    throw new EntityAlreadyExistsException("Unit", updatedUnit.getName());
+                }
+
                 unit.setName(updatedUnit.getName());
                 LogUtils.logInfo("Updated unit name for id: " + id);
             }

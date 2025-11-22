@@ -5,15 +5,18 @@ import org.l5g7.mealcraft.app.notification.NotificationResponseDto;
 import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
+import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
+import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
 import org.l5g7.mealcraft.app.user.UserResponseDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
@@ -85,6 +88,108 @@ public class AdminPageWebController {
         return ADMIN_PAGE;
     }
 
+    @GetMapping("/product/new")
+    public String showCreateProductForm(Model model) {
+        ProductDto product = new ProductDto();
+
+        ResponseEntity<List<UnitDto>> unitsResponse = internalApiClient
+                .get()
+                .uri("/units")
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
+
+        List<UnitDto> units = unitsResponse.getBody();
+
+        model.addAttribute("product", product);
+        model.addAttribute("units", units);
+        model.addAttribute("title", "Create product");
+        model.addAttribute("fragmentToLoad", "fragments/product-form :: content");
+
+        return "admin-page";
+    }
+
+    @PostMapping("/product")
+    public String saveProduct(@ModelAttribute("product") ProductDto productDto,
+                              Model model) {
+
+        try {
+            if (productDto.getId() == null) {
+                internalApiClient
+                        .post()
+                        .uri("/products")
+                        .body(productDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            } else {
+                internalApiClient
+                        .put()
+                        .uri("/products/{id}", productDto.getId())
+                        .body(productDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
+            return "redirect:/mealcraft/admin/product";
+
+        } catch (HttpClientErrorException e) {
+
+            if (e.getStatusCode() == HttpStatus.CONFLICT) {
+                List<UnitDto> units = internalApiClient
+                        .get()
+                        .uri("/units")
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<List<UnitDto>>() {
+                        });
+
+                model.addAttribute("product", productDto);
+                model.addAttribute("units", units);
+                model.addAttribute("title", productDto.getId() == null ? "Create product" : "Edit product");
+                model.addAttribute("fragmentToLoad", "fragments/product-form :: content");
+
+                model.addAttribute("errorMessage", "Product with this name already exists");
+
+                return "admin-page";
+            }
+            throw e;
+        }
+    }
+
+    @GetMapping("/product/edit/{id}")
+    public String showEditProductForm(@PathVariable Long id, Model model) {
+
+        ProductDto product = internalApiClient
+                .get()
+                .uri("/products/{id}", id)
+                .retrieve()
+                .body(ProductDto.class);
+
+        List<UnitDto> units = internalApiClient
+                .get()
+                .uri("/units")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
+
+        model.addAttribute("product", product);
+        model.addAttribute("units", units);
+        model.addAttribute("title", "Edit product");
+        model.addAttribute("fragmentToLoad", "fragments/product-form :: content");
+
+        return "admin-page";
+    }
+
+    @GetMapping("/product/delete/{id}")
+    public String deleteProduct(@PathVariable Long id) {
+
+        internalApiClient
+                .delete()
+                .uri("/products/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
+
+        return "redirect:/mealcraft/admin/product";
+    }
+
     @GetMapping("/notification")
     public String notificationsPage(Model model) {
         ResponseEntity<List<NotificationResponseDto>> response = internalApiClient.get()
@@ -125,6 +230,93 @@ public class AdminPageWebController {
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/units :: content");
         model.addAttribute(TITLE, "Units");
         return ADMIN_PAGE;
+    }
+
+    @GetMapping("/unit/new")
+    public String showCreateUnitForm(Model model) {
+        UnitDto unit = new UnitDto();
+
+        model.addAttribute("unit", unit);
+        model.addAttribute("title", "Create unit");
+        model.addAttribute("fragmentToLoad", "fragments/unit-form :: content");
+
+        return "admin-page";
+    }
+
+    @PostMapping("/unit")
+    public String saveUnit(@ModelAttribute("unit") UnitDto unitDto,
+                           Model model) {
+
+        try {
+            if (unitDto.getId() == null) {
+                UnitCreateDto createDto = UnitCreateDto.builder()
+                        .name(unitDto.getName())
+                        .build();
+
+                internalApiClient
+                        .post()
+                        .uri("/units")
+                        .body(createDto)
+                        .retrieve()
+                        .toBodilessEntity();
+
+            } else {
+                UnitUpdateDto updateDto = UnitUpdateDto.builder()
+                        .id(unitDto.getId())
+                        .name(unitDto.getName())
+                        .build();
+
+                internalApiClient
+                        .put()
+                        .uri("/units/{id}", unitDto.getId())
+                        .body(updateDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
+
+            return "redirect:/mealcraft/admin/unit";
+
+        } catch (HttpClientErrorException e) {
+
+            if (e.getStatusCode() == HttpStatus.CONFLICT) {
+                model.addAttribute("unit", unitDto);
+                model.addAttribute("title", unitDto.getId() == null ? "Create unit" : "Edit unit");
+                model.addAttribute("fragmentToLoad", "fragments/unit-form :: content");
+                model.addAttribute("errorMessage", "Unit with this name already exists");
+
+                return "admin-page";
+            }
+
+            throw e;
+        }
+    }
+
+    @GetMapping("/unit/delete/{id}")
+    public String deleteUnit(@PathVariable Long id) {
+
+        internalApiClient
+                .delete()
+                .uri("/units/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
+
+        return "redirect:/mealcraft/admin/unit";
+    }
+
+    @GetMapping("/unit/edit/{id}")
+    public String showEditUnitForm(@PathVariable Long id, Model model) {
+
+        UnitDto unit = internalApiClient
+                .get()
+                .uri("/units/{id}", id)
+                .retrieve()
+                .body(UnitDto.class);
+
+        model.addAttribute("unit", unit);
+        model.addAttribute("title", "Edit unit");
+        model.addAttribute("fragmentToLoad", "fragments/unit-form :: content");
+
+        return "admin-page";
     }
 
 
