@@ -14,5 +14,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UnitUpdateDto {
 
+    private Long id;
     private String name;
 }

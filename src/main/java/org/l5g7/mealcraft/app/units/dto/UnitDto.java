@@ -13,8 +13,6 @@ public class UnitDto {
 
     private Long id;
 
-    @NotNull
-    @NotEmpty
     @NotBlank
     private String name;
 }

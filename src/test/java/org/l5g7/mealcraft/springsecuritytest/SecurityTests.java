@@ -17,7 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @SpringBootTest
-class SecurityTests {
+@SuppressWarnings("java:S5786")
+public class SecurityTests {
 
     @Autowired
     private WebApplicationContext context;

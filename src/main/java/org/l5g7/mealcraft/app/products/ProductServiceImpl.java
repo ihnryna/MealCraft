@@ -6,6 +6,7 @@ import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
+import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void createProduct(ProductDto productDto) {
+
+        if (productRepository.existsByNameIgnoreCase(productDto.getName())) {
+            throw new EntityAlreadyExistsException("Product", productDto.getName());
+        }
+
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(productDto.getDefaultUnitId())));
         Product entity = Product.builder()
                 .name(productDto.getName())
@@ -85,6 +91,11 @@ public class ProductServiceImpl implements ProductService {
         if (existing.isEmpty()) {
             throw new EntityDoesNotExistException("Product", String.valueOf(id));
         }
+
+        if (productRepository.existsByNameIgnoreCaseAndIdNot(productDto.getName(), id)) {
+            throw new EntityAlreadyExistsException("Product", productDto.getName());
+        }
+
         User user;
         if (productDto.getOwnerUserId() != null) {
             user = userRepository.findById(productDto.getOwnerUserId())

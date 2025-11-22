@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xml:lang="en">
 <head>
     <meta charset="UTF-8">
     <title th:text="${title} ?: 'MealCraft'">MealCraft</title>
@@ -21,7 +22,7 @@
 
     <!-- Main Content -->
     <main class="content">
-        <h1 th:text="${month} ?: 'Month'"></h1>
+        <h1 th:text="${month}">Month</h1>
         <table class="calendar">
             <thead>
             <tr>

@@ -1,6 +1,4 @@
-package org.l5g7.mealcraft.app.shoppingItem;
-
-
+package org.l5g7.mealcraft.app.shoppingitem;
 import java.util.List;
 
 public interface ShoppingItemService {

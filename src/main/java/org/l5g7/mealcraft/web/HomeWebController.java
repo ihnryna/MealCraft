@@ -1,12 +1,10 @@
 package org.l5g7.mealcraft.web;
 
 import jakarta.servlet.http.HttpSession;
-import org.l5g7.mealcraft.app.shoppingItem.ShoppingItemDto;
-import org.l5g7.mealcraft.app.user.User;
-import org.l5g7.mealcraft.logging.LogUtils;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
+import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,15 +25,16 @@ import java.util.*;
 public class HomeWebController {
 
     private final RestClient internalApiClient;
+    private final UserService userService;
 
-    public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
+    public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
+        this.userService = userService;
     }
 
     @GetMapping("/mealcraft/home")
     public String showHome(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println(auth.getAuthorities());
         if (auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
             return "redirect:/mealcraft/admin/home";
         }
@@ -63,7 +62,6 @@ public class HomeWebController {
         }
 
 
-        //auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         model.addAttribute("username", username);
         String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
@@ -72,9 +70,8 @@ public class HomeWebController {
         model.addAttribute("weeks", weeks);
         model.addAttribute("title", "MealCraft — Головна");
 
-        //TODO: change to actual userId from db
         ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
-                .uri("/shopping-items/getUserShoppingItems/{id}", 2L)
+                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
                 });

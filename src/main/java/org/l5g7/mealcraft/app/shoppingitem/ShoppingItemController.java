@@ -1,7 +1,6 @@
-package org.l5g7.mealcraft.app.shoppingItem;
+package org.l5g7.mealcraft.app.shoppingitem;
 
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.logging.LogUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

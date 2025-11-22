@@ -1,11 +1,14 @@
 <div th:fragment="content">
     <h2 th:text="${title}">Users</h2>
 
+    <a th:href="@{/mealcraft/admin/unit/new}">+ Add unit</a>
+
     <table class="table">
         <thead>
         <tr>
             <th>ID</th>
             <th>Name</th>
+            <th>Action</th>
         </tr>
         </thead>
 
@@ -13,6 +16,12 @@
         <tr th:each="u : ${data}">
             <td th:text="${u.id}"></td>
             <td th:text="${u.name}"></td>
+            <td>
+                <a th:href="@{|/mealcraft/admin/unit/edit/${u.id}|}">Edit</a>
+                |
+                <a th:href="@{|/mealcraft/admin/unit/delete/${u.id}|}"
+                   onclick="return confirm('Are you sure you want to delete this unit?');">Delete</a>
+            </td>
         </tr>
         </tbody>
     </table>

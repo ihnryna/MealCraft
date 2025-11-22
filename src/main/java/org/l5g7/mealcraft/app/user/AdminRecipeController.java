@@ -2,7 +2,6 @@ package org.l5g7.mealcraft.app.user;
 
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.recipes.RecipeService;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
