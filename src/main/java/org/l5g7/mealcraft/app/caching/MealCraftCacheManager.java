@@ -14,17 +14,14 @@ public class MealCraftCacheManager implements CacheManager {
 
     private final int TTL_MINUTES = 5;
 
-    // A map to hold our active caches (name -> CacheEntry)
     private final ConcurrentHashMap<String, CacheEntry> cacheMap = new ConcurrentHashMap<>();
 
     @Override
     public Cache getCache(String name) {
-        // remove expired entries first
         clearExpiredCaches();
 
-        // create or reuse a CacheEntry; return its Cache
         CacheEntry entry = cacheMap.compute(name, (k, existing) -> {
-            if (existing == null || existing.isExpired()) {
+            if (existing == null) {
                 LogUtils.logInfo("Creating a new cache region named: " + k);
                 Cache cache = new ConcurrentMapCache(k, new ConcurrentHashMap<>(), false);
                 return new CacheEntry(cache);
@@ -38,7 +35,7 @@ public class MealCraftCacheManager implements CacheManager {
     @Override
     public Collection<String> getCacheNames() {
         clearExpiredCaches();
-        return Collections.unmodifiableSet(cacheMap.keySet());
+        return cacheMap.keySet();
     }
 
     private void clearExpiredCaches() {
