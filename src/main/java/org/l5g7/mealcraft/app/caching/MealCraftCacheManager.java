@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.caching;
+package org.l5g7.mealcraft.app.caching;
 
 import org.l5g7.mealcraft.logging.LogUtils;
 import org.springframework.cache.Cache;
@@ -48,6 +48,12 @@ public class MealCraftCacheManager implements CacheManager {
                 LogUtils.logInfo("Removed expired cache: " + e.getKey());
             }
         }
+    }
+
+    public boolean clearAllCaches() {
+        cacheMap.clear();
+        LogUtils.logInfo("Cleared all caches");
+        return true;
     }
 
     private class CacheEntry {
