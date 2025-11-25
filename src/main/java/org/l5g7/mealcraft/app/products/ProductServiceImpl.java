@@ -11,6 +11,7 @@ import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,7 @@ public class ProductServiceImpl implements ProductService {
                 .defaultUnitId(entity.getDefaultUnit().getId())
                 .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
                 .imageUrl(entity.getImageUrl())
+                .createdAt(entity.getCreatedAt())
                 .build()).toList();
     }
 
@@ -53,7 +55,8 @@ public class ProductServiceImpl implements ProductService {
                     entity.getName(),
                     entity.getDefaultUnit().getId(),
                     entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null,
-                    entity.getImageUrl()
+                    entity.getImageUrl(),
+                    entity.getCreatedAt()
             );
         } else {
             throw new EntityDoesNotExistException("Product", String.valueOf(id));
@@ -72,6 +75,7 @@ public class ProductServiceImpl implements ProductService {
                 .name(productDto.getName())
                 .imageUrl(productDto.getImageUrl())
                 .defaultUnit(unit)
+                .createdAt(new Date())
                 .build();
         if (productDto.getOwnerUserId() != null) {
             User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));

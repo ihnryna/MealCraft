@@ -16,6 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.util.Calendar;
+import java.util.Date;
+
 @Configuration
 @Profile("dev")
 public class DataInitializer {
@@ -26,12 +29,19 @@ public class DataInitializer {
             if (userRepository.count() == 0) {
                 PasswordHasher encoder = new PasswordHasher();
 
+                Date now = new Date();
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(now);
+                cal.add(Calendar.DATE, -1);
+                Date yesterday = cal.getTime();
+
                 User admin = User.builder()
                         .username("admin")
                         .email("admin@mealcraft.org")
                         .password(encoder.hashPassword("admin123"))
                         .role(Role.ADMIN)
                         .avatarUrl("https://images.unsplash.com/photo-1495745966610-2a67f2297e5e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGhvdG9ncmFwaGVyfGVufDB8fDB8fHww&fm=jpg&q=60&w=3000")
+                        .createdAt(now)
                         .build();
 
                 User user = User.builder()
@@ -40,6 +50,7 @@ public class DataInitializer {
                         .password(encoder.hashPassword("user123"))
                         .role(Role.USER)
                         .avatarUrl(null)
+                        .createdAt(now)
                         .build();
 
                 User premiumUser = User.builder()
@@ -48,6 +59,7 @@ public class DataInitializer {
                         .password(encoder.hashPassword("ira123"))
                         .role(Role.PREMIUM_USER)
                         .avatarUrl(null)
+                        .createdAt(yesterday)
                         .build();
 
                 userRepository.save(admin);
@@ -66,6 +78,7 @@ public class DataInitializer {
                         .name("Milk")
                         .imageUrl(null)
                         .defaultUnit(unit1)
+                        .createdAt(yesterday)
                         .build();
 
                 ShoppingItem shoppingItem1 = ShoppingItem.builder()
@@ -83,6 +96,7 @@ public class DataInitializer {
                         .name("Egg")
                         .imageUrl(null)
                         .defaultUnit(unit2)
+                        .createdAt(yesterday)
                         .build();
 
                 ShoppingItem shoppingItem2 = ShoppingItem.builder()
@@ -96,6 +110,7 @@ public class DataInitializer {
                         .name("Bread")
                         .imageUrl(null)
                         .defaultUnit(unit2)
+                        .createdAt(yesterday)
                         .build();
 
                 ShoppingItem shoppingItem3 = ShoppingItem.builder()

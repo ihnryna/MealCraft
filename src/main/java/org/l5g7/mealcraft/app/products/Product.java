@@ -9,6 +9,7 @@ import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.user.User;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -33,4 +34,8 @@ public class Product {
 
     @ManyToMany(mappedBy = "ingredients")
     private List<Recipe> recipes;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false, updatable = false)
+    private Date createdAt;
 }
