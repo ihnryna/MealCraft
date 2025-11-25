@@ -140,23 +140,23 @@ public class UnitServiceImpl implements UnitService {
         return "anonymous";
     }
 
-    @Cacheable(cacheNames = "cacheTest")
-    public String cachingTest() {
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        return "Caching test successful";
-    }
-
-    @CacheEvict(cacheNames = "cacheTest")
-    public String delCachingTest() {
-
-        return "Cache evicted";
-    }
-
+//    @Cacheable(cacheNames = "cacheTest")
+//    public String cachingTest() {
+//
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        return "Caching test successful";
+//    }
+//
+//    @CacheEvict(cacheNames = "cacheTest")
+//    public String delCachingTest() {
+//
+//        return "Cache evicted";
+//    }
+//
 
 }

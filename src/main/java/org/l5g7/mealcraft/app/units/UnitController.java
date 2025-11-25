@@ -52,13 +52,13 @@ public class UnitController {
         unitServiceImpl.deleteUnit(id);
     }
 
-    @GetMapping("/cache")
-    public String cachingTest() {
-        return unitServiceImpl.cachingTest();
-    }
-
-    @GetMapping("/cache/evict")
-    public String evictCache() {
-        return unitServiceImpl.delCachingTest();
-    }
+//    @GetMapping("/cache")
+//    public String cachingTest() {
+//        return unitServiceImpl.cachingTest();
+//    }
+//
+//    @GetMapping("/cache/evict")
+//    public String evictCache() {
+//        return unitServiceImpl.delCachingTest();
+//    }
 }
