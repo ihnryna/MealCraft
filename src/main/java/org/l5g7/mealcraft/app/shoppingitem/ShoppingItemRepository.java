@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.app.shoppingItem;
+package org.l5g7.mealcraft.app.shoppingitem;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
