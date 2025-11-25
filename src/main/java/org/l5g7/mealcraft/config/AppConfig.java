@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -14,6 +15,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.Arrays;
 
 @Configuration
+@EnableScheduling
 public class AppConfig {
     @Bean
     public ObjectMapper objectMapper() {

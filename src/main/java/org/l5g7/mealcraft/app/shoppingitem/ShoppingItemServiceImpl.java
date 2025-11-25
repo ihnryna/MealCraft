@@ -9,6 +9,7 @@ import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,7 +72,8 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                     entity.getProduct().getId(),
                     entity.getRequiredQty(),
                     entity.getStatus(),
-                    entity.getProduct().getDefaultUnit().getName()
+                    entity.getProduct().getDefaultUnit().getName(),
+                    null
             );
         } else {
             throw new EntityDoesNotExistException("ShoppingItem", String.valueOf(id));
@@ -92,6 +94,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 .product(product)
                 .requiredQty(shoppingItemDto.getRequiredQty())
                 .status(shoppingItemDto.getStatus())
+                .boughtAt(shoppingItemDto.getBoughtAt())
                 .build();
 
         shoppingItemRepository.save(entity);
@@ -139,6 +142,9 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 shoppingItem.setUserOwner(userRepository.findById(patch.getUserOwnerId())
                         .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(patch.getUserOwnerId()))));
             }
+            if (patch.getBoughtAt() != null) {
+                shoppingItem.setBoughtAt(patch.getBoughtAt());
+            }
             shoppingItemRepository.save(shoppingItem);
         });
     }
@@ -156,6 +162,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         }
         existing.ifPresent(shoppingItem -> {
             shoppingItem.setStatus(!shoppingItem.getStatus());
+            shoppingItem.setBoughtAt(new Date(System.currentTimeMillis()));
             shoppingItemRepository.save(shoppingItem);
         });
     }
