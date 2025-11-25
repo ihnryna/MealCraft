@@ -8,6 +8,8 @@ import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -33,6 +35,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    @Cacheable(cacheNames = "recipes", key = "'allRecipes'")
     public List<RecipeDto> getAllRecipes() {
         List<Recipe> entities = recipeRepository.findAll();
 
@@ -56,6 +59,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    @Cacheable(cacheNames = "recipes", key = "#id")
     public RecipeDto getRecipeById(Long id) {
         Optional<Recipe> recipe = recipeRepository.findById(id);
 
@@ -83,6 +87,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "recipes", allEntries = true)
     public void createRecipe(RecipeDto recipeDto) {
 
         User user = null;
@@ -96,7 +101,7 @@ public class RecipeServiceImpl implements RecipeService {
             baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
                     .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(recipeDto.getBaseRecipeId())));
         }
-        
+
         List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
 
         if (ingredients.size() != recipeDto.getIngredientsId().size()) {
@@ -116,6 +121,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "recipes", allEntries = true)
     public void updateRecipe(Long id, RecipeDto recipeDto) {
         Optional<Recipe> existing = recipeRepository.findById(id);
         if (existing.isEmpty()) {
@@ -151,6 +157,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "recipes", allEntries = true)
     public void patchRecipe(Long id, RecipeDto patch) {
         Optional<Recipe> existing = recipeRepository.findById(patch.getId());
         if (existing.isEmpty()) {
@@ -187,6 +194,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "recipes", allEntries = true)
     public void deleteRecipeById(Long id) {
         recipeRepository.deleteById(id);
     }

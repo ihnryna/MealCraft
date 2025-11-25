@@ -1,5 +1,6 @@
 package org.l5g7.mealcraft.app.units;
 
+import org.hibernate.annotations.Cache;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
@@ -11,6 +12,8 @@ import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogUtils;
 import org.l5g7.mealcraft.logging.LogMarker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class UnitServiceImpl implements UnitService {
         this.repository = repository;
     }
 
+    @Cacheable(value = "units")
     public List<UnitDto> getAllUnits() {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -38,6 +42,7 @@ public class UnitServiceImpl implements UnitService {
         }
     }
 
+    @Cacheable(value = "units", key = "#id")
     public UnitDto getUnitById(Long id) {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -129,4 +134,24 @@ public class UnitServiceImpl implements UnitService {
         }
         return "anonymous";
     }
+
+    @Cacheable("cacheTest")
+    public String cachingTest() {
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        return "Caching test successful";
+    }
+
+    @CacheEvict("cacheTest")
+    public String delCachingTest() {
+
+        return "Cache evicted";
+    }
+
+
 }
