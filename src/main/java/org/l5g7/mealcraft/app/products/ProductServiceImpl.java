@@ -9,6 +9,9 @@ import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@CacheConfig(cacheNames = "products")
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
@@ -32,6 +36,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(key = "'allProducts'")
     public List<ProductDto> getAllProducts() {
         List<Product> entities = productRepository.findAll();
 
@@ -46,6 +51,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(key = "#id")
     public ProductDto getProductById(Long id) {
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()) {
@@ -64,6 +70,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void createProduct(ProductDto productDto) {
 
         if (productRepository.existsByNameIgnoreCase(productDto.getName())) {
@@ -90,6 +97,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void updateProduct(Long id, ProductDto productDto) {
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
@@ -122,6 +130,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void patchProduct(Long id, ProductDto patch) {
         Optional<Product> existing = productRepository.findById(patch.getId());
         if (existing.isEmpty()) {
@@ -147,11 +156,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void deleteProductById(Long id) {
         productRepository.deleteById(id);
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void addProductToRecipe(Long productId, Long recipeId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(productId)));

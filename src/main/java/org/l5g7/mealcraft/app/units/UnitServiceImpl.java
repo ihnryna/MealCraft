@@ -11,6 +11,9 @@ import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogUtils;
 import org.l5g7.mealcraft.logging.LogMarker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
+@CacheConfig(cacheNames = "units")
 public class UnitServiceImpl implements UnitService {
 
     private final UnitRepository repository;
@@ -27,6 +31,7 @@ public class UnitServiceImpl implements UnitService {
         this.repository = repository;
     }
 
+    @Cacheable(key = "'allUnits'")
     public List<UnitDto> getAllUnits() {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -38,6 +43,7 @@ public class UnitServiceImpl implements UnitService {
         }
     }
 
+    @Cacheable(key = "#id")
     public UnitDto getUnitById(Long id) {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -53,6 +59,7 @@ public class UnitServiceImpl implements UnitService {
         }
     }
 
+    @CacheEvict(allEntries = true)
     public UnitDto createUnit(UnitCreateDto unit) {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -73,6 +80,7 @@ public class UnitServiceImpl implements UnitService {
         }
     }
 
+    @CacheEvict(allEntries = true)
     public UnitDto updateUnit(Long id, UnitUpdateDto updatedUnit) {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -100,6 +108,7 @@ public class UnitServiceImpl implements UnitService {
         }
     }
 
+    @CacheEvict(allEntries = true)
     public UnitDto patchUnit(Long id, UnitUpdateDto updates) {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -111,6 +120,7 @@ public class UnitServiceImpl implements UnitService {
         }
     }
 
+    @CacheEvict(allEntries = true)
     public void deleteUnit(Long id) {
         String username = getAuthenticatedUsername();
         LogUtils.logMDC("user", username);
@@ -129,4 +139,24 @@ public class UnitServiceImpl implements UnitService {
         }
         return "anonymous";
     }
+
+//    @Cacheable(cacheNames = "cacheTest")
+//    public String cachingTest() {
+//
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        return "Caching test successful";
+//    }
+//
+//    @CacheEvict(cacheNames = "cacheTest")
+//    public String delCachingTest() {
+//
+//        return "Cache evicted";
+//    }
+//
+
 }
