@@ -85,8 +85,7 @@ public class HomeWebController {
 
     @PostMapping("/mealcraft/shopping/toggle")
     public String toggleChecked(@RequestParam Long id) {
-        ShoppingItemDto dto = new ShoppingItemDto();
-        dto.setStatus(true);
+
         internalApiClient.patch()
                 .uri("/shopping-items/toggle/{id}", id)
                 .retrieve()

@@ -117,7 +117,7 @@ public class DataInitializer {
                         .userOwner(user)
                         .product(product3)
                         .requiredQty(1)
-                        .status(true)
+                        .status(false)
                         .build();
 
                 unitRepository.save(unit1);

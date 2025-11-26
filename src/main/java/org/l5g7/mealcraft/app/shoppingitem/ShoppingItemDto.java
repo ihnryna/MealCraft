@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,5 +28,5 @@ public class ShoppingItemDto {
     private Boolean status;
     private String unitName; //aux
 
-
+    private Date boughtAt;
 }
