@@ -13,7 +13,7 @@ import java.util.Date;
 public class PurchasedItemDeletionScheduler {
     private final ShoppingItemRepository shoppingItemRepository;
 
-    @Scheduled(fixedDelay = 1 * 60 * 1000)
+    @Scheduled(fixedDelayString =  "#{${shopping-item-cleanup-tick-delay-minutes} * 60 * 1000}")
     public void cleanUpPurchasedItems() {
         Date twoMinutesAgo = new Date(System.currentTimeMillis() - 2 * 60 * 1000);
         shoppingItemRepository.deleteBought(twoMinutesAgo);
