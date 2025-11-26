@@ -5,6 +5,7 @@ import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,13 +72,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void createUser(UserRequestDto userDto) {
-        User newUser = User.builder().
-                username(userDto.username()).
-                email(userDto.email()).
-                role(userDto.role()).
-                password(passwordHasher.hashPassword(userDto.password())).
-                avatarUrl(userDto.avatarUrl()).
-                build();
+        User newUser = User.builder()
+                .username(userDto.username())
+                .email(userDto.email())
+                .role(userDto.role())
+                .password(passwordHasher.hashPassword(userDto.password()))
+                .avatarUrl(userDto.avatarUrl())
+                .createdAt(new Date())
+                .build();
         userRepository.save(newUser);
     }
 

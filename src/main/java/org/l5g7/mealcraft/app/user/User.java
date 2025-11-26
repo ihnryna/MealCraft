@@ -6,6 +6,7 @@ import org.l5g7.mealcraft.app.notification.Notification;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.enums.Role;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -42,4 +43,7 @@ public class User {
             cascade = CascadeType.ALL)
     private List<Notification> notifications;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false, updatable = false)
+    private Date createdAt;
 }
