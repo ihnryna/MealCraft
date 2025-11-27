@@ -1,40 +1,38 @@
 <div th:fragment="content">
-  <h2 th:text="${title}">Users</h2>
+    <h2 th:text="${title}">Users</h2>
 
-  <a th:href="@{/mealcraft/admin/product/new}">+ Add product</a>
+    <a th:href="@{/mealcraft/admin/product/new}">+ Add product</a>
 
-  <table class="table">
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Default unit id</th>
-      <th>User owner id</th>
-      <th>Image</th>
-      <th>Action</th>
-    </tr>
-    </thead>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Default unit</th>
+            <th>Image</th>
+            <th>Action</th>
+        </tr>
+        </thead>
 
-    <tbody>
-    <tr th:each="p : ${data}">
-      <td th:text="${p.id}"></td>
-      <td th:text="${p.name}"></td>
-      <td th:text="${p.defaultUnitId}"></td>
-      <td th:text="${p.ownerUserId}"></td>
-      <td>
-        <img th:if="${p.imageUrl != null}"
-             th:src="${p.imageUrl}"
-             alt="product image"
-             height="50">
-      </td>
-      <td>
-        <a th:href="@{|/mealcraft/admin/product/edit/${p.id}|}">Edit</a>
-        |
-        <a th:href="@{|/mealcraft/admin/product/delete/${p.id}|}"
-           onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+        <tbody>
+        <tr th:each="p : ${data}">
+            <td th:text="${p.id}"></td>
+            <td th:text="${p.name}"></td>
+            <td th:text="${p.defaultUnitName}"></td>
+            <td>
+                <img th:if="${p.imageUrl != null}"
+                     th:src="${p.imageUrl}"
+                     alt="product image"
+                     height="50">
+            </td>
+            <td>
+                <a th:href="@{|/mealcraft/admin/product/edit/${p.id}|}">Edit</a>
+                |
+                <a th:href="@{|/mealcraft/admin/product/delete/${p.id}|}"
+                   onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
 </div>

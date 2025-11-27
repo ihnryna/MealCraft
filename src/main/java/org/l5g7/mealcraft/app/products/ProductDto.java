@@ -29,4 +29,6 @@ public class ProductDto {
     private String imageUrl;
 
     private Date createdAt;
+
+    private String defaultUnitName;
 }

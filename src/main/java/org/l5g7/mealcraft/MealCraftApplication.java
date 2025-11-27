@@ -18,7 +18,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         }
 
 )
-@EnableScheduling
 @SpringBootApplication
 public class MealCraftApplication {
 

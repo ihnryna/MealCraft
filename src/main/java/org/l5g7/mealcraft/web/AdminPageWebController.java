@@ -296,16 +296,35 @@ public class AdminPageWebController {
     }
 
     @GetMapping("/unit/delete/{id}")
-    public String deleteUnit(@PathVariable Long id) {
+    public String deleteUnit(@PathVariable Long id, Model model) {
+        try {
+            internalApiClient
+                    .delete()
+                    .uri("/units/{id}", id)
+                    .retrieve()
+                    .toBodilessEntity();
 
-        internalApiClient
-                .delete()
-                .uri("/units/{id}", id)
-                .retrieve()
-                .toBodilessEntity();
+            return "redirect:/mealcraft/admin/unit";
 
-        return "redirect:/mealcraft/admin/unit";
+        } catch (HttpClientErrorException e) {
+
+            ResponseEntity<List<UnitDto>> response = internalApiClient.get()
+                    .uri("/units")
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
+
+            List<UnitDto> data = response.getBody();
+
+            model.addAttribute("data", data);
+            model.addAttribute("errorMessage",
+                    "This unit cannot be deleted because it is used by existing products.");
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/units :: content");
+            model.addAttribute(TITLE, "Units");
+
+            return ADMIN_PAGE;
+        }
     }
+
 
     @GetMapping("/unit/edit/{id}")
     public String showEditUnitForm(@PathVariable Long id, Model model) {

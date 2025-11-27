@@ -3,6 +3,10 @@
 
     <a th:href="@{/mealcraft/admin/unit/new}">+ Add unit</a>
 
+    <div th:if="${errorMessage}">
+        <p th:text="${errorMessage}" style="color: red;"></p>
+    </div>
+
     <table class="table">
         <thead>
         <tr>

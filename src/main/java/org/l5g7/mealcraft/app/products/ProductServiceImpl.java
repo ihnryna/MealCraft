@@ -47,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
                 .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
                 .imageUrl(entity.getImageUrl())
                 .createdAt(entity.getCreatedAt())
+                .defaultUnitName(entity.getDefaultUnit().getName())
                 .build()).toList();
     }
 
@@ -62,7 +63,8 @@ public class ProductServiceImpl implements ProductService {
                     entity.getDefaultUnit().getId(),
                     entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null,
                     entity.getImageUrl(),
-                    entity.getCreatedAt()
+                    entity.getCreatedAt(),
+                    entity.getDefaultUnit().getName()
             );
         } else {
             throw new EntityDoesNotExistException("Product", String.valueOf(id));
