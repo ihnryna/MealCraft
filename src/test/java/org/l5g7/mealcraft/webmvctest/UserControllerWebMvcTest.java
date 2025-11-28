@@ -39,8 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         )
 )
 @AutoConfigureMockMvc(addFilters = false)
-@SuppressWarnings("java:S5786")
-public class UserControllerWebMvcTest {
+class UserControllerWebMvcTest {
 
     @MockitoBean
     private UserService userService;

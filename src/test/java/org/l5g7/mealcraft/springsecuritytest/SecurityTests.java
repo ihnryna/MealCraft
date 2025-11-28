@@ -17,8 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @SpringBootTest
-@SuppressWarnings("java:S5786")
-public class SecurityTests {
+class SecurityTests {
 
     @Autowired
     private WebApplicationContext context;
@@ -62,7 +61,7 @@ public class SecurityTests {
 
     @Test
     void login_returns_valid_Jwt() throws Exception {
-        mockMvc.perform(post("/auth/register")
+       mockMvc.perform(post("/auth/register")
                         .contentType("application/json")
                         .content("{\"username\":\"alice\",\"email\":\"alice@example.com\",\"password\":\"secretP\"}"))
                 .andExpect(status().isOk());

@@ -1,6 +1,8 @@
 package org.l5g7.mealcraft.web;
 
 import jakarta.servlet.http.HttpSession;
+import org.l5g7.mealcraft.app.Event;
+import org.l5g7.mealcraft.app.EventCell;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -61,6 +63,28 @@ public class HomeWebController {
             weeks.add(week);
         }
 
+        ArrayList<Event> events = new ArrayList<>();
+        events.add(new Event(LocalDate.of(2025, 11, 3), LocalDate.of(2025, 11, 6), "cook","#FFB347"));
+        events.add(new Event(LocalDate.of(2025, 11, 5), LocalDate.of(2025, 11, 17), "book", "#C2FF47"));
+
+
+        Map<LocalDate, ArrayList<EventCell>> dayEventMap = new HashMap<>();
+
+        for (Event ev : events) {
+            LocalDate start = ev.getStart();
+            LocalDate end = ev.getEnd();
+            for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                if(dayEventMap.containsKey(i)) {
+                    dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), dayEventMap.get(i).size(), ev.getColor()));
+                } else {
+                    dayEventMap.put(i, new ArrayList<>(
+                            List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), 0, ev.getColor())))
+                    );
+                }
+            }
+        }
+
+        model.addAttribute("dayEventMap", dayEventMap);
 
         String username = auth.getName();
         model.addAttribute("username", username);

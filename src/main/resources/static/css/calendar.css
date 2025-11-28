@@ -10,13 +10,13 @@
     height: 100px;
     text-align: right;
     vertical-align: top;
-    padding: 5px;
     position: relative;
 }
 
 .day-cell {
     cursor: pointer;
     transition: background-color 0.2s;
+    height: 100px;
 }
 
 .day-cell:hover {
@@ -24,11 +24,38 @@
 }
 
 /* для додаткового контенту всередині дня */
-.day-cell .events {
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
-    right: 5px;
-    font-size: 0.8em;
-    color: #555;
+.day-cell .day-number {
+    padding: 10px;
+}
+
+.calendar td {
+    position: relative;
+    height: 40px;
+}
+
+/* Загальний стиль */
+.calendar .slots span.event {
+    display: block;
+    width: 100%;
+}
+
+/* Початок */
+.calendar .slots span.event-start {
+    display: block;
+    width: 100%;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+/* Кінець */
+.calendar .slots span.event-end {
+    display: block;
+    width: 100%;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* Середина */
+.calendar .slots span.event:not(.event-start):not(.event-end) {
+    border-radius: 0;
 }
