@@ -1,8 +1,6 @@
 package org.l5g7.mealcraft.app.mealplan;
 
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.app.products.Product;
-import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.user.User;

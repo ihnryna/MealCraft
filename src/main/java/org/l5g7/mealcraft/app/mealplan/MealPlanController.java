@@ -1,8 +1,6 @@
 package org.l5g7.mealcraft.app.mealplan;
 
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.app.products.ProductDto;
-import org.l5g7.mealcraft.app.products.ProductService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
