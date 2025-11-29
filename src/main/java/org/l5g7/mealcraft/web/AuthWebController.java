@@ -2,6 +2,7 @@ package org.l5g7.mealcraft.web;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
@@ -93,6 +94,53 @@ public class AuthWebController {
             return "redirect:/mealcraft/login";
         } catch (Exception e) {
             return "redirect:/mealcraft/home";
+        }
+    }
+
+    @GetMapping("/register")
+    public String getRegisterUserPage(@RequestParam(required = false) String error,
+                                      @RequestParam(required = false) String email,
+                                      Model model) {
+        if (error != null)
+            model.addAttribute("error", "User with such email or username already exists");
+        if (email != null)
+            model.addAttribute("email", email);
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String doRegister(@RequestParam String username,
+                             @RequestParam String email,
+                             @RequestParam String password,
+                             @RequestParam String password2,
+                             HttpServletResponse servletResponse,
+                             Model model) {
+        try {
+            if (!password.equals(password2)) {
+                model.addAttribute("error", "Passwords do not match");
+                model.addAttribute("email", email);
+                return "redirect:/mealcraft/register";
+            }
+
+            RegisterUserDto userRegDto = new RegisterUserDto();
+            userRegDto.setUsername(username);
+            userRegDto.setEmail(email);
+            userRegDto.setPassword(password);
+
+
+            ResponseEntity<Void> response = internalApiClient.post()
+                    .uri("/auth/register")
+                    .body(userRegDto)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            return "redirect:/mealcraft/login";
+
+
+        } catch (Exception e) {
+            model.addAttribute("error", "User with such email or username already exists");
+            model.addAttribute("email", email);
+            return "redirect:/mealcraft/register?error=true&email=" + email;
         }
     }
 }
