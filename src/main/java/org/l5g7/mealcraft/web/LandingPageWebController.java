@@ -1,0 +1,15 @@
+package org.l5g7.mealcraft.web;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+public class LandingPageWebController {
+
+    @GetMapping("/mealcraft/landing")
+    public String landingPage(Model model) {
+        return "landing-page";
+    }
+}

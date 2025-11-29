@@ -46,7 +46,7 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/templates/**"
                         ).permitAll()
-                        .requestMatchers("/mealcraft/login", "/mealcraft/register").permitAll()
+                        .requestMatchers("/mealcraft/login", "/mealcraft/register", "/mealcraft/landing").permitAll()
                         .requestMatchers("/mealcraft/admin/**").hasRole("ADMIN")
                         .requestMatchers("/mealcraft/**").hasAnyRole("ADMIN","USER","PREMIUM_USER")
                         .anyRequest().hasAnyRole("ADMIN", "USER","PREMIUM_USER")
