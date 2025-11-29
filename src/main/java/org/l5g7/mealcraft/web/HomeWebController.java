@@ -68,7 +68,7 @@ public class HomeWebController {
         model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
 
         model.addAttribute("weeks", weeks);
-        model.addAttribute("title", "MealCraft — Головна");
+        model.addAttribute("title", "MealCraft — Main Page");
 
         ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
                 .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
