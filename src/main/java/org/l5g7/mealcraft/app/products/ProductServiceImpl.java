@@ -217,7 +217,7 @@ public class ProductServiceImpl implements ProductService {
         }
         List<Recipe> recipesUsing = recipeRepository.findAllByIngredientsProduct(product);
         if (!recipesUsing.isEmpty()) {
-            throw new IllegalArgumentException("Cannot delete product: it is used in some recipes");
+            throw new IllegalArgumentException("Cannot delete product because it is used in some recipes");
         }
         productRepository.delete(product);
     }

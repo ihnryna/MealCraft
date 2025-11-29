@@ -322,15 +322,33 @@ public class AdminPageWebController {
     }
 
     @GetMapping("/product/delete/{id}")
-    public String deleteProduct(@PathVariable Long id) {
+    public String deleteProduct(@PathVariable Long id, Model model) {
+        try {
+            internalApiClient
+                    .delete()
+                    .uri("/products/{id}", id)
+                    .retrieve()
+                    .toBodilessEntity();
 
-        internalApiClient
-                .delete()
-                .uri("/products/{id}", id)
-                .retrieve()
-                .toBodilessEntity();
+            return "redirect:/mealcraft/admin/product";
 
-        return "redirect:/mealcraft/admin/product";
+        } catch (HttpClientErrorException e) {
+            String message = e.getResponseBodyAsString();
+            ResponseEntity<List<ProductDto>> response = internalApiClient
+                    .get()
+                    .uri("/products")
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {});
+
+            List<ProductDto> data = response.getBody();
+
+            model.addAttribute("data", data);
+            model.addAttribute("errorMessage", message);
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/products :: content");
+            model.addAttribute(TITLE, "Products");
+
+            return ADMIN_PAGE;
+        }
     }
 
 
