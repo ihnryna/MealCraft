@@ -14,7 +14,7 @@
             <div class="dropdown">
                 <a href="/mealcraft/settings">Settings</a>
                 <a href="/mealcraft/profile">Profile</a>
-                <a href="/logout">Logout</a>
+                <a href="/mealcraft/logout">Logout</a>
                 <div th:if="${#authorization.expression('hasRole(''ROLE_PREMIUM_USER'')')}"
                      class="color-strip">
                     <form method="post" action="/mealcraft/user/color" class="color-options">

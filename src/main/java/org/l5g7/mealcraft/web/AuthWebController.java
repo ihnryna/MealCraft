@@ -76,5 +76,24 @@ public class AuthWebController {
             return "redirect:/mealcraft/login?error=true&email=" + email;
         }
     }
+
+    @GetMapping("/logout")
+    public String doLogout(HttpServletResponse servletResponse) {
+        try {
+            ResponseEntity<Void> response = internalApiClient.post()
+                    .uri("/auth/logout")
+                    .retrieve()
+                    .toBodilessEntity();
+
+            List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+            if (setCookies != null) {
+                servletResponse.addHeader(HttpHeaders.SET_COOKIE, setCookies.get(0));
+            }
+
+            return "redirect:/mealcraft/login";
+        } catch (Exception e) {
+            return "redirect:/mealcraft/home";
+        }
+    }
 }
 
