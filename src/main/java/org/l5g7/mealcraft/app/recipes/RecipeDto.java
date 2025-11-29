@@ -1,11 +1,14 @@
 package org.l5g7.mealcraft.app.recipes;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
+
 import java.util.Date;
 import java.util.List;
 
@@ -30,6 +33,6 @@ public class RecipeDto {
 
     private String imageUrl;
 
-    private List<Long> ingredientsId;
+    private List<RecipeIngredientDto> ingredients;
 
 }

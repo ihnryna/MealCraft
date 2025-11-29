@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
@@ -76,6 +77,144 @@ public class AdminPageWebController {
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
         model.addAttribute(TITLE, "Recipes");
         return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/new")
+    public String showCreateRecipeForm(Model model) {
+        RecipeDto recipe = new RecipeDto();
+
+        model.addAttribute("recipe", recipe);
+        model.addAttribute("title", "Create recipe");
+        model.addAttribute("fragmentToLoad", "fragments/recipe-form :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/new-from/{id}")
+    public String showCreateBasedOnRecipeForm(@PathVariable Long id, Model model) {
+
+        RecipeDto base = internalApiClient
+                .get()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        if (base == null) {
+            return "redirect:/mealcraft/admin/recipe";
+        }
+
+        base.setBaseRecipeId(base.getId());
+        base.setId(null);
+
+        model.addAttribute("recipe", base);
+        model.addAttribute("title", "Create recipe based on " + base.getName());
+        model.addAttribute("fragmentToLoad", "fragments/recipe-form :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/edit/{id}")
+    public String showEditRecipeForm(@PathVariable Long id, Model model) {
+
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute("recipe", recipe);
+        model.addAttribute("title", "Edit recipe");
+        model.addAttribute("fragmentToLoad", "fragments/recipe-form :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @PostMapping("/recipe")
+    public String saveRecipe(@ModelAttribute("recipe") RecipeDto recipeDto,
+                             Model model) {
+
+        String title = (recipeDto.getId() == null)
+                ? "Create recipe"
+                : "Edit recipe";
+
+        try {
+            if (recipeDto.getId() == null) {
+                internalApiClient
+                        .post()
+                        .uri("/recipes")
+                        .body(recipeDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            } else {
+                internalApiClient
+                        .put()
+                        .uri("/recipes/{id}", recipeDto.getId())
+                        .body(recipeDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
+
+            return "redirect:/mealcraft/admin/recipe";
+
+        } catch (RestClientResponseException ex) {
+
+            String message;
+            String body = ex.getResponseBodyAsString();
+
+            if (body != null && !body.isBlank()) {
+                message = body;
+            } else {
+                message = "Failed to save recipe: " + ex.getStatusCode();
+            }
+
+            model.addAttribute("recipe", recipeDto);
+            model.addAttribute(TITLE, title);
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipe-form :: content");
+            model.addAttribute("errorMessage", message);
+
+            return ADMIN_PAGE;
+        }
+    }
+
+    @GetMapping("/recipe/delete/{id}")
+    public String deleteRecipe(@PathVariable Long id) {
+
+        internalApiClient
+                .delete()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
+
+        return "redirect:/mealcraft/admin/recipe";
+    }
+
+    @GetMapping("/recipe/view/{id}")
+    public String viewRecipe(@PathVariable Long id, Model model) {
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute("recipe", recipe);
+        model.addAttribute("title", "Recipe details");
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipe-details :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/product-suggestions")
+    @ResponseBody
+    public List<ProductDto> getProductSuggestions(@RequestParam("query") String query) {
+
+        return internalApiClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/products/search")
+                        .queryParam("prefix", query)
+                        .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<ProductDto>>() {});
     }
 
     @GetMapping("/product")
@@ -193,6 +332,7 @@ public class AdminPageWebController {
 
         return "redirect:/mealcraft/admin/product";
     }
+
 
     @GetMapping("/notification")
     public String notificationsPage(Model model) {

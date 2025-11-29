@@ -2,6 +2,8 @@ package org.l5g7.mealcraft.config;
 
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.recipes.Recipe;
+import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.PasswordHasher;
@@ -24,7 +26,8 @@ public class DataInitializer {
     @Bean
     CommandLineRunner initDatabase(UserRepository userRepository,
                                    UnitRepository unitRepository,
-                                   ProductRepository productRepository) {
+                                   ProductRepository productRepository,
+                                   RecipeRepository recipeRepository) {
         return args -> {
             if (userRepository.count() == 0) {
                 PasswordHasher encoder = new PasswordHasher();
@@ -103,6 +106,44 @@ public class DataInitializer {
                 productRepository.save(product1);
                 productRepository.save(product2);
                 productRepository.save(product3);
+
+                Product userOnlyProduct1 = Product.builder()
+                        .name("User secret cheese")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .ownerUser(user)
+                        .createdAt(now)
+                        .build();
+
+                Product userOnlyProduct2 = Product.builder()
+                        .name("Ira private butter")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .ownerUser(premiumUser)
+                        .createdAt(now)
+                        .build();
+
+                productRepository.save(userOnlyProduct1);
+                productRepository.save(userOnlyProduct2);
+
+                Recipe userRecipe1 = Recipe.builder()
+                        .name("User's secret sandwich")
+                        .ownerUser(user)
+                        .imageUrl(null)
+                        .baseRecipe(null)
+                        .createdAt(now)
+                        .build();
+
+                Recipe userRecipe2 = Recipe.builder()
+                        .name("Ira's private toast")
+                        .ownerUser(premiumUser)
+                        .imageUrl(null)
+                        .baseRecipe(null)
+                        .createdAt(now)
+                        .build();
+
+                recipeRepository.save(userRecipe1);
+                recipeRepository.save(userRecipe2);
             }
         };
     }

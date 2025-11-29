@@ -32,9 +32,6 @@ public class Product {
 
     private String imageUrl;
 
-    @ManyToMany(mappedBy = "ingredients")
-    private List<Recipe> recipes;
-
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
     private Date createdAt;
