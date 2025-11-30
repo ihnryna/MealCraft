@@ -6,12 +6,12 @@ import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
-import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -26,6 +26,7 @@ public class ProductServiceImpl implements ProductService {
     private final UnitRepository unitRepository;
     private final UserRepository userRepository;
     private final RecipeRepository recipeRepository;
+    private static final String ENTITY_NAME = "Product";
 
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository, UnitRepository unitRepository, UserRepository userRepository, RecipeRepository recipeRepository) {
@@ -36,27 +37,44 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @Cacheable(key = "'allProducts'")
     public List<ProductDto> getAllProducts() {
-        List<Product> entities = productRepository.findAll();
+        User currentUser = getCurrentUserOrNullIfAdmin();
 
-        return entities.stream().map(entity -> ProductDto.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .defaultUnitId(entity.getDefaultUnit().getId())
-                .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
-                .imageUrl(entity.getImageUrl())
-                .createdAt(entity.getCreatedAt())
-                .defaultUnitName(entity.getDefaultUnit().getName())
-                .build()).toList();
+        List<Product> entities;
+
+        if (currentUser == null) {
+            entities = productRepository.findAllByOwnerUserIsNull();
+        } else {
+            entities = productRepository.findAllByOwnerUserIsNullOrOwnerUser_Id(currentUser.getId());
+        }
+
+        return entities.stream()
+                .map(entity -> ProductDto.builder()
+                        .id(entity.getId())
+                        .name(entity.getName())
+                        .defaultUnitId(entity.getDefaultUnit().getId())
+                        .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
+                        .imageUrl(entity.getImageUrl())
+                        .createdAt(entity.getCreatedAt())
+                        .defaultUnitName(entity.getDefaultUnit().getName())
+                        .build())
+                .toList();
     }
 
     @Override
-    @Cacheable(key = "#id")
     public ProductDto getProductById(Long id) {
+
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()) {
             Product entity = product.get();
+
+            User owner = entity.getOwnerUser();
+            if (owner != null && (currentUser == null || !owner.getId().equals(currentUser.getId()))) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+
             return new ProductDto(
                     entity.getId(),
                     entity.getName(),
@@ -67,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
                     entity.getDefaultUnit().getName()
             );
         } else {
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
     }
 
@@ -75,58 +93,64 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(allEntries = true)
     public void createProduct(ProductDto productDto) {
 
-        if (productRepository.existsByNameIgnoreCase(productDto.getName())) {
-            throw new EntityAlreadyExistsException("Product", productDto.getName());
-        }
+        Unit unit = unitRepository.findById(productDto.getDefaultUnitId())
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        "Unit",
+                        "id",
+                        String.valueOf(productDto.getDefaultUnitId())
+                ));
 
-        Unit unit = unitRepository.findById(productDto.getDefaultUnitId()).orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(productDto.getDefaultUnitId())));
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
         Product entity = Product.builder()
                 .name(productDto.getName())
                 .imageUrl(productDto.getImageUrl())
                 .defaultUnit(unit)
                 .createdAt(new Date())
                 .build();
-        if (productDto.getOwnerUserId() != null) {
-            User user = userRepository.findById(productDto.getOwnerUserId()).orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
-            entity = Product.builder()
-                    .name(productDto.getName())
-                    .imageUrl(productDto.getImageUrl())
-                    .defaultUnit(unit)
-                    .ownerUser(user)
-                    .build();
+
+        if (currentUser != null) {
+            entity.setOwnerUser(currentUser);
         }
+
         productRepository.save(entity);
     }
 
     @Override
     @CacheEvict(allEntries = true)
     public void updateProduct(Long id, ProductDto productDto) {
+
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
-
-        if (productRepository.existsByNameIgnoreCaseAndIdNot(productDto.getName(), id)) {
-            throw new EntityAlreadyExistsException("Product", productDto.getName());
-        }
-
-        User user;
-        if (productDto.getOwnerUserId() != null) {
-            user = userRepository.findById(productDto.getOwnerUserId())
-                    .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(productDto.getOwnerUserId())));
-        } else {
-            user = null;
-        }
-
 
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId())
-                .orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(productDto.getDefaultUnitId())));
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        "Unit",
+                        "id",
+                        String.valueOf(productDto.getDefaultUnitId())
+                ));
 
         existing.ifPresent(product -> {
+            User owner = product.getOwnerUser();
+
+            if (owner == null) {
+                if (currentUser != null) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            } else {
+                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            }
+
             product.setName(productDto.getName());
             product.setImageUrl(productDto.getImageUrl());
-            product.setOwnerUser(user);
             product.setDefaultUnit(unit);
+
             productRepository.save(product);
         });
     }
@@ -134,45 +158,109 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CacheEvict(allEntries = true)
     public void patchProduct(Long id, ProductDto patch) {
-        Optional<Product> existing = productRepository.findById(patch.getId());
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
+        Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
+
         existing.ifPresent(product -> {
+            User owner = product.getOwnerUser();
+
+            if (owner == null) {
+                if (currentUser != null) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            } else {
+                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            }
+
             if (patch.getName() != null) {
                 product.setName(patch.getName());
             }
+
             if (patch.getImageUrl() != null) {
                 product.setImageUrl(patch.getImageUrl());
             }
+
             if (patch.getDefaultUnitId() != null) {
-                product.setDefaultUnit(unitRepository.findById(patch.getDefaultUnitId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("Unit", String.valueOf(patch.getDefaultUnitId()))));
+                Unit unit = unitRepository.findById(patch.getDefaultUnitId())
+                        .orElseThrow(() -> new EntityDoesNotExistException(
+                                "Unit",
+                                "id",
+                                String.valueOf(patch.getDefaultUnitId())
+                        ));
+                product.setDefaultUnit(unit);
             }
-            if (patch.getOwnerUserId() != null) {
-                product.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(patch.getOwnerUserId()))));
-            }
+
             productRepository.save(product);
         });
     }
 
     @Override
-    @CacheEvict(allEntries = true)
+    @CacheEvict(value = "products", allEntries = true)
     public void deleteProductById(Long id) {
-        productRepository.deleteById(id);
+        User currentUser = getCurrentUserOrNullIfAdmin();
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id)));
+        if (product.getOwnerUser() == null) {
+            if (currentUser != null) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        } else {
+            if (currentUser == null || !product.getOwnerUser().getId().equals(currentUser.getId())) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        }
+        List<Recipe> recipesUsing = recipeRepository.findAllByIngredientsProduct(product);
+        if (!recipesUsing.isEmpty()) {
+            throw new IllegalArgumentException("Cannot delete product because it is used in some recipes");
+        }
+        productRepository.delete(product);
     }
+
 
     @Override
-    @CacheEvict(allEntries = true)
-    public void addProductToRecipe(Long productId, Long recipeId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(productId)));
-        Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new EntityDoesNotExistException("Recipe", String.valueOf(recipeId)));
+    public List<ProductDto> searchProductsByPrefix(String prefix) {
+        User currentUser = getCurrentUserOrNullIfAdmin();
 
-        recipe.getIngredients().add(product);
-        recipeRepository.save(recipe);
+        List<Product> products;
+
+        if (currentUser == null) {
+            products = productRepository.findAllByOwnerUserIsNullAndNameStartingWithIgnoreCase(prefix);
+        } else {
+            products = productRepository
+                    .findAllByOwnerUserIsNullOrOwnerUser_IdAndNameStartingWithIgnoreCase(currentUser.getId(), prefix);
+        }
+
+        return products.stream()
+                .map(entity -> ProductDto.builder()
+                        .id(entity.getId())
+                        .name(entity.getName())
+                        .defaultUnitId(entity.getDefaultUnit().getId())
+                        .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
+                        .imageUrl(entity.getImageUrl())
+                        .createdAt(entity.getCreatedAt())
+                        .defaultUnitName(entity.getDefaultUnit().getName())
+                        .build())
+                .toList();
     }
 
+    private User getCurrentUserOrNullIfAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return null;
+        }
+
+        String name = authentication.getName();
+        return userRepository.findByUsername(name)
+                .orElseThrow(() -> new EntityDoesNotExistException("User", "name", name));
+    }
 }

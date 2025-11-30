@@ -1,0 +1,112 @@
+<div th:fragment="content">
+    <h2 th:text="${title}">Edit profile</h2>
+
+    <div th:if="${errorMessage}">
+        <p th:text="${errorMessage}" style="color: red;"></p>
+    </div>
+
+    <div id="clientErrorMessage" style="color: red; display: none;"></div>
+
+    <form th:action="@{/mealcraft/profile}"
+          th:object="${user}"
+          method="post"
+          id="profileForm">
+
+        <input type="hidden" th:field="*{id}" id="userId">
+
+        <div>
+            <label>Username:</label>
+            <span th:text="*{username}">username</span>
+        </div>
+
+        <div>
+            <label>Email:</label>
+            <span th:text="*{email}">email</span>
+        </div>
+
+        <div>
+            <label for="password">Password:</label>
+            <input id="password" type="password">
+        </div>
+
+        <div>
+            <label for="secondPassword">Type new password again:</label>
+            <input id="secondPassword" type="password">
+        </div>
+
+        <div>
+            <label for="avatarUrl">Avatar URL:</label>
+            <input id="avatarUrl" type="text" th:field="*{avatarUrl}">
+        </div>
+
+        <div>
+            <button type="submit">Save</button>
+            <button type="button" onclick="window.location.href='/mealcraft/home'">Back</button>
+        </div>
+    </form>
+
+    <script th:inline="javascript">
+        const form = document.getElementById('profileForm');
+        const errorDiv = document.getElementById('clientErrorMessage');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const secondPassword = document.getElementById('secondPassword').value;
+            const userId = document.getElementById('userId').value;
+            const avatarUrl = document.getElementById('avatarUrl').value;
+            const username = /*[[${user.username}]]*/ '';
+            const email = /*[[${user.email}]]*/ '';
+            const role = /*[[${user.role}]]*/ '';
+
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+
+            if (!password || !secondPassword) {
+                errorDiv.textContent = 'Both password fields are required';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password !== secondPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const requestBody = {
+                username: username,
+                email: email,
+                role: role,
+                avatarUrl: avatarUrl
+            };
+
+            // Only include password if it's being changed
+            if (password) {
+                requestBody.password = password;
+            }
+
+            fetch(`/users/${userId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/mealcraft/home';
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error(text || 'Failed to update profile');
+                        });
+                    }
+                })
+                .catch(error => {
+                    errorDiv.textContent = error.message;
+                    errorDiv.style.display = 'block';
+                });
+        });
+    </script>
+</div>

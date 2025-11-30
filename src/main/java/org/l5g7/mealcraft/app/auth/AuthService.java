@@ -5,9 +5,7 @@ import jakarta.validation.Valid;
 import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.l5g7.mealcraft.app.auth.security.JwtService;
-import org.l5g7.mealcraft.app.user.UserRepository;
-import org.l5g7.mealcraft.app.user.User;
-import org.l5g7.mealcraft.app.user.PasswordHasher;
+import org.l5g7.mealcraft.app.user.*;
 import org.l5g7.mealcraft.enums.Role;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
@@ -26,6 +24,9 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private PasswordHasher passwordHasher;
 
     @Autowired
@@ -37,12 +38,15 @@ public class AuthService {
             LogUtils.logWarn("Username already exists: " + username.getUsername());
             throw new EntityAlreadyExistsException("Username", username.getUsername());
         }
-        userRepository.save(User.builder()
-                .username(username.getUsername())
-                .email(username.getEmail())
-                .password(passwordHasher.hashPassword(username.getPassword()))
-                .role(Role.USER)
-                .build());
+
+        userService.createUser(new UserRequestDto(
+                username.getUsername(),
+                username.getEmail(),
+                username.getPassword(),
+                Role.USER,
+                null
+        ));
+
         LogUtils.logInfo("User registered: " + username);
         return "User registered";
     }

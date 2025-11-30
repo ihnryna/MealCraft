@@ -2,24 +2,22 @@ package org.l5g7.mealcraft.app.recipes;
 
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @Service
-@CacheConfig(cacheNames = "recipes")
 public class RecipeServiceImpl implements RecipeService {
 
     private final RecipeRepository recipeRepository;
@@ -36,171 +34,401 @@ public class RecipeServiceImpl implements RecipeService {
         this.recipeProvider = recipeProvider;
     }
 
+    @Transactional
     @Override
-    @Cacheable(key = "'allRecipes'")
     public List<RecipeDto> getAllRecipes() {
-        List<Recipe> entities = recipeRepository.findAll();
+        User currentUser = getCurrentUserOrNullIfAdmin();
 
-        return entities.stream().map(entity -> {
-            List<Long> ingredientsId = (entity.getIngredients() != null)
-                    ? entity.getIngredients().stream()
-                    .map(Product::getId)
-                    .toList()
-                    : List.of();
+        List<Recipe> entities;
 
-            return RecipeDto.builder()
-                    .id(entity.getId())
-                    .name(entity.getName())
-                    .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
-                    .baseRecipeId(entity.getBaseRecipe()!=null ? entity.getBaseRecipe().getId() : null)
-                    .createdAt(entity.getCreatedAt())
-                    .imageUrl(entity.getImageUrl())
-                    .ingredientsId(ingredientsId)
-                    .build();
-        }).toList();
+        if (currentUser == null) {
+            entities = recipeRepository.findAllByOwnerUserIsNull();
+        } else {
+            entities = recipeRepository.findAllByOwnerUserIsNullOrOwnerUser_Id(currentUser.getId());
+        }
+
+        return entities.stream()
+                .map(entity -> {
+                    List<RecipeIngredientDto> ingredients = (entity.getIngredients() != null)
+                            ? entity.getIngredients().stream()
+                            .map(ingredient -> RecipeIngredientDto.builder()
+                                    .id(ingredient.getId())
+                                    .productId(ingredient.getProduct().getId())
+                                    .productName(ingredient.getProduct().getName())
+                                    .amount(ingredient.getAmount())
+                                    .build())
+                            .toList()
+                            : List.of();
+
+                    return RecipeDto.builder()
+                            .id(entity.getId())
+                            .name(entity.getName())
+                            .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
+                            .baseRecipeId(entity.getBaseRecipe() != null ? entity.getBaseRecipe().getId() : null)
+                            .createdAt(entity.getCreatedAt())
+                            .imageUrl(entity.getImageUrl())
+                            .ingredients(ingredients)
+                            .build();
+                }).toList();
     }
 
+    @Transactional
     @Override
-    @Cacheable(key = "#id")
     public RecipeDto getRecipeById(Long id) {
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
         Optional<Recipe> recipe = recipeRepository.findById(id);
 
         if (recipe.isPresent()) {
             Recipe entity = recipe.get();
 
-            List<Long> ingredientsId = entity.getIngredients() != null
+            User owner = entity.getOwnerUser();
+            if (owner != null && (currentUser == null || !owner.getId().equals(currentUser.getId()))) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+
+            List<RecipeIngredientDto> ingredients = entity.getIngredients() != null
                     ? entity.getIngredients().stream()
-                    .map(Product::getId)
+                    .map(ingredient -> RecipeIngredientDto.builder()
+                            .id(ingredient.getId())
+                            .productId(ingredient.getProduct().getId())
+                            .productName(ingredient.getProduct().getName())
+                            .amount(ingredient.getAmount())
+                            .build())
                     .toList()
                     : List.of();
 
             return new RecipeDto(
                     entity.getId(),
                     entity.getName(),
-                    entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null,
-                    entity.getBaseRecipe()!=null ? entity.getBaseRecipe().getId() : null,
+                    owner != null ? owner.getId() : null,
+                    entity.getBaseRecipe() != null ? entity.getBaseRecipe().getId() : null,
                     entity.getCreatedAt(),
                     entity.getImageUrl(),
-                    ingredientsId
+                    ingredients
             );
         } else {
-            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
     }
 
+    @Transactional
     @Override
-    @CacheEvict(allEntries = true)
     public void createRecipe(RecipeDto recipeDto) {
 
-        User user = null;
-        if(recipeDto.getOwnerUserId()!=null){
-            user = userRepository.findById(recipeDto.getOwnerUserId())
-                    .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(recipeDto.getOwnerUserId())));
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
+        if (recipeDto.getIngredients() == null || recipeDto.getIngredients().isEmpty()) {
+            throw new IllegalArgumentException("Recipe must contain at least one ingredient");
         }
 
         Recipe baseRecipe = null;
-        if(recipeDto.getBaseRecipeId()!=null){
+        if (recipeDto.getBaseRecipeId() != null) {
             baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                    .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(recipeDto.getBaseRecipeId())));
-        }
-
-        List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
-
-        if (ingredients.size() != recipeDto.getIngredientsId().size()) {
-            throw new NoSuchElementException("One or more products not found");
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            ENTITY_NAME,
+                            "id",
+                            String.valueOf(recipeDto.getBaseRecipeId())
+                    ));
         }
 
         Recipe entity = Recipe.builder()
                 .name(recipeDto.getName())
-                .ownerUser(user)
+                .ownerUser(currentUser)
                 .imageUrl(recipeDto.getImageUrl())
                 .baseRecipe(baseRecipe)
                 .createdAt(new Date())
-                .ingredients(ingredients)
                 .build();
-        recipeRepository.save(entity);
 
+        List<RecipeIngredient> ingredients = new ArrayList<>();
+
+        Set<Long> usedProducts = new HashSet<>();
+        for (RecipeIngredientDto ingDto : recipeDto.getIngredients()) {
+            Long productId = ingDto.getProductId();
+            if (productId == null) {
+                throw new IllegalArgumentException("Product must be selected for each ingredient");
+            }
+
+            if (!usedProducts.add(productId)) {
+                throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
+            }
+
+            if (ingDto.getAmount() == null || ingDto.getAmount().doubleValue() <= 0) {
+                throw new IllegalArgumentException("Ingredient amount must be positive");
+            }
+
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            "Product",
+                            "id",
+                            String.valueOf(productId)
+                    ));
+
+            RecipeIngredient ingredient = RecipeIngredient.builder()
+                    .recipe(entity)
+                    .product(product)
+                    .amount(ingDto.getAmount())
+                    .build();
+
+            ingredients.add(ingredient);
+        }
+
+        entity.setIngredients(ingredients);
+
+        recipeRepository.save(entity);
     }
 
+    @Transactional
     @Override
-    @CacheEvict(allEntries = true)
     public void updateRecipe(Long id, RecipeDto recipeDto) {
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
         Optional<Recipe> existing = recipeRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+        }
+
+        if (recipeDto.getIngredients() == null || recipeDto.getIngredients().isEmpty()) {
+            throw new IllegalArgumentException("Recipe must contain at least one ingredient");
         }
 
         User user;
-        if(recipeDto.getOwnerUserId()!=null){
+        if (recipeDto.getOwnerUserId() != null) {
             user = userRepository.findById(recipeDto.getOwnerUserId())
-                    .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(recipeDto.getOwnerUserId())));
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            "User",
+                            "id",
+                            String.valueOf(recipeDto.getOwnerUserId())
+                    ));
         } else {
             user = null;
         }
 
         Recipe baseRecipe;
-        if(recipeDto.getBaseRecipeId()!=null){
+        if (recipeDto.getBaseRecipeId() != null) {
             baseRecipe = recipeRepository.findById(recipeDto.getBaseRecipeId())
-                    .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(recipeDto.getBaseRecipeId())));
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            ENTITY_NAME,
+                            "id",
+                            String.valueOf(recipeDto.getBaseRecipeId())
+                    ));
         } else {
             baseRecipe = null;
         }
 
         existing.ifPresent(recipe -> {
-            List<Product> ingredients = productRepository.findAllById(recipeDto.getIngredientsId());
+            User owner = recipe.getOwnerUser();
+
+            if (owner == null) {
+                if (currentUser != null) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            } else {
+                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            }
 
             recipe.setName(recipeDto.getName());
             recipe.setOwnerUser(user);
             recipe.setImageUrl(recipeDto.getImageUrl());
             recipe.setBaseRecipe(baseRecipe);
-            recipe.setIngredients(ingredients);
+
+            List<RecipeIngredient> ingredients = new ArrayList<>();
+
+            Set<Long> usedProducts = new HashSet<>();
+
+            for (RecipeIngredientDto ingDto : recipeDto.getIngredients()) {
+                Long productId = ingDto.getProductId();
+                if (productId == null) {
+                    throw new IllegalArgumentException("Product must be selected for each ingredient");
+                }
+
+                if (!usedProducts.add(productId)) {
+                    throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
+                }
+
+                if (ingDto.getAmount() == null || ingDto.getAmount().doubleValue() <= 0) {
+                    throw new IllegalArgumentException("Ingredient amount must be positive");
+                }
+
+                Product product = productRepository.findById(productId)
+                        .orElseThrow(() -> new EntityDoesNotExistException(
+                                "Product",
+                                "id",
+                                String.valueOf(productId)
+                        ));
+
+                User productOwner = product.getOwnerUser();
+                if (productOwner != null && (currentUser == null || !productOwner.getId().equals(currentUser.getId()))) {
+                    throw new EntityDoesNotExistException(
+                            "Product",
+                            "id",
+                            String.valueOf(productId)
+                    );
+                }
+
+                RecipeIngredient ingredient = RecipeIngredient.builder()
+                        .recipe(recipe)
+                        .product(product)
+                        .amount(ingDto.getAmount())
+                        .build();
+
+                ingredients.add(ingredient);
+            }
+
+            recipe.getIngredients().clear();
+            recipe.getIngredients().addAll(ingredients);
+
             recipeRepository.save(recipe);
         });
     }
 
+    @Transactional
     @Override
-    @CacheEvict(allEntries = true)
     public void patchRecipe(Long id, RecipeDto patch) {
-        Optional<Recipe> existing = recipeRepository.findById(patch.getId());
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
+        Optional<Recipe> existing = recipeRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
+
         existing.ifPresent(recipe -> {
+            User owner = recipe.getOwnerUser();
+
+            if (owner == null) {
+                if (currentUser != null) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            } else {
+                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+                }
+            }
+
             if (patch.getName() != null) {
                 recipe.setName(patch.getName());
             }
+
             if (patch.getImageUrl() != null) {
                 recipe.setImageUrl(patch.getImageUrl());
             }
-            if(patch.getIngredientsId() != null){
-                List<Long> ingredientsId = recipe.getIngredients() != null
-                        ? recipe.getIngredients().stream()
-                        .map(Product::getId)
-                        .toList()
-                        : List.of();
 
-                List<Product> ingredients = productRepository.findAllById(ingredientsId);
+            if (patch.getIngredients() != null) {
 
-                recipe.setIngredients(ingredients);
+                if (patch.getIngredients().isEmpty()) {
+                    throw new IllegalArgumentException("Recipe must contain at least one ingredient");
+                }
+
+                List<RecipeIngredient> ingredients = new ArrayList<>();
+                Set<Long> usedProducts = new HashSet<>();
+
+                for (RecipeIngredientDto ingDto : patch.getIngredients()) {
+                    if (ingDto == null) {
+                        continue;
+                    }
+
+                    Long productId = ingDto.getProductId();
+                    if (productId == null) {
+                        throw new IllegalArgumentException("Product must be selected for each ingredient");
+                    }
+
+                    if (!usedProducts.add(productId)) {
+                        throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
+                    }
+
+                    if (ingDto.getAmount() == null || ingDto.getAmount().doubleValue() <= 0) {
+                        throw new IllegalArgumentException("Ingredient amount must be positive");
+                    }
+
+                    Product product = productRepository.findById(productId)
+                            .orElseThrow(() -> new EntityDoesNotExistException(
+                                    "Product",
+                                    "id",
+                                    String.valueOf(productId)
+                            ));
+
+                    User productOwner = product.getOwnerUser();
+                    if (productOwner != null && (currentUser == null || !productOwner.getId().equals(currentUser.getId()))) {
+                        throw new EntityDoesNotExistException(
+                                "Product",
+                                "id",
+                                String.valueOf(productId)
+                        );
+                    }
+
+                    RecipeIngredient ingredient = RecipeIngredient.builder()
+                            .recipe(recipe)
+                            .product(product)
+                            .amount(ingDto.getAmount())
+                            .build();
+
+                    ingredients.add(ingredient);
+                }
+
+                recipe.getIngredients().clear();
+                recipe.getIngredients().addAll(ingredients);
             }
-            if(patch.getOwnerUserId()!=null){
+
+            if (patch.getOwnerUserId() != null) {
                 recipe.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
-                        .orElseThrow(() -> new EntityDoesNotExistException("User", String.valueOf(patch.getOwnerUserId()))));
+                        .orElseThrow(() -> new EntityDoesNotExistException(
+                                "User",
+                                "id",
+                                String.valueOf(patch.getOwnerUserId())
+                        )));
             }
+
             if (patch.getBaseRecipeId() != null) {
                 recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
-                        .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(patch.getBaseRecipeId()))));
+                        .orElseThrow(() -> new EntityDoesNotExistException(
+                                ENTITY_NAME,
+                                "id",
+                                String.valueOf(patch.getBaseRecipeId())
+                        )));
             }
+
             recipeRepository.save(recipe);
         });
     }
 
+    @Transactional
     @Override
-    @CacheEvict(allEntries = true)
     public void deleteRecipeById(Long id) {
+
+        User currentUser = getCurrentUserOrNullIfAdmin();
+
+        Recipe recipe = recipeRepository.findById(id)
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        ENTITY_NAME,
+                        "id",
+                        String.valueOf(id)
+                ));
+        User owner = recipe.getOwnerUser();
+
+        if (owner == null) {
+            if (currentUser != null) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        } else {
+            if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        }
+
+        List<Recipe> children = recipeRepository.findAllByBaseRecipe(recipe);
+        if (!children.isEmpty()) {
+            for (Recipe child : children) {
+                child.setBaseRecipe(null);
+            }
+            recipeRepository.saveAll(children);
+        }
         recipeRepository.deleteById(id);
     }
 
+
+    @Transactional
     @Override
     public RecipeDto getRandomRecipe() throws NoSuchElementException {
         ExternalRecipe externalRecipe = recipeProvider.getRandomRecipe();
@@ -210,5 +438,20 @@ public class RecipeServiceImpl implements RecipeService {
                 .name(externalRecipe.name())
                 .imageUrl(externalRecipe.imageUrl())
                 .build();
+    }
+
+    private User getCurrentUserOrNullIfAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return null;
+        }
+
+        String name = authentication.getName();
+        return userRepository.findByUsername(name)
+                .orElseThrow(() -> new EntityDoesNotExistException("User", "name", name));
     }
 }

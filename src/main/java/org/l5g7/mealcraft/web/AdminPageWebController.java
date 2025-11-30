@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
@@ -55,7 +56,8 @@ public class AdminPageWebController {
         ResponseEntity<List<UserResponseDto>> response = internalApiClient.get()
                 .uri("/users")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<UserResponseDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<UserResponseDto>>() {
+                });
 
         List<UserResponseDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -69,7 +71,8 @@ public class AdminPageWebController {
         ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
                 .uri("/recipes")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {
+                });
 
         List<RecipeDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -78,12 +81,152 @@ public class AdminPageWebController {
         return ADMIN_PAGE;
     }
 
+    @GetMapping("/recipe/new")
+    public String showCreateRecipeForm(Model model) {
+        RecipeDto recipe = new RecipeDto();
+
+        model.addAttribute("recipe", recipe);
+        model.addAttribute("title", "Create recipe");
+        model.addAttribute("fragmentToLoad", "fragments/recipe-form :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/new-from/{id}")
+    public String showCreateBasedOnRecipeForm(@PathVariable Long id, Model model) {
+
+        RecipeDto base = internalApiClient
+                .get()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        if (base == null) {
+            return "redirect:/mealcraft/admin/recipe";
+        }
+
+        base.setBaseRecipeId(base.getId());
+        base.setId(null);
+
+        model.addAttribute("recipe", base);
+        model.addAttribute("title", "Create recipe based on " + base.getName());
+        model.addAttribute("fragmentToLoad", "fragments/recipe-form :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/edit/{id}")
+    public String showEditRecipeForm(@PathVariable Long id, Model model) {
+
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute("recipe", recipe);
+        model.addAttribute("title", "Edit recipe");
+        model.addAttribute("fragmentToLoad", "fragments/recipe-form :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @PostMapping("/recipe")
+    public String saveRecipe(@ModelAttribute("recipe") RecipeDto recipeDto,
+                             Model model) {
+
+        String title = (recipeDto.getId() == null)
+                ? "Create recipe"
+                : "Edit recipe";
+
+        try {
+            if (recipeDto.getId() == null) {
+                internalApiClient
+                        .post()
+                        .uri("/recipes")
+                        .body(recipeDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            } else {
+                internalApiClient
+                        .put()
+                        .uri("/recipes/{id}", recipeDto.getId())
+                        .body(recipeDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
+
+            return "redirect:/mealcraft/admin/recipe";
+
+        } catch (RestClientResponseException ex) {
+
+            String message;
+            String body = ex.getResponseBodyAsString();
+
+            if (body != null && !body.isBlank()) {
+                message = body;
+            } else {
+                message = "Failed to save recipe: " + ex.getStatusCode();
+            }
+
+            model.addAttribute("recipe", recipeDto);
+            model.addAttribute(TITLE, title);
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipe-form :: content");
+            model.addAttribute("errorMessage", message);
+
+            return ADMIN_PAGE;
+        }
+    }
+
+    @GetMapping("/recipe/delete/{id}")
+    public String deleteRecipe(@PathVariable Long id) {
+
+        internalApiClient
+                .delete()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
+
+        return "redirect:/mealcraft/admin/recipe";
+    }
+
+    @GetMapping("/recipe/view/{id}")
+    public String viewRecipe(@PathVariable Long id, Model model) {
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri("/recipes/{id}", id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute("recipe", recipe);
+        model.addAttribute("title", "Recipe details");
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipe-details :: content");
+
+        return ADMIN_PAGE;
+    }
+
+    @GetMapping("/recipe/product-suggestions")
+    @ResponseBody
+    public List<ProductDto> getProductSuggestions(@RequestParam("query") String query) {
+
+        return internalApiClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/products/search")
+                        .queryParam("prefix", query)
+                        .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<ProductDto>>() {
+                });
+    }
+
     @GetMapping("/product")
     public String productsPage(Model model) {
         ResponseEntity<List<ProductDto>> response = internalApiClient.get()
                 .uri("/products")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {
+                });
 
         List<ProductDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -183,23 +326,44 @@ public class AdminPageWebController {
     }
 
     @GetMapping("/product/delete/{id}")
-    public String deleteProduct(@PathVariable Long id) {
+    public String deleteProduct(@PathVariable Long id, Model model) {
+        try {
+            internalApiClient
+                    .delete()
+                    .uri("/products/{id}", id)
+                    .retrieve()
+                    .toBodilessEntity();
 
-        internalApiClient
-                .delete()
-                .uri("/products/{id}", id)
-                .retrieve()
-                .toBodilessEntity();
+            return "redirect:/mealcraft/admin/product";
 
-        return "redirect:/mealcraft/admin/product";
+        } catch (HttpClientErrorException e) {
+            String message = e.getResponseBodyAsString();
+            ResponseEntity<List<ProductDto>> response = internalApiClient
+                    .get()
+                    .uri("/products")
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {
+                    });
+
+            List<ProductDto> data = response.getBody();
+
+            model.addAttribute("data", data);
+            model.addAttribute("errorMessage", message);
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/products :: content");
+            model.addAttribute(TITLE, "Products");
+
+            return ADMIN_PAGE;
+        }
     }
+
 
     @GetMapping("/notification")
     public String notificationsPage(Model model) {
         ResponseEntity<List<NotificationResponseDto>> response = internalApiClient.get()
                 .uri("/notifications")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<NotificationResponseDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<NotificationResponseDto>>() {
+                });
 
         List<NotificationResponseDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -213,7 +377,8 @@ public class AdminPageWebController {
         ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
                 .uri("/shopping-items")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
+                });
 
         List<ShoppingItemDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -227,7 +392,8 @@ public class AdminPageWebController {
         ResponseEntity<List<UnitDto>> response = internalApiClient.get()
                 .uri("/units")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
 
         List<UnitDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -280,18 +446,25 @@ public class AdminPageWebController {
 
             return "redirect:/mealcraft/admin/unit";
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientResponseException ex) {
 
-            if (e.getStatusCode() == HttpStatus.CONFLICT) {
-                model.addAttribute("unit", unitDto);
-                model.addAttribute("title", unitDto.getId() == null ? "Create unit" : "Edit unit");
-                model.addAttribute("fragmentToLoad", "fragments/unit-form :: content");
-                model.addAttribute("errorMessage", "Unit with this name already exists");
+            String body = ex.getResponseBodyAsString();
+            String message;
 
-                return "admin-page";
+            if (body != null && !body.isBlank()) {
+                message = body;
+            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                message = "Unit with this name already exists";
+            } else {
+                message = "Failed to save unit: " + ex.getStatusCode();
             }
 
-            throw e;
+            model.addAttribute("unit", unitDto);
+            model.addAttribute(TITLE, unitDto.getId() == null ? "Create unit" : "Edit unit");
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/unit-form :: content");
+            model.addAttribute("errorMessage", message);
+
+            return ADMIN_PAGE;
         }
     }
 
@@ -306,18 +479,29 @@ public class AdminPageWebController {
 
             return "redirect:/mealcraft/admin/unit";
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientResponseException ex) {
 
             ResponseEntity<List<UnitDto>> response = internalApiClient.get()
                     .uri("/units")
                     .retrieve()
-                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
+                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
+                    });
 
             List<UnitDto> data = response.getBody();
 
+            String body = ex.getResponseBodyAsString();
+            String message;
+
+            if (body != null && !body.isBlank()) {
+                message = body;
+            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                message = "This unit cannot be deleted because it is used by existing products.";
+            } else {
+                message = "Failed to delete unit: " + ex.getStatusCode();
+            }
+
             model.addAttribute("data", data);
-            model.addAttribute("errorMessage",
-                    "This unit cannot be deleted because it is used by existing products.");
+            model.addAttribute("errorMessage", message);
             model.addAttribute(FRAGMENT_TO_LOAD, "fragments/units :: content");
             model.addAttribute(TITLE, "Units");
 

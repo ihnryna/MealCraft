@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.user.User;
 import java.util.Date;
 import java.util.List;
@@ -34,11 +35,8 @@ public class Recipe {
 
     private String imageUrl;
 
-    @ManyToMany
-    @JoinTable(
-            name = "recipe_product",
-            joinColumns = @JoinColumn(name = "recipe_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id")
-    )
-    private List<Product> ingredients;
+    @OneToMany(mappedBy = "recipe",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<RecipeIngredient> ingredients;
 }

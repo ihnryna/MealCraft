@@ -3,9 +3,14 @@ package org.l5g7.mealcraft.app.products;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Date;
+import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
-    boolean existsByNameIgnoreCase(String name);
     long countByCreatedAtBetween(Date from, Date to);
+    List<Product> findByNameStartingWithIgnoreCase(String prefix);
+    List<Product> findAllByOwnerUserIsNull();
+    List<Product> findAllByOwnerUserIsNullOrOwnerUser_Id(Long id);
+    List<Product> findAllByOwnerUserIsNullAndNameStartingWithIgnoreCase(String prefix);
+    List<Product> findAllByOwnerUserIsNullOrOwnerUser_IdAndNameStartingWithIgnoreCase(Long ownerId, String prefix);
+
 }

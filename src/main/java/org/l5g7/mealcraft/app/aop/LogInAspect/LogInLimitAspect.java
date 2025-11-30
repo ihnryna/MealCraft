@@ -25,7 +25,7 @@ public class LogInLimitAspect {
     private HashMap<String, ArrayList<LocalDateTime>> logCounts = new HashMap<>();
 
     private final int LIMIT_MINUTES = 1;
-    private final int MAX_LOGS = 4;
+    private final int MAX_LOGS = 12;
 
     @Pointcut("execution(* org.l5g7.mealcraft.app.auth.AuthService.login(..))")
     public void loginMethod() {}
