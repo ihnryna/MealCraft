@@ -6,12 +6,10 @@ import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
-import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -74,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
             User owner = entity.getOwnerUser();
             if (owner != null) {
                 if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
                 }
             }
 
@@ -88,7 +86,7 @@ public class ProductServiceImpl implements ProductService {
                     entity.getDefaultUnit().getName()
             );
         } else {
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+            throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
         }
     }
 
@@ -99,6 +97,7 @@ public class ProductServiceImpl implements ProductService {
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId())
                 .orElseThrow(() -> new EntityDoesNotExistException(
                         "Unit",
+                        "id",
                         String.valueOf(productDto.getDefaultUnitId())
                 ));
 
@@ -126,12 +125,13 @@ public class ProductServiceImpl implements ProductService {
 
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+            throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
         }
 
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId())
                 .orElseThrow(() -> new EntityDoesNotExistException(
                         "Unit",
+                        "id",
                         String.valueOf(productDto.getDefaultUnitId())
                 ));
 
@@ -140,11 +140,11 @@ public class ProductServiceImpl implements ProductService {
 
             if (owner == null) {
                 if (currentUser != null) {
-                    throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
                 }
             } else {
                 if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
                 }
             }
 
@@ -163,7 +163,7 @@ public class ProductServiceImpl implements ProductService {
 
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Product", String.valueOf(id));
+            throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
         }
 
         existing.ifPresent(product -> {
@@ -171,11 +171,11 @@ public class ProductServiceImpl implements ProductService {
 
             if (owner == null) {
                 if (currentUser != null) {
-                    throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
                 }
             } else {
                 if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
                 }
             }
 
@@ -191,6 +191,7 @@ public class ProductServiceImpl implements ProductService {
                 Unit unit = unitRepository.findById(patch.getDefaultUnitId())
                         .orElseThrow(() -> new EntityDoesNotExistException(
                                 "Unit",
+                                "id",
                                 String.valueOf(patch.getDefaultUnitId())
                         ));
                 product.setDefaultUnit(unit);
@@ -205,14 +206,14 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProductById(Long id) {
         User currentUser = getCurrentUserOrNullIfAdmin();
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new EntityDoesNotExistException("Product", String.valueOf(id)));
+                .orElseThrow(() -> new EntityDoesNotExistException("Product", "id", String.valueOf(id)));
         if (product.getOwnerUser() == null) {
             if (currentUser != null) {
-                throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
             }
         } else {
             if (currentUser == null || !product.getOwnerUser().getId().equals(currentUser.getId())) {
-                throw new EntityDoesNotExistException("Product", String.valueOf(id));
+                throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
             }
         }
         List<Recipe> recipesUsing = recipeRepository.findAllByIngredientsProduct(product);
@@ -260,6 +261,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         String email = authentication.getName();
-        return userRepository.findByEmail(email).orElseThrow(() -> new EntityDoesNotExistException("User", email));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityDoesNotExistException("User", "email", email));
     }
 }
