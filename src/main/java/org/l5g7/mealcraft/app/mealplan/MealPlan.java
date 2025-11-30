@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.user.User;
+import org.l5g7.mealcraft.enums.MealPlanColor;
 import org.l5g7.mealcraft.enums.MealStatus;
 import java.util.Date;
 
@@ -39,4 +40,9 @@ public class MealPlan {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MealStatus status;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private MealPlanColor color;
+
 }

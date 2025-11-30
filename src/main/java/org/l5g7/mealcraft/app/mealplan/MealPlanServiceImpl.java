@@ -1,10 +1,14 @@
 package org.l5g7.mealcraft.app.mealplan;
 
 import jakarta.validation.Valid;
+import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
+import org.l5g7.mealcraft.enums.MealPlanColor;
 import org.l5g7.mealcraft.enums.MealStatus;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.stereotype.Service;
@@ -22,11 +26,13 @@ public class MealPlanServiceImpl implements MealPlanService {
     private static final String ENTITY_NAME = "MealPlan";
     private static final String ENTITY_RECIPE = "Recipe";
     private static final String ENTITY_USER= "User";
+    private final ShoppingItemRepository shoppingItemRepository;
 
-    public MealPlanServiceImpl(MealPlanRepository mealPlanRepository, UserRepository userRepository, RecipeRepository recipeRepository) {
+    public MealPlanServiceImpl(MealPlanRepository mealPlanRepository, UserRepository userRepository, RecipeRepository recipeRepository, ShoppingItemRepository shoppingItemRepository) {
         this.mealPlanRepository = mealPlanRepository;
         this.userRepository = userRepository;
         this.recipeRepository = recipeRepository;
+        this.shoppingItemRepository = shoppingItemRepository;
     }
 
     @Override
@@ -40,6 +46,8 @@ public class MealPlanServiceImpl implements MealPlanService {
                 .planDate(entity.getPlanDate())
                 .servings(entity.getServings())
                 .status(entity.getStatus())
+                .name(entity.getRecipe().getName())
+                .color(entity.getColor().getHex())
                 .build()).toList();
     }
 
@@ -55,7 +63,9 @@ public class MealPlanServiceImpl implements MealPlanService {
                     mealPlan.getRecipe().getId(),
                     mealPlan.getPlanDate(),
                     mealPlan.getServings(),
-                    mealPlan.getStatus()
+                    mealPlan.getStatus(),
+                    mealPlan.getRecipe().getName(),
+                    mealPlan.getColor().getHex()
             );
         } else {
             throw new EntityDoesNotExistException("Product", String.valueOf(id));
@@ -78,6 +88,8 @@ public class MealPlanServiceImpl implements MealPlanService {
                 .planDate(entity.getPlanDate())
                 .servings(entity.getServings())
                 .status(entity.getStatus())
+                .name(entity.getRecipe().getName())
+                .color(entity.getColor().getHex())
                 .build()).toList();
     }
 
@@ -96,6 +108,8 @@ public class MealPlanServiceImpl implements MealPlanService {
                 .planDate(entity.getPlanDate())
                 .servings(entity.getServings())
                 .status(entity.getStatus())
+                .name(entity.getRecipe().getName())
+                .color(entity.getColor().getHex())
                 .build()).toList();
     }
 
@@ -114,6 +128,8 @@ public class MealPlanServiceImpl implements MealPlanService {
                 .planDate(entity.getPlanDate())
                 .servings(entity.getServings())
                 .status(entity.getStatus())
+                .name(entity.getRecipe().getName())
+                .color(entity.getColor().getHex())
                 .build()).toList();
     }
 
@@ -132,6 +148,8 @@ public class MealPlanServiceImpl implements MealPlanService {
                 .planDate(entity.getPlanDate())
                 .servings(entity.getServings())
                 .status(entity.getStatus())
+                .name(entity.getRecipe().getName())
+                .color(entity.getColor().getHex())
                 .build()).toList();
     }
 
@@ -151,10 +169,16 @@ public class MealPlanServiceImpl implements MealPlanService {
                 .planDate(mealPlanDto.getPlanDate())
                 .servings(mealPlanDto.getServings())
                 .status(mealPlanDto.getStatus())
+                .color(MealPlanColor.fromHex(mealPlanDto.getColor()))
                 .build();
 
         mealPlanRepository.save(entity);
+
+        for(Product product : recipe.getIngredients()){
+            shoppingItemRepository.save(new ShoppingItem(null,userOwner,product,1,false,null));
+        }
     }
+
     @Override
     public void updateMealPlan(Long id, MealPlanDto mealPlanDto){
         Optional<MealPlan> existing = mealPlanRepository.findById(id);
@@ -173,6 +197,7 @@ public class MealPlanServiceImpl implements MealPlanService {
         existing.get().setPlanDate(mealPlanDto.getPlanDate());
         existing.get().setServings(mealPlanDto.getServings());
         existing.get().setStatus(mealPlanDto.getStatus());
+        existing.get().setColor(MealPlanColor.fromHex(mealPlanDto.getColor()));
 
         mealPlanRepository.save(existing.get());
     }
@@ -207,6 +232,10 @@ public class MealPlanServiceImpl implements MealPlanService {
 
         if(mealPlanDto.getStatus()!=null){
             existing.get().setStatus(mealPlanDto.getStatus());
+        }
+
+        if(mealPlanDto.getColor()!=null){
+            existing.get().setColor(MealPlanColor.fromHex(mealPlanDto.getColor()));
         }
 
         mealPlanRepository.save(existing.get());

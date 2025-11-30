@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.app;
+package org.l5g7.mealcraft.app.mealplan;
 
 import lombok.Getter;
 import lombok.Setter;

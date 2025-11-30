@@ -7,10 +7,14 @@ import org.l5g7.mealcraft.app.mealplan.MealPlan;
 import org.l5g7.mealcraft.app.mealplan.MealPlanDto;
 import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
 import org.l5g7.mealcraft.app.mealplan.MealPlanServiceImpl;
+import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
+import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
+import org.l5g7.mealcraft.enums.MealPlanColor;
 import org.l5g7.mealcraft.enums.MealStatus;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.mockito.InjectMocks;
@@ -36,6 +40,8 @@ class MealPlanServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private RecipeRepository recipeRepository;
+    @Mock
+    private ShoppingItemRepository shoppingItemRepository;
 
     @InjectMocks
     private MealPlanServiceImpl mealPlanService;
@@ -46,6 +52,14 @@ class MealPlanServiceImplTest {
     private MealPlan mealPlan1;
     private MealPlan mealPlan2;
     private MealPlan mealPlan3;
+    private Recipe baseRecipe;
+    private Unit unit1;
+    private Unit unit2;
+    private Product product1;
+    private Product product2;
+    private Recipe recipe1;
+    private Recipe recipe2;
+
 
     LocalDate localPlanDate1 = LocalDate.of(2025, 11, 3); // 3 Nov 2025
     LocalDate localPlanDate2 = LocalDate.of(2025, 11, 5);   // 5 Nov 2025
@@ -78,6 +92,7 @@ class MealPlanServiceImplTest {
                 .planDate(planDate1) // 3 Nov 2025
                 .servings(2)
                 .status(MealStatus.PLANNED)
+                .color(MealPlanColor.BLUE)
                 .build();
 
         mealPlan2 = MealPlan.builder()
@@ -87,6 +102,7 @@ class MealPlanServiceImplTest {
                 .planDate(planDate2) // 5 Nov 2025
                 .servings(3)
                 .status(MealStatus.PLANNED)
+                .color(MealPlanColor.ORANGE)
                 .build();
 
         mealPlan3 = MealPlan.builder()
@@ -96,8 +112,57 @@ class MealPlanServiceImplTest {
                 .planDate(planDate2) // 5 Nov 2025
                 .servings(10)
                 .status(MealStatus.CANCELLED)
+                .color(MealPlanColor.PURPLE)
                 .build();
 
+        baseRecipe = Recipe.builder()
+                .id(2L)
+                .name("Base Soup")
+                .createdAt(new Date())
+                .ownerUser(testUser)
+                .ingredients(List.of())
+                .build();
+
+        unit2 = Unit.builder()
+                .name("pc")
+                .build();
+
+        product1 = Product.builder()
+                .id(1L)
+                .name("Beetroot")
+                .defaultUnit(unit2)
+                .build();
+
+        unit1 = Unit.builder()
+                .id(1L)
+                .name("liter")
+                .build();
+
+        product2 = Product.builder()
+                .id(2L)
+                .name("Water")
+                .defaultUnit(unit1)
+                .build();
+
+        recipe1 = Recipe.builder()
+                .id(1L)
+                .name("Borshch")
+                .createdAt(new Date())
+                .ownerUser(testUser)
+                .baseRecipe(baseRecipe)
+                .imageUrl("https://example.com/borshch.jpg")
+                .ingredients(List.of(product1, product2))
+                .build();
+
+        recipe2 = Recipe.builder()
+                .id(2L)
+                .name("Stewed beetroot")
+                .createdAt(new Date())
+                .ownerUser(null)
+                .baseRecipe(null)
+                .imageUrl(null)
+                .ingredients(List.of(product1))
+                .build();
     }
 
     @Test
@@ -224,14 +289,15 @@ class MealPlanServiceImplTest {
                 .planDate(new Date())
                 .servings(3)
                 .status(MealStatus.PLANNED)
+                .name(recipe2.getName())
+                .color(MealPlanColor.LIGHT_BLUE.getHex())
                 .build();
 
         User user = new User();
         user.setId(1L);
-        Recipe recipe = Recipe.builder().id(2L).name("Test Recipe").createdAt(new Date()).build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe));
+        when(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe2));
 
         mealPlanService.createMealPlan(dto);
 
@@ -287,6 +353,7 @@ class MealPlanServiceImplTest {
                 .planDate(new Date())
                 .servings(1)
                 .status(MealStatus.PLANNED)
+                .color(MealPlanColor.BLUE)
                 .build();
 
         User newUser = new User();
@@ -304,6 +371,7 @@ class MealPlanServiceImplTest {
                 .planDate(new Date())
                 .servings(5)
                 .status(MealStatus.COOKED)
+                .color(MealPlanColor.GREEN.getHex())
                 .build();
 
         when(mealPlanRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -317,6 +385,7 @@ class MealPlanServiceImplTest {
         assertEquals(newRecipe, existing.getRecipe());
         assertEquals(5, existing.getServings());
         assertEquals(MealStatus.COOKED, existing.getStatus());
+        assertEquals(MealPlanColor.GREEN, existing.getColor());
     }
 
     @Test

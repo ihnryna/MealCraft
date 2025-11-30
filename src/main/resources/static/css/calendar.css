@@ -16,14 +16,13 @@
 .day-cell {
     cursor: pointer;
     transition: background-color 0.2s;
-    height: 100px;
+    height: 120px;
 }
 
 .day-cell:hover {
     background-color: #f0f0f0;
 }
 
-/* для додаткового контенту всередині дня */
 .day-cell .day-number {
     padding: 10px;
 }
@@ -33,13 +32,23 @@
     height: 40px;
 }
 
-/* Загальний стиль */
+.calendar .slots span {
+    display: block;
+    height: 20px;
+    background-color: transparent;
+    line-height: 22px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
 .calendar .slots span.event {
     display: block;
     width: 100%;
 }
 
-/* Початок */
 .calendar .slots span.event-start {
     display: block;
     width: 100%;
@@ -47,7 +56,6 @@
     border-bottom-left-radius: 12px;
 }
 
-/* Кінець */
 .calendar .slots span.event-end {
     display: block;
     width: 100%;
@@ -55,7 +63,6 @@
     border-bottom-right-radius: 12px;
 }
 
-/* Середина */
 .calendar .slots span.event:not(.event-start):not(.event-end) {
     border-radius: 0;
 }

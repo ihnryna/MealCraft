@@ -1,8 +1,8 @@
 package org.l5g7.mealcraft.web;
 
 import jakarta.servlet.http.HttpSession;
-import org.l5g7.mealcraft.app.Event;
-import org.l5g7.mealcraft.app.EventCell;
+import org.l5g7.mealcraft.app.mealplan.EventCell;
+import org.l5g7.mealcraft.app.mealplan.MealPlanDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,6 +21,7 @@ import org.springframework.web.client.RestClient;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.DayOfWeek;
+import java.time.ZoneId;
 import java.util.*;
 
 @Controller
@@ -63,31 +64,67 @@ public class HomeWebController {
             weeks.add(week);
         }
 
-        ArrayList<Event> events = new ArrayList<>();
-        events.add(new Event(LocalDate.of(2025, 11, 3), LocalDate.of(2025, 11, 6), "cook","#FFB347"));
-        events.add(new Event(LocalDate.of(2025, 11, 5), LocalDate.of(2025, 11, 17), "book", "#C2FF47"));
+
+        String username = auth.getName();
+        model.addAttribute("username", username);
 
 
+        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
+                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<MealPlanDto>>() {
+                });
+
+        List<MealPlanDto> events = responseMeals.getBody();
         Map<LocalDate, ArrayList<EventCell>> dayEventMap = new HashMap<>();
 
-        for (Event ev : events) {
-            LocalDate start = ev.getStart();
-            LocalDate end = ev.getEnd();
-            for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
-                if(dayEventMap.containsKey(i)) {
-                    dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), dayEventMap.get(i).size(), ev.getColor()));
-                } else {
-                    dayEventMap.put(i, new ArrayList<>(
-                            List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), 0, ev.getColor())))
-                    );
+        if (events != null) {
+            for (MealPlanDto ev : events) {
+                Date date = ev.getPlanDate();
+                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate end = start.plusDays(ev.getServings());
+                int slot = 0;
+                boolean foundSlot = false;
+                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                    if (!foundSlot) {
+                        if (dayEventMap.containsKey(i)) {
+                            slot = dayEventMap.get(i).size();
+                            foundSlot = true;
+                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                            System.out.println(slot+" "+ev.getName());
+                            //dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                        } else {
+                            foundSlot = true;
+                            dayEventMap.put(i, new ArrayList<>());
+                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                            System.out.println(slot+" "+ev.getName());
+
+                        }
+                    } else {
+                        if (dayEventMap.containsKey(i)) {
+                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                            System.out.println(slot+" "+ev.getName());
+
+                            //dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                        } else {
+                            dayEventMap.put(i, new ArrayList<>());
+                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                            System.out.println(slot+" "+ev.getName());
+
+
+                            /*dayEventMap.put(i, new ArrayList<>(
+                                    List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor())))
+                            );*/
+                        }
+                        //dayEventMap.put(i, new ArrayList<>(List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()))));
+                    }
                 }
             }
         }
 
         model.addAttribute("dayEventMap", dayEventMap);
 
-        String username = auth.getName();
-        model.addAttribute("username", username);
+
         String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
         model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
 
@@ -121,6 +158,13 @@ public class HomeWebController {
     public String setUserColor(@RequestParam String color, HttpSession session) {
         session.setAttribute("themeColor", color);
         return "redirect:/mealcraft/home";
+    }
+
+    private void putAtSlot(List<EventCell> list, int slot, EventCell cell) {
+        while (list.size() <= slot) {
+            list.add(null); // додаємо пусті слоти
+        }
+        list.set(slot, cell);
     }
 
 }

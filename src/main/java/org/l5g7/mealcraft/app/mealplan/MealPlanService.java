@@ -5,7 +5,6 @@ import org.l5g7.mealcraft.enums.MealStatus;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 public interface MealPlanService {
     List<MealPlanDto> getAllMealPlans();
