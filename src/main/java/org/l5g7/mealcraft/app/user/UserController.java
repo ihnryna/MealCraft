@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -43,7 +42,6 @@ public class UserController {
     public void patchUser(@PathVariable Long id, @RequestBody @Valid UserRequestDto user) {
         userService.patchUser(id, user);
     }
-
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
