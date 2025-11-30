@@ -56,7 +56,8 @@ public class AdminPageWebController {
         ResponseEntity<List<UserResponseDto>> response = internalApiClient.get()
                 .uri("/users")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<UserResponseDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<UserResponseDto>>() {
+                });
 
         List<UserResponseDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -70,7 +71,8 @@ public class AdminPageWebController {
         ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
                 .uri("/recipes")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {
+                });
 
         List<RecipeDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -214,7 +216,8 @@ public class AdminPageWebController {
                         .queryParam("prefix", query)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<ProductDto>>() {});
+                .body(new ParameterizedTypeReference<List<ProductDto>>() {
+                });
     }
 
     @GetMapping("/product")
@@ -222,7 +225,8 @@ public class AdminPageWebController {
         ResponseEntity<List<ProductDto>> response = internalApiClient.get()
                 .uri("/products")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {
+                });
 
         List<ProductDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -338,7 +342,8 @@ public class AdminPageWebController {
                     .get()
                     .uri("/products")
                     .retrieve()
-                    .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {});
+                    .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {
+                    });
 
             List<ProductDto> data = response.getBody();
 
@@ -357,7 +362,8 @@ public class AdminPageWebController {
         ResponseEntity<List<NotificationResponseDto>> response = internalApiClient.get()
                 .uri("/notifications")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<NotificationResponseDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<NotificationResponseDto>>() {
+                });
 
         List<NotificationResponseDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -371,7 +377,8 @@ public class AdminPageWebController {
         ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
                 .uri("/shopping-items")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
+                });
 
         List<ShoppingItemDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -385,7 +392,8 @@ public class AdminPageWebController {
         ResponseEntity<List<UnitDto>> response = internalApiClient.get()
                 .uri("/units")
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
 
         List<UnitDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -438,18 +446,25 @@ public class AdminPageWebController {
 
             return "redirect:/mealcraft/admin/unit";
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientResponseException ex) {
 
-            if (e.getStatusCode() == HttpStatus.CONFLICT) {
-                model.addAttribute("unit", unitDto);
-                model.addAttribute("title", unitDto.getId() == null ? "Create unit" : "Edit unit");
-                model.addAttribute("fragmentToLoad", "fragments/unit-form :: content");
-                model.addAttribute("errorMessage", "Unit with this name already exists");
+            String body = ex.getResponseBodyAsString();
+            String message;
 
-                return "admin-page";
+            if (body != null && !body.isBlank()) {
+                message = body;
+            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                message = "Unit with this name already exists";
+            } else {
+                message = "Failed to save unit: " + ex.getStatusCode();
             }
 
-            throw e;
+            model.addAttribute("unit", unitDto);
+            model.addAttribute(TITLE, unitDto.getId() == null ? "Create unit" : "Edit unit");
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/unit-form :: content");
+            model.addAttribute("errorMessage", message);
+
+            return ADMIN_PAGE;
         }
     }
 
@@ -464,18 +479,29 @@ public class AdminPageWebController {
 
             return "redirect:/mealcraft/admin/unit";
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientResponseException ex) {
 
             ResponseEntity<List<UnitDto>> response = internalApiClient.get()
                     .uri("/units")
                     .retrieve()
-                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
+                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
+                    });
 
             List<UnitDto> data = response.getBody();
 
+            String body = ex.getResponseBodyAsString();
+            String message;
+
+            if (body != null && !body.isBlank()) {
+                message = body;
+            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                message = "This unit cannot be deleted because it is used by existing products.";
+            } else {
+                message = "Failed to delete unit: " + ex.getStatusCode();
+            }
+
             model.addAttribute("data", data);
-            model.addAttribute("errorMessage",
-                    "This unit cannot be deleted because it is used by existing products.");
+            model.addAttribute("errorMessage", message);
             model.addAttribute(FRAGMENT_TO_LOAD, "fragments/units :: content");
             model.addAttribute(TITLE, "Units");
 
