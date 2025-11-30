@@ -8,6 +8,7 @@ import org.l5g7.mealcraft.app.mealplan.MealPlanDto;
 import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
 import org.l5g7.mealcraft.app.mealplan.MealPlanServiceImpl;
 import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
@@ -59,6 +60,9 @@ class MealPlanServiceImplTest {
     private Product product2;
     private Recipe recipe1;
     private Recipe recipe2;
+    private RecipeIngredient recipeIngredient11;
+    private RecipeIngredient recipeIngredient12;
+    private RecipeIngredient recipeIngredient21;
 
 
     LocalDate localPlanDate1 = LocalDate.of(2025, 11, 3); // 3 Nov 2025
@@ -151,8 +155,21 @@ class MealPlanServiceImplTest {
                 .ownerUser(testUser)
                 .baseRecipe(baseRecipe)
                 .imageUrl("https://example.com/borshch.jpg")
-                .ingredients(List.of(product1, product2))
                 .build();
+
+        recipeIngredient11 = RecipeIngredient.builder()
+                .product(product1)
+                .recipe(recipe1)
+                .amount(1d)
+                .build();
+
+        recipeIngredient12 = RecipeIngredient.builder()
+                .product(product2)
+                .recipe(recipe1)
+                .amount(1d)
+                .build();
+
+        recipe1.setIngredients(List.of(recipeIngredient11, recipeIngredient12));
 
         recipe2 = Recipe.builder()
                 .id(2L)
@@ -161,8 +178,16 @@ class MealPlanServiceImplTest {
                 .ownerUser(null)
                 .baseRecipe(null)
                 .imageUrl(null)
-                .ingredients(List.of(product1))
                 .build();
+
+        recipeIngredient21 = RecipeIngredient.builder()
+                .product(product1)
+                .recipe(recipe2)
+                .amount(1d)
+                .build();
+
+        recipe2.setIngredients(List.of(recipeIngredient21));
+
     }
 
     @Test
@@ -349,7 +374,7 @@ class MealPlanServiceImplTest {
         MealPlan existing = MealPlan.builder()
                 .id(id)
                 .userOwner(new User())
-                .recipe(Recipe.builder().id(10L).name("Old").createdAt(new Date()).build())
+                .recipe(recipe1)
                 .planDate(new Date())
                 .servings(1)
                 .status(MealStatus.PLANNED)
@@ -373,6 +398,14 @@ class MealPlanServiceImplTest {
                 .status(MealStatus.COOKED)
                 .color(MealPlanColor.GREEN.getHex())
                 .build();
+
+        RecipeIngredient recipeIngredientNew = RecipeIngredient.builder()
+                .product(product2)
+                .recipe(newRecipe)
+                .amount(1d)
+                .build();
+
+        newRecipe.setIngredients(List.of(recipeIngredientNew));
 
         when(mealPlanRepository.findById(id)).thenReturn(Optional.of(existing));
         when(userRepository.findById(1L)).thenReturn(Optional.of(newUser));
@@ -423,6 +456,14 @@ class MealPlanServiceImplTest {
                 .name("Test2 Recipe")
                 .createdAt(new Date())
                 .build();
+
+        RecipeIngredient recipeIngredientNew = RecipeIngredient.builder()
+                .product(product2)
+                .recipe(newRecipe)
+                .amount(1d)
+                .build();
+
+        newRecipe.setIngredients(List.of(recipeIngredientNew));
 
         MealPlanDto dto = MealPlanDto.builder()
                 .recipeId(99L)

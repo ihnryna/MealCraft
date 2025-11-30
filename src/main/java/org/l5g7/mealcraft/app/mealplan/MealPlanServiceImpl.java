@@ -2,6 +2,7 @@ package org.l5g7.mealcraft.app.mealplan;
 
 import jakarta.validation.Valid;
 import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
@@ -174,8 +175,8 @@ public class MealPlanServiceImpl implements MealPlanService {
 
         mealPlanRepository.save(entity);
 
-        for(Product product : recipe.getIngredients()){
-            shoppingItemRepository.save(new ShoppingItem(null,userOwner,product,1,false,null));
+        for(RecipeIngredient ingredient : recipe.getIngredients()){
+            shoppingItemRepository.save(new ShoppingItem(null,userOwner,ingredient.getProduct(),ingredient.getAmount(),false,null));
         }
     }
 
@@ -199,6 +200,10 @@ public class MealPlanServiceImpl implements MealPlanService {
         existing.get().setStatus(mealPlanDto.getStatus());
         existing.get().setColor(MealPlanColor.fromHex(mealPlanDto.getColor()));
 
+        for(RecipeIngredient ingredient : recipe.getIngredients()){
+            shoppingItemRepository.save(new ShoppingItem(null,userOwner,ingredient.getProduct(),ingredient.getAmount(),false,null));
+        }
+
         mealPlanRepository.save(existing.get());
     }
 
@@ -220,6 +225,9 @@ public class MealPlanServiceImpl implements MealPlanService {
                     .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_RECIPE, String.valueOf(mealPlanDto.getRecipeId())));
 
             existing.get().setRecipe(recipe);
+            for(RecipeIngredient ingredient : recipe.getIngredients()){
+                shoppingItemRepository.save(new ShoppingItem(null,existing.get().getUserOwner(),ingredient.getProduct(),ingredient.getAmount(),false,null));
+            }
         }
 
         if(mealPlanDto.getPlanDate()!=null){

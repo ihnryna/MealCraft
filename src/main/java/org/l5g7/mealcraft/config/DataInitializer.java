@@ -4,6 +4,8 @@ import org.l5g7.mealcraft.app.mealplan.MealPlan;
 import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientRepository;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
@@ -39,7 +41,7 @@ public class DataInitializer {
                                    UnitRepository unitRepository,
                                    ProductRepository productRepository,
                                    RecipeRepository recipeRepository,
-                                   MealPlanRepository mealPlanRepository, ShoppingItemRepository shoppingItemRepository) {
+                                   MealPlanRepository mealPlanRepository, ShoppingItemRepository shoppingItemRepository, RecipeIngredientRepository recipeIngredientRepository) {
         return args -> {
             if (userRepository.count() == 0) {
                 PasswordHasher encoder = new PasswordHasher();
@@ -170,7 +172,24 @@ public class DataInitializer {
                         .ownerUser(user)
                         .baseRecipe(baseRecipe)
                         .imageUrl("https://example.com/borshch.jpg")
-                        .ingredients(List.of(product1, product2, product3))
+                        .build();
+
+                RecipeIngredient recipeIngredient1 = RecipeIngredient.builder()
+                        .product(product1)
+                        .recipe(recipe1)
+                        .amount(1d)
+                        .build();
+
+                RecipeIngredient recipeIngredient2 = RecipeIngredient.builder()
+                        .product(product2)
+                        .recipe(recipe1)
+                        .amount(1d)
+                        .build();
+
+                RecipeIngredient recipeIngredient3 = RecipeIngredient.builder()
+                        .product(product3)
+                        .recipe(recipe1)
+                        .amount(1d)
                         .build();
 
                 Recipe recipe2 = Recipe.builder()
@@ -179,16 +198,27 @@ public class DataInitializer {
                         .ownerUser(null)
                         .baseRecipe(null)
                         .imageUrl(null)
-                        .ingredients(List.of(product1))
                         .build();
+
+                RecipeIngredient recipeIngredient21 = RecipeIngredient.builder()
+                        .product(product1)
+                        .recipe(recipe2)
+                        .amount(1d)
+                        .build();
+
+                recipe1.setIngredients(List.of(recipeIngredient1, recipeIngredient2, recipeIngredient3));
+                recipe2.setIngredients(List.of(recipeIngredient21));
+
 
                 LocalDate localPlanDate1 = LocalDate.of(2025, 11, 3);
                 LocalDate localPlanDate2 = LocalDate.of(2025, 11, 5);
                 Date planDate1 = Date.from(localPlanDate1.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 Date planDate2 = Date.from(localPlanDate2.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
                 recipeRepository.save(baseRecipe);
                 recipeRepository.save(recipe1);
                 recipeRepository.save(recipe2);
+
 
                 MealPlan mealPlan1 = MealPlan.builder()
                         .userOwner(user)
@@ -211,11 +241,12 @@ public class DataInitializer {
                 mealPlanRepository.save(mealPlan1);
                 mealPlanRepository.save(mealPlan2);
 
-                for(Product product : mealPlan2.getRecipe().getIngredients()){
-                    shoppingItemRepository.save(new ShoppingItem(null,mealPlan2.getUserOwner(),product,1,false,null));
+
+                for(RecipeIngredient ingredient : mealPlan2.getRecipe().getIngredients()){
+                    shoppingItemRepository.save(new ShoppingItem(null,mealPlan2.getUserOwner(),ingredient.getProduct(),ingredient.getAmount(),false,null));
                 }
-                for(Product product : mealPlan1.getRecipe().getIngredients()){
-                    shoppingItemRepository.save(new ShoppingItem(null,mealPlan1.getUserOwner(),product,1,false,null));
+                for(RecipeIngredient ingredient : mealPlan1.getRecipe().getIngredients()){
+                    shoppingItemRepository.save(new ShoppingItem(null,mealPlan1.getUserOwner(),ingredient.getProduct(),ingredient.getAmount(),false,null));
                 }
             }
         };

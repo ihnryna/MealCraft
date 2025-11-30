@@ -24,7 +24,7 @@ public class ShoppingItemDto {
 
     private Long userOwnerId;
     private Long productId;
-    private Integer requiredQty;
+    private Double requiredQty;
     private Boolean status;
     private String unitName; //aux
 

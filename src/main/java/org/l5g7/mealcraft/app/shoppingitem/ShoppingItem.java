@@ -25,7 +25,7 @@ public class ShoppingItem {
     private Product product;
 
     @Column(nullable = false)
-    private Integer requiredQty;
+    private Double requiredQty;
 
     @Column(nullable = false)
     private Boolean status;  // to-buy - false, bought - true
