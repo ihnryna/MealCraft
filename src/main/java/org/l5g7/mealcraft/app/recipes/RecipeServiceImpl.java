@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -33,6 +34,7 @@ public class RecipeServiceImpl implements RecipeService {
         this.recipeProvider = recipeProvider;
     }
 
+    @Transactional
     @Override
     public List<RecipeDto> getAllRecipes() {
         User currentUser = getCurrentUserOrNullIfAdmin();
@@ -70,6 +72,7 @@ public class RecipeServiceImpl implements RecipeService {
                 }).toList();
     }
 
+    @Transactional
     @Override
     public RecipeDto getRecipeById(Long id) {
         User currentUser = getCurrentUserOrNullIfAdmin();
@@ -109,6 +112,7 @@ public class RecipeServiceImpl implements RecipeService {
         }
     }
 
+    @Transactional
     @Override
     public void createRecipe(RecipeDto recipeDto) {
 
@@ -174,6 +178,7 @@ public class RecipeServiceImpl implements RecipeService {
         recipeRepository.save(entity);
     }
 
+    @Transactional
     @Override
     public void updateRecipe(Long id, RecipeDto recipeDto) {
         User currentUser = getCurrentUserOrNullIfAdmin();
@@ -279,6 +284,7 @@ public class RecipeServiceImpl implements RecipeService {
         });
     }
 
+    @Transactional
     @Override
     public void patchRecipe(Long id, RecipeDto patch) {
         User currentUser = getCurrentUserOrNullIfAdmin();
@@ -387,6 +393,7 @@ public class RecipeServiceImpl implements RecipeService {
         });
     }
 
+    @Transactional
     @Override
     public void deleteRecipeById(Long id) {
 
@@ -421,6 +428,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
 
+    @Transactional
     @Override
     public RecipeDto getRandomRecipe() throws NoSuchElementException {
         ExternalRecipe externalRecipe = recipeProvider.getRandomRecipe();
@@ -442,12 +450,8 @@ public class RecipeServiceImpl implements RecipeService {
             return null;
         }
 
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityDoesNotExistException(
-                        "User",
-                        "email",
-                        email
-                ));
+        String name = authentication.getName();
+        return userRepository.findByUsername(name)
+                .orElseThrow(() -> new EntityDoesNotExistException("User", "name", name));
     }
 }

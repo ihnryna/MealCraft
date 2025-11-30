@@ -26,6 +26,7 @@ public class ProductServiceImpl implements ProductService {
     private final UnitRepository unitRepository;
     private final UserRepository userRepository;
     private final RecipeRepository recipeRepository;
+    private static final String ENTITY_NAME = "Product";
 
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository, UnitRepository unitRepository, UserRepository userRepository, RecipeRepository recipeRepository) {
@@ -39,25 +40,25 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDto> getAllProducts() {
         User currentUser = getCurrentUserOrNullIfAdmin();
 
-        List<Product> entities = productRepository.findAll().stream()
-                .filter(p -> {
-                    User owner = p.getOwnerUser();
-                    if (owner == null) {
-                        return true;
-                    }
-                    return currentUser != null && owner.getId().equals(currentUser.getId());
-                })
-                .toList();
+        List<Product> entities;
 
-        return entities.stream().map(entity -> ProductDto.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .defaultUnitId(entity.getDefaultUnit().getId())
-                .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
-                .imageUrl(entity.getImageUrl())
-                .createdAt(entity.getCreatedAt())
-                .defaultUnitName(entity.getDefaultUnit().getName())
-                .build()).toList();
+        if (currentUser == null) {
+            entities = productRepository.findAllByOwnerUserIsNull();
+        } else {
+            entities = productRepository.findAllByOwnerUserIsNullOrOwnerUser_Id(currentUser.getId());
+        }
+
+        return entities.stream()
+                .map(entity -> ProductDto.builder()
+                        .id(entity.getId())
+                        .name(entity.getName())
+                        .defaultUnitId(entity.getDefaultUnit().getId())
+                        .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
+                        .imageUrl(entity.getImageUrl())
+                        .createdAt(entity.getCreatedAt())
+                        .defaultUnitName(entity.getDefaultUnit().getName())
+                        .build())
+                .toList();
     }
 
     @Override
@@ -70,10 +71,8 @@ public class ProductServiceImpl implements ProductService {
             Product entity = product.get();
 
             User owner = entity.getOwnerUser();
-            if (owner != null) {
-                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
-                }
+            if (owner != null && (currentUser == null || !owner.getId().equals(currentUser.getId()))) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
             }
 
             return new ProductDto(
@@ -86,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
                     entity.getDefaultUnit().getName()
             );
         } else {
-            throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
     }
 
@@ -125,7 +124,7 @@ public class ProductServiceImpl implements ProductService {
 
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
 
         Unit unit = unitRepository.findById(productDto.getDefaultUnitId())
@@ -140,11 +139,11 @@ public class ProductServiceImpl implements ProductService {
 
             if (owner == null) {
                 if (currentUser != null) {
-                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
                 }
             } else {
                 if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
                 }
             }
 
@@ -163,7 +162,7 @@ public class ProductServiceImpl implements ProductService {
 
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
 
         existing.ifPresent(product -> {
@@ -171,11 +170,11 @@ public class ProductServiceImpl implements ProductService {
 
             if (owner == null) {
                 if (currentUser != null) {
-                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
                 }
             } else {
                 if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
                 }
             }
 
@@ -206,14 +205,14 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProductById(Long id) {
         User currentUser = getCurrentUserOrNullIfAdmin();
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new EntityDoesNotExistException("Product", "id", String.valueOf(id)));
+                .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id)));
         if (product.getOwnerUser() == null) {
             if (currentUser != null) {
-                throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
             }
         } else {
             if (currentUser == null || !product.getOwnerUser().getId().equals(currentUser.getId())) {
-                throw new EntityDoesNotExistException("Product", "id", String.valueOf(id));
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
             }
         }
         List<Recipe> recipesUsing = recipeRepository.findAllByIngredientsProduct(product);
@@ -226,18 +225,18 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> searchProductsByPrefix(String prefix) {
-
         User currentUser = getCurrentUserOrNullIfAdmin();
-        List<Product> products = productRepository.findByNameStartingWithIgnoreCase(prefix);
+
+        List<Product> products;
+
+        if (currentUser == null) {
+            products = productRepository.findAllByOwnerUserIsNullAndNameStartingWithIgnoreCase(prefix);
+        } else {
+            products = productRepository
+                    .findAllByOwnerUserIsNullOrOwnerUser_IdAndNameStartingWithIgnoreCase(currentUser.getId(), prefix);
+        }
 
         return products.stream()
-                .filter(p -> {
-                    User owner = p.getOwnerUser();
-                    if (owner == null) {
-                        return true;
-                    }
-                    return currentUser != null && owner.getId().equals(currentUser.getId());
-                })
                 .map(entity -> ProductDto.builder()
                         .id(entity.getId())
                         .name(entity.getName())
@@ -246,8 +245,8 @@ public class ProductServiceImpl implements ProductService {
                         .imageUrl(entity.getImageUrl())
                         .createdAt(entity.getCreatedAt())
                         .defaultUnitName(entity.getDefaultUnit().getName())
-                        .build()
-                ).toList();
+                        .build())
+                .toList();
     }
 
     private User getCurrentUserOrNullIfAdmin() {
@@ -260,8 +259,8 @@ public class ProductServiceImpl implements ProductService {
             return null;
         }
 
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityDoesNotExistException("User", "email", email));
+        String name = authentication.getName();
+        return userRepository.findByUsername(name)
+                .orElseThrow(() -> new EntityDoesNotExistException("User", "name", name));
     }
 }
