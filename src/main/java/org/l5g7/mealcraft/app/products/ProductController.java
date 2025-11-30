@@ -36,7 +36,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}")
-    public void patchRecipe(@PathVariable Long id, @RequestBody ProductDto partialUpdate) {
+    public void patchProduct(@PathVariable Long id, @RequestBody ProductDto partialUpdate) {
         productService.patchProduct(id, partialUpdate);
     }
 

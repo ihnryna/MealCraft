@@ -21,8 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SuppressWarnings("java:S5786")
-public class ProductServiceUnitTests {
+class ProductServiceUnitTests {
 
     private ProductRepository productRepository;
     private UnitRepository unitRepository;
