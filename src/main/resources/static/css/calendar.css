@@ -17,6 +17,11 @@
     cursor: pointer;
     transition: background-color 0.2s;
     height: 120px;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .day-cell:hover {

@@ -7,6 +7,7 @@ import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClient;
@@ -23,6 +25,8 @@ import java.time.YearMonth;
 import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.util.*;
+
+import static org.apache.hc.client5.http.utils.DateUtils.toDate;
 
 @Controller
 public class HomeWebController {
@@ -127,6 +131,73 @@ public class HomeWebController {
         List<ShoppingItemDto> shoppingItems = response.getBody();
         model.addAttribute("shoppingItems", shoppingItems);
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/calendar :: calendarFragment");
+        return "home";
+    }
+
+
+    @GetMapping("/mealcraft/home/{day}")
+    public String showDayPage(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day, Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        String username = auth.getName();
+        model.addAttribute("username", username);
+
+        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
+                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<MealPlanDto>>() {
+                });
+
+        List<MealPlanDto> events = responseMeals.getBody();
+        Map<LocalDate, ArrayList<MealPlanDto>> dayEventMapForDay = new HashMap<>();
+
+        if (events != null) {
+            for (MealPlanDto ev : events) {
+                Date date = ev.getPlanDate();
+                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate end = start.plusDays(ev.getServings());
+                int slot = 0;
+                boolean foundSlot = false;
+                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                    if (!foundSlot) {
+                        if (dayEventMapForDay.containsKey(i)) {
+                            slot = dayEventMapForDay.get(i).size();
+                            foundSlot = true;
+                            dayEventMapForDay.get(i).add(ev);
+                        } else {
+                            foundSlot = true;
+                            dayEventMapForDay.put(i, new ArrayList<>());
+                            dayEventMapForDay.get(i).add(ev);
+                        }
+                    } else {
+                        if (dayEventMapForDay.containsKey(i)) {
+                            dayEventMapForDay.get(i).add(ev);
+                        } else {
+                            dayEventMapForDay.put(i, new ArrayList<>());
+                            dayEventMapForDay.get(i).add(ev);
+                        }
+                    }
+                }
+            }
+        }
+
+        model.addAttribute("dayEventMapForDay", dayEventMapForDay);
+        Date d = Date.from(day.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        model.addAttribute("dayDate", d);
+
+
+        model.addAttribute("title", "MealCraft — Main Page");
+
+        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
+                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
+                });
+
+        List<ShoppingItemDto> shoppingItems = response.getBody();
+        model.addAttribute("shoppingItems", shoppingItems);
+        model.addAttribute("day",day);
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/day :: dayFragment");
         return "home";
     }
 
