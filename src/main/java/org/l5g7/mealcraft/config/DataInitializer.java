@@ -70,7 +70,7 @@ public class DataInitializer {
 
                 User premiumUser = User.builder()
                         .username("ira")
-                        .email("ira@mealcraft.o rg")
+                        .email("ira@mealcraft.org")
                         .password(encoder.hashPassword("ira123"))
                         .role(Role.PREMIUM_USER)
                         .avatarUrl(null)
