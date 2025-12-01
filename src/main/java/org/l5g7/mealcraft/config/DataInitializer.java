@@ -208,8 +208,8 @@ public class DataInitializer {
                 recipe2.setIngredients(List.of(recipeIngredient21));
 
 
-                LocalDate localPlanDate1 = LocalDate.of(2025, 11, 3);
-                LocalDate localPlanDate2 = LocalDate.of(2025, 11, 5);
+                LocalDate localPlanDate1 = LocalDate.of(2025, 12, 3);
+                LocalDate localPlanDate2 = LocalDate.of(2025, 12, 5);
                 Date planDate1 = Date.from(localPlanDate1.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 Date planDate2 = Date.from(localPlanDate2.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
