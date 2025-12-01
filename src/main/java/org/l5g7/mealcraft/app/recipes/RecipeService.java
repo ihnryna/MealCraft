@@ -11,6 +11,7 @@ public interface RecipeService {
     void patchRecipe(Long id, RecipeDto patch);
     void deleteRecipeById(Long id);
     RecipeDto getRandomRecipe() throws NoSuchElementException;
+    List<RecipeDto> getRecipesByProducts(List<String> products);
 
 }
 

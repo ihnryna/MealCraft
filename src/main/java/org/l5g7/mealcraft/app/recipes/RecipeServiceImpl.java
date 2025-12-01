@@ -428,4 +428,64 @@ public class RecipeServiceImpl implements RecipeService {
                 .build();
     }
 
+    @Transactional
+    @Override
+    public List<RecipeDto> getRecipesByProducts(List<String> products) {
+        if (products == null || products.isEmpty()) {
+            return List.of();
+        }
+
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
+
+        Set<String> allowedProductNames = products.stream()
+                .map(String::toLowerCase)
+                .collect(java.util.stream.Collectors.toSet());
+
+        List<Recipe> entities;
+
+        if (currentUser == null) {
+            entities = recipeRepository.findAllByOwnerUserIsNull();
+        } else {
+            entities = recipeRepository.findAllByOwnerUserIsNullOrOwnerUser_Id(currentUser.getId());
+        }
+
+        List<Recipe> filteredEntities = entities.stream()
+                .filter(recipe -> {
+                    if (recipe.getIngredients() == null || recipe.getIngredients().isEmpty()) {
+                        return false;
+                    }
+
+                    return recipe.getIngredients().stream()
+                            .allMatch(ingredient ->
+                                ingredient.getProduct() != null &&
+                                allowedProductNames.contains(ingredient.getProduct().getName().toLowerCase())
+                            );
+                })
+                .toList();
+
+        return filteredEntities.stream()
+                .map(entity -> {
+                    List<RecipeIngredientDto> ingredients = (entity.getIngredients() != null)
+                            ? entity.getIngredients().stream()
+                            .map(ingredient -> RecipeIngredientDto.builder()
+                                    .id(ingredient.getId())
+                                    .productId(ingredient.getProduct().getId())
+                                    .productName(ingredient.getProduct().getName())
+                                    .amount(ingredient.getAmount())
+                                    .build())
+                            .toList()
+                            : List.of();
+
+                    return RecipeDto.builder()
+                            .id(entity.getId())
+                            .name(entity.getName())
+                            .ownerUserId(entity.getOwnerUser() != null ? entity.getOwnerUser().getId() : null)
+                            .baseRecipeId(entity.getBaseRecipe() != null ? entity.getBaseRecipe().getId() : null)
+                            .createdAt(entity.getCreatedAt())
+                            .imageUrl(entity.getImageUrl())
+                            .ingredients(ingredients)
+                            .build();
+                }).toList();
+    }
+
 }
