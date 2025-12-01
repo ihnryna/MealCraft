@@ -268,7 +268,7 @@ public class DataInitializer {
                         .createdAt(new Date())
                         .ownerUser(null) // Public recipe
                         .baseRecipe(null)
-                        .imageUrl("https://example.com/omelet.jpg")
+                        .imageUrl("/images/imagesForDB/tomatoOmlette.png")
                         .build();
 
                 RecipeIngredient recipeIngredient41 = RecipeIngredient.builder()
@@ -285,58 +285,56 @@ public class DataInitializer {
 
                 recipe4.setIngredients(List.of(recipeIngredient41, recipeIngredient42));
 
-                // Recipe 5: Chicken Rice Bowl (user's private recipe with Chicken + Rice)
                 Recipe recipe5 = Recipe.builder()
                         .name("Chicken Rice Bowl")
                         .createdAt(new Date())
-                        .ownerUser(user) // User's private recipe
+                        .ownerUser(user)
                         .baseRecipe(null)
                         .imageUrl("https://example.com/chicken-rice.jpg")
                         .build();
 
                 RecipeIngredient recipeIngredient51 = RecipeIngredient.builder()
-                        .product(product6) // Chicken
+                        .product(product6)
                         .recipe(recipe5)
                         .amount(1d)
                         .build();
 
                 RecipeIngredient recipeIngredient52 = RecipeIngredient.builder()
-                        .product(product7) // Rice
+                        .product(product7)
                         .recipe(recipe5)
                         .amount(1d)
                         .build();
 
                 recipe5.setIngredients(List.of(recipeIngredient51, recipeIngredient52));
 
-                // Recipe 6: Ultimate Sandwich (premium user's recipe with multiple ingredients)
                 Recipe recipe6 = Recipe.builder()
                         .name("Ultimate Sandwich")
                         .createdAt(new Date())
-                        .ownerUser(premiumUser) // Premium user's recipe
+                        .ownerUser(premiumUser)
                         .baseRecipe(null)
                         .imageUrl("https://example.com/ultimate-sandwich.jpg")
                         .build();
 
                 RecipeIngredient recipeIngredient61 = RecipeIngredient.builder()
-                        .product(product3) // Bread
+                        .product(product3)
                         .recipe(recipe6)
                         .amount(2d)
                         .build();
 
                 RecipeIngredient recipeIngredient62 = RecipeIngredient.builder()
-                        .product(product5) // Cheese
+                        .product(product5)
                         .recipe(recipe6)
                         .amount(2d)
                         .build();
 
                 RecipeIngredient recipeIngredient63 = RecipeIngredient.builder()
-                        .product(product4) // Tomato
+                        .product(product4)
                         .recipe(recipe6)
                         .amount(1d)
                         .build();
 
                 RecipeIngredient recipeIngredient64 = RecipeIngredient.builder()
-                        .product(product6) // Chicken
+                        .product(product6)
                         .recipe(recipe6)
                         .amount(1d)
                         .build();
