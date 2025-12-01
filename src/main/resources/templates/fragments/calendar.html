@@ -36,4 +36,14 @@
       </tr>
       </tbody>
     </table>
+
+  <div class="month-nav">
+    <a th:href="@{/mealcraft/home(month=${prevMonth})}" class="nav-btn">
+      <i class="bi bi-arrow-left-circle"></i>
+    </a>
+
+    <a th:href="@{/mealcraft/home(month=${nextMonth})}" class="nav-btn">
+      <i class="bi bi-arrow-right-circle"></i>
+    </a>
+  </div>
 </div>
