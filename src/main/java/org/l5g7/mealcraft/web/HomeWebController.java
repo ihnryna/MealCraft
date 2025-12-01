@@ -94,6 +94,22 @@ public class HomeWebController {
         return "redirect:/mealcraft/home";
     }
 
+    @GetMapping("/mealcraft/craft")
+    public String showCraftPage(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            return "redirect:/mealcraft/admin/home";
+        }
+
+        String username = auth.getName();
+        model.addAttribute("username", username);
+        model.addAttribute("title", "MealCraft — Recipe Craft");
+        model.addAttribute(FRAGMENT_TO_LOAD, "craft-page :: content");
+
+        return "home";
+    }
+
     private void putAtSlot(List<EventCell> list, int slot, EventCell cell) {
         while (list.size() <= slot) {
             list.add(null);
