@@ -39,7 +39,11 @@ public class HomeWebController {
     }
 
     @GetMapping("/mealcraft/home")
-    public String showHome(Model model) {
+    public String showHome(@RequestParam(value = "month", required = false)
+                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                           LocalDate month,
+                           Model model) {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
             return "redirect:/mealcraft/admin/home";
@@ -48,7 +52,7 @@ public class HomeWebController {
         String username = auth.getName();
         model.addAttribute("username", username);
 
-        addMonthCalendarToModel(model);
+        addMonthCalendarToModel(model, month);
         addCalendarMealPlansToModel(model, username);
         addShoppingItemsToModel(model, username);
 
@@ -65,40 +69,14 @@ public class HomeWebController {
         String username = auth.getName();
         model.addAttribute("username", username);
 
-        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
-                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
-                .retrieve()
-                .toEntity(new ParameterizedTypeReference<>() {
-                });
-
-        List<MealPlanDto> events = responseMeals.getBody();
-        Map<LocalDate, ArrayList<MealPlanDto>> dayEventMapForDay = new HashMap<>();
-
-        if (events != null) {
-            for (MealPlanDto ev : events) {
-                Date date = ev.getPlanDate();
-                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate end = start.plusDays(ev.getServings());
-                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
-                    dayEventMapForDay.computeIfAbsent(i, k -> new ArrayList<>());
-                    dayEventMapForDay.get(i).add(ev);
-                }
-            }
-        }
-
-        model.addAttribute("dayEventMapForDay", dayEventMapForDay);
-        Date d = Date.from(day.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        model.addAttribute("dayDate", d);
-
-
         model.addAttribute("title", "MealCraft — Main Page");
-
+        addPageMealPlansToModel(model, username, day);
         addShoppingItemsToModel(model, username);
-
         model.addAttribute("day", day);
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/day :: dayFragment");
         return "home";
     }
+
 
     @PostMapping("/mealcraft/shopping/toggle")
     public String toggleChecked(@RequestParam Long id) {
@@ -123,8 +101,13 @@ public class HomeWebController {
         list.set(slot, cell);
     }
 
-    private void addMonthCalendarToModel(Model model) {
-        YearMonth currentMonth = YearMonth.now();
+    private void addMonthCalendarToModel(Model model, LocalDate month) {
+
+        LocalDate now = (month != null) ? month : LocalDate.now();
+        model.addAttribute("prevMonth", now.minusMonths(1));
+        model.addAttribute("nextMonth", now.plusMonths(1));
+
+        YearMonth currentMonth = (month != null) ? YearMonth.from(month) : YearMonth.now();
         LocalDate firstOfMonth = currentMonth.atDay(1);
         DayOfWeek firstDayOfWeek = firstOfMonth.getDayOfWeek();
 
@@ -164,6 +147,7 @@ public class HomeWebController {
     }
 
     private void addCalendarMealPlansToModel(Model model, String username) {
+
         ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
                 .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
                 .retrieve()
@@ -191,6 +175,33 @@ public class HomeWebController {
         }
 
         model.addAttribute("dayEventMap", dayEventMap);
+    }
+
+    private void addPageMealPlansToModel(Model model, String username, LocalDate day) {
+        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
+                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
+
+        List<MealPlanDto> events = responseMeals.getBody();
+        Map<LocalDate, ArrayList<MealPlanDto>> dayEventMapForDay = new HashMap<>();
+
+        if (events != null) {
+            for (MealPlanDto ev : events) {
+                Date date = ev.getPlanDate();
+                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate end = start.plusDays(ev.getServings());
+                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                    dayEventMapForDay.computeIfAbsent(i, k -> new ArrayList<>());
+                    dayEventMapForDay.get(i).add(ev);
+                }
+            }
+        }
+
+        model.addAttribute("dayEventMapForDay", dayEventMapForDay);
+        Date d = Date.from(day.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        model.addAttribute("dayDate", d);
     }
 
 }
