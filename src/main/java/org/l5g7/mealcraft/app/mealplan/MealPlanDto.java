@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import org.l5g7.mealcraft.enums.MealPlanColor;
 import org.l5g7.mealcraft.enums.MealStatus;
 
 import java.util.Date;

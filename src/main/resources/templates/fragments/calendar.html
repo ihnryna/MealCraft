@@ -16,7 +16,7 @@
       <tr th:each="week : ${weeks}">
         <td th:each="day : ${week}">
 
-          <div class="day-cell" th:href="@{/mealcraft/home/day}">
+          <a class="day-cell" th:if="${day != null}" th:href="@{/mealcraft/home/{day}(day=${day})}">
             <div class="day-number"
                  th:text="${day != null ? day.dayOfMonth : ''}"></div>
 
@@ -30,7 +30,8 @@
                                 </span>
               </div>
             </div>
-          </div>
+          </a>
+          <div th:if="${day == null}" class="day-cell empty-cell"></div>
         </td>
       </tr>
       </tbody>
