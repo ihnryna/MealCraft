@@ -68,8 +68,7 @@ public class StatisticsService {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
         Date dayOnly = stripTime(cal.getTime());
-        Optional<DailyStats> existing = dailyStatsRepository.findByDay(dayOnly);
-        return existing.orElse(null);
+        return getStatsForDay(dayOnly);
     }
 
     public DailyStats getStatsForDay(Date date) {
