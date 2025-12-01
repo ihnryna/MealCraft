@@ -26,8 +26,6 @@ import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.util.*;
 
-import static org.apache.hc.client5.http.utils.DateUtils.toDate;
-
 @Controller
 public class HomeWebController {
 
@@ -47,89 +45,14 @@ public class HomeWebController {
             return "redirect:/mealcraft/admin/home";
         }
 
-        YearMonth currentMonth = YearMonth.now();
-        LocalDate firstOfMonth = currentMonth.atDay(1);
-        DayOfWeek firstDayOfWeek = firstOfMonth.getDayOfWeek();
-
-        List<List<LocalDate>> weeks = new ArrayList<>();
-        List<LocalDate> week = new ArrayList<>();
-
-        int emptyDays = (firstDayOfWeek.getValue() + 6) % 7;
-        for (int i = 0; i < emptyDays; i++) week.add(null);
-
-        for (int day = 1; day <= currentMonth.lengthOfMonth(); day++) {
-            week.add(LocalDate.of(currentMonth.getYear(), currentMonth.getMonth(), day));
-            if (week.size() == 7) {
-                weeks.add(week);
-                week = new ArrayList<>();
-            }
-        }
-        if (!week.isEmpty()) {
-            while (week.size() < 7) week.add(null);
-            weeks.add(week);
-        }
-
-
         String username = auth.getName();
         model.addAttribute("username", username);
 
+        addMonthCalendarToModel(model);
+        addCalendarMealPlansToModel(model, username);
+        addShoppingItemsToModel(model, username);
 
-        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
-                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
-                .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<MealPlanDto>>() {
-                });
-
-        List<MealPlanDto> events = responseMeals.getBody();
-        Map<LocalDate, ArrayList<EventCell>> dayEventMap = new HashMap<>();
-
-        if (events != null) {
-            for (MealPlanDto ev : events) {
-                Date date = ev.getPlanDate();
-                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate end = start.plusDays(ev.getServings());
-                int slot = 0;
-                boolean foundSlot = false;
-                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
-                    if (!foundSlot) {
-                        if (dayEventMap.containsKey(i)) {
-                            slot = dayEventMap.get(i).size();
-                            foundSlot = true;
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                        } else {
-                            foundSlot = true;
-                            dayEventMap.put(i, new ArrayList<>());
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                        }
-                    } else {
-                        if (dayEventMap.containsKey(i)) {
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-
-                        } else {
-                            dayEventMap.put(i, new ArrayList<>());
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                        }
-                    }
-                }
-            }
-        }
-
-        model.addAttribute("dayEventMap", dayEventMap);
-
-        String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-        model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
-
-        model.addAttribute("weeks", weeks);
         model.addAttribute("title", "MealCraft — Main Page");
-
-        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
-                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
-                .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
-                });
-
-        List<ShoppingItemDto> shoppingItems = response.getBody();
-        model.addAttribute("shoppingItems", shoppingItems);
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/calendar :: calendarFragment");
         return "home";
     }
@@ -145,7 +68,7 @@ public class HomeWebController {
         ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
                 .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<MealPlanDto>>() {
+                .toEntity(new ParameterizedTypeReference<>() {
                 });
 
         List<MealPlanDto> events = responseMeals.getBody();
@@ -156,27 +79,9 @@ public class HomeWebController {
                 Date date = ev.getPlanDate();
                 LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                 LocalDate end = start.plusDays(ev.getServings());
-                int slot = 0;
-                boolean foundSlot = false;
                 for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
-                    if (!foundSlot) {
-                        if (dayEventMapForDay.containsKey(i)) {
-                            slot = dayEventMapForDay.get(i).size();
-                            foundSlot = true;
-                            dayEventMapForDay.get(i).add(ev);
-                        } else {
-                            foundSlot = true;
-                            dayEventMapForDay.put(i, new ArrayList<>());
-                            dayEventMapForDay.get(i).add(ev);
-                        }
-                    } else {
-                        if (dayEventMapForDay.containsKey(i)) {
-                            dayEventMapForDay.get(i).add(ev);
-                        } else {
-                            dayEventMapForDay.put(i, new ArrayList<>());
-                            dayEventMapForDay.get(i).add(ev);
-                        }
-                    }
+                    dayEventMapForDay.computeIfAbsent(i, k -> new ArrayList<>());
+                    dayEventMapForDay.get(i).add(ev);
                 }
             }
         }
@@ -188,15 +93,9 @@ public class HomeWebController {
 
         model.addAttribute("title", "MealCraft — Main Page");
 
-        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
-                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
-                .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
-                });
+        addShoppingItemsToModel(model, username);
 
-        List<ShoppingItemDto> shoppingItems = response.getBody();
-        model.addAttribute("shoppingItems", shoppingItems);
-        model.addAttribute("day",day);
+        model.addAttribute("day", day);
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/day :: dayFragment");
         return "home";
     }
@@ -219,9 +118,79 @@ public class HomeWebController {
 
     private void putAtSlot(List<EventCell> list, int slot, EventCell cell) {
         while (list.size() <= slot) {
-            list.add(null); // додаємо пусті слоти
+            list.add(null);
         }
         list.set(slot, cell);
+    }
+
+    private void addMonthCalendarToModel(Model model) {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate firstOfMonth = currentMonth.atDay(1);
+        DayOfWeek firstDayOfWeek = firstOfMonth.getDayOfWeek();
+
+        List<List<LocalDate>> weeks = new ArrayList<>();
+        List<LocalDate> week = new ArrayList<>();
+
+        int emptyDays = (firstDayOfWeek.getValue() + 6) % 7;
+        for (int i = 0; i < emptyDays; i++) week.add(null);
+
+        for (int day = 1; day <= currentMonth.lengthOfMonth(); day++) {
+            week.add(LocalDate.of(currentMonth.getYear(), currentMonth.getMonth(), day));
+            if (week.size() == 7) {
+                weeks.add(week);
+                week = new ArrayList<>();
+            }
+        }
+        if (!week.isEmpty()) {
+            while (week.size() < 7) week.add(null);
+            weeks.add(week);
+        }
+
+        String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+        model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
+
+        model.addAttribute("weeks", weeks);
+    }
+
+    private void addShoppingItemsToModel(Model model, String username) {
+        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
+                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
+
+        List<ShoppingItemDto> shoppingItems = response.getBody();
+        model.addAttribute("shoppingItems", shoppingItems);
+    }
+
+    private void addCalendarMealPlansToModel(Model model, String username) {
+        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
+                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
+        List<MealPlanDto> events = responseMeals.getBody();
+        Map<LocalDate, ArrayList<EventCell>> dayEventMap = new HashMap<>();
+
+        if (events != null) {
+            for (MealPlanDto ev : events) {
+                Date date = ev.getPlanDate();
+                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate end = start.plusDays(ev.getServings());
+                int slot = 0;
+                boolean foundSlot = false;
+                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                    dayEventMap.computeIfAbsent(i, k -> new ArrayList<>());
+                    if (!foundSlot) {
+                        slot = dayEventMap.get(i).size();
+                        foundSlot = true;
+                    }
+                    putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
+                }
+            }
+        }
+
+        model.addAttribute("dayEventMap", dayEventMap);
     }
 
 }
