@@ -35,6 +35,10 @@ body {
     align-items: center;
 }
 
+#SilpoLink{
+    padding-left: 40px;
+}
+
 .logo {
     display: flex;
     align-items: center;
