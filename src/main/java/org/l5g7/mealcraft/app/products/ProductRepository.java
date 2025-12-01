@@ -11,6 +11,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByOwnerUserIsNull();
     List<Product> findAllByOwnerUserIsNullOrOwnerUser_Id(Long id);
     List<Product> findAllByOwnerUserIsNullAndNameStartingWithIgnoreCase(String prefix);
-    List<Product> findAllByOwnerUserIsNullOrOwnerUser_IdAndNameStartingWithIgnoreCase(Long ownerId, String prefix);
+    List<Product> findAllByNameStartingWithIgnoreCaseAndOwnerUserIsNullOrOwnerUser_Id(String prefix, Long ownerId);
 
 }
