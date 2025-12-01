@@ -1,17 +1,16 @@
 package org.l5g7.mealcraft.app.products;
 
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
+import org.l5g7.mealcraft.app.user.CurrentUserProvider;
 import org.l5g7.mealcraft.app.user.User;
-import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -24,21 +23,21 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final UnitRepository unitRepository;
-    private final UserRepository userRepository;
     private final RecipeRepository recipeRepository;
+    private final CurrentUserProvider currentUserProvider;
     private static final String ENTITY_NAME = "Product";
 
     @Autowired
-    public ProductServiceImpl(ProductRepository productRepository, UnitRepository unitRepository, UserRepository userRepository, RecipeRepository recipeRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, UnitRepository unitRepository, RecipeRepository recipeRepository, CurrentUserProvider currentUserProvider) {
         this.productRepository = productRepository;
         this.unitRepository = unitRepository;
-        this.userRepository = userRepository;
         this.recipeRepository = recipeRepository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     public List<ProductDto> getAllProducts() {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         List<Product> entities;
 
@@ -64,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto getProductById(Long id) {
 
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()) {
@@ -100,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
                         String.valueOf(productDto.getDefaultUnitId())
                 ));
 
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         Product entity = Product.builder()
                 .name(productDto.getName())
@@ -120,7 +119,7 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(allEntries = true)
     public void updateProduct(Long id, ProductDto productDto) {
 
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isEmpty()) {
@@ -158,52 +157,49 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CacheEvict(allEntries = true)
     public void patchProduct(Long id, ProductDto patch) {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
-        Optional<Product> existing = productRepository.findById(id);
-        if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        ENTITY_NAME,
+                        "id",
+                        String.valueOf(id)
+                ));
+
+        User owner = product.getOwnerUser();
+
+        if (owner == null) {
+            if (currentUser != null) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        } else {
+            if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
         }
 
-        existing.ifPresent(product -> {
-            User owner = product.getOwnerUser();
-
-            if (owner == null) {
-                if (currentUser != null) {
-                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-                }
-            } else {
-                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-                }
-            }
-
-            if (patch.getName() != null) {
-                product.setName(patch.getName());
-            }
-
-            if (patch.getImageUrl() != null) {
-                product.setImageUrl(patch.getImageUrl());
-            }
-
-            if (patch.getDefaultUnitId() != null) {
-                Unit unit = unitRepository.findById(patch.getDefaultUnitId())
-                        .orElseThrow(() -> new EntityDoesNotExistException(
-                                "Unit",
-                                "id",
-                                String.valueOf(patch.getDefaultUnitId())
-                        ));
-                product.setDefaultUnit(unit);
-            }
-
-            productRepository.save(product);
-        });
+        if (patch.getName() != null) {
+            product.setName(patch.getName());
+        }
+        if (patch.getImageUrl() != null) {
+            product.setImageUrl(patch.getImageUrl());
+        }
+        if (patch.getDefaultUnitId() != null) {
+            Unit unit = unitRepository.findById(patch.getDefaultUnitId())
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            "Unit",
+                            "id",
+                            String.valueOf(patch.getDefaultUnitId())
+                    ));
+            product.setDefaultUnit(unit);
+        }
+        productRepository.save(product);
     }
 
     @Override
     @CacheEvict(value = "products", allEntries = true)
     public void deleteProductById(Long id) {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id)));
         if (product.getOwnerUser() == null) {
@@ -225,7 +221,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> searchProductsByPrefix(String prefix) {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         List<Product> products;
 
@@ -249,18 +245,29 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-    private User getCurrentUserOrNullIfAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    @Override
+    public void addProductToRecipe(Long recipeId, Long productId, Double amount) {
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        "Recipe",
+                        "id",
+                        String.valueOf(recipeId)
+                ));
 
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        ENTITY_NAME,
+                        "id",
+                        String.valueOf(productId)
+                ));
 
-        if (isAdmin) {
-            return null;
-        }
+        RecipeIngredient recipeIngredient = RecipeIngredient.builder()
+                .product(product)
+                .recipe(recipe)
+                .amount(amount)
+                .build();
 
-        String name = authentication.getName();
-        return userRepository.findByUsername(name)
-                .orElseThrow(() -> new EntityDoesNotExistException("User", "name", name));
+        recipe.getIngredients().add(recipeIngredient);
     }
+
 }
