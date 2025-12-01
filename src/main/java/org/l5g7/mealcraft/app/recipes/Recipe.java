@@ -1,6 +1,7 @@
 package org.l5g7.mealcraft.app.recipes;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,5 +39,6 @@ public class Recipe {
     @OneToMany(mappedBy = "recipe",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
+    @Size(min = 1)
     private List<RecipeIngredient> ingredients;
 }
