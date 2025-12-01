@@ -166,6 +166,7 @@ public class DataInitializer {
                         .name("Base Soup")
                         .createdAt(new Date())
                         .ownerUser(null)
+                        .ingredients(List.of())
                         .build();
 
                 Recipe recipe1 = Recipe.builder()
@@ -251,10 +252,6 @@ public class DataInitializer {
                 for (RecipeIngredient ingredient : mealPlan2.getRecipe().getIngredients()) {
                     shoppingItemRepository.save(new ShoppingItem(null, mealPlan2.getUserOwner(), ingredient.getProduct(), ingredient.getAmount(), false, null));
                 }
-                for (RecipeIngredient ingredient : mealPlan1.getRecipe().getIngredients()) {
-                    shoppingItemRepository.save(new ShoppingItem(null, mealPlan1.getUserOwner(), ingredient.getProduct(), ingredient.getAmount(), false, null));
-                }
-
                 Calendar startCal = Calendar.getInstance();
                 startCal.setTime(yesterday);
                 startCal.set(Calendar.HOUR_OF_DAY, 0);

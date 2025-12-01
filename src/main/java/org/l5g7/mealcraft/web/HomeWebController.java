@@ -29,6 +29,7 @@ public class HomeWebController {
 
     private final RestClient internalApiClient;
     private final UserService userService;
+    private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
@@ -91,39 +92,25 @@ public class HomeWebController {
                             slot = dayEventMap.get(i).size();
                             foundSlot = true;
                             putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-                            //dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
                         } else {
                             foundSlot = true;
                             dayEventMap.put(i, new ArrayList<>());
                             putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-
                         }
                     } else {
                         if (dayEventMap.containsKey(i)) {
                             putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
 
-                            //dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
                         } else {
                             dayEventMap.put(i, new ArrayList<>());
                             putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-
-
-                            /*dayEventMap.put(i, new ArrayList<>(
-                                    List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor())))
-                            );*/
                         }
-                        //dayEventMap.put(i, new ArrayList<>(List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()))));
                     }
                 }
             }
         }
 
         model.addAttribute("dayEventMap", dayEventMap);
-
 
         String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
         model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
@@ -138,9 +125,8 @@ public class HomeWebController {
                 });
 
         List<ShoppingItemDto> shoppingItems = response.getBody();
-
         model.addAttribute("shoppingItems", shoppingItems);
-
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/calendar :: calendarFragment");
         return "home";
     }
 
