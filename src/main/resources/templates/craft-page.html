@@ -52,14 +52,12 @@
                 return row;
             }
 
-            // Add product functionality
             addProductBtn.addEventListener('click', function() {
                 const row = createProductRow(productIndex);
                 productsContainer.appendChild(row);
                 productIndex++;
             });
 
-            // Remove product functionality
             productsContainer.addEventListener('click', function(e) {
                 if (e.target.classList.contains('remove-product')) {
                     const row = e.target.closest('.product-row');
@@ -73,14 +71,12 @@
                     if (productsContainer.children.length > 1) {
                         row.remove();
                     } else {
-                        // Clear the input if it's the last row
                         input.value = '';
                         row.querySelector('.product-suggestions').innerHTML = '';
                     }
                 }
             });
 
-            // Product search functionality with debouncing
             let searchTimeouts = new Map();
 
             function performProductSearch(input, row, query) {
@@ -127,20 +123,15 @@
                         input.dataset.inputId = inputId;
                     }
 
-                    // Add typing visual feedback
                     input.classList.add('typing');
 
-                    // Clear previous timeout for this input
                     if (searchTimeouts.has(inputId)) {
                         clearTimeout(searchTimeouts.get(inputId));
                     }
 
-                    // Remove from selected products if user is typing something different
                     const currentValue = input.value.trim();
                     if (currentValue && selectedProducts.has(currentValue)) {
-                        // Don't remove if they're just typing the same product name
                     } else {
-                        // Remove any previously selected product for this input
                         Array.from(selectedProducts).forEach(product => {
                             if (input.dataset.lastSelected === product) {
                                 selectedProducts.delete(product);
@@ -149,7 +140,6 @@
                         });
                     }
 
-                    // Debounce the search - wait 300ms after user stops typing
                     const timeoutId = setTimeout(() => {
                         input.classList.remove('typing');
                         performProductSearch(input, row, query);
@@ -160,7 +150,6 @@
                 }
             });
 
-            // Also listen for keyup events to handle backspace/delete more responsively
             productsContainer.addEventListener('keyup', function(e) {
                 if (e.target.classList.contains('product-name-input')) {
                     const input = e.target;
@@ -168,10 +157,8 @@
                     const suggestionsList = row.querySelector('.product-suggestions');
                     const query = input.value.trim();
 
-                    // If field is cleared, immediately clear suggestions
                     if (query.length === 0) {
                         suggestionsList.innerHTML = '';
-                        // Remove from selected products
                         if (input.dataset.lastSelected) {
                             selectedProducts.delete(input.dataset.lastSelected);
                             input.dataset.lastSelected = '';
@@ -180,7 +167,6 @@
                 }
             });
 
-            // Add keyboard navigation for suggestions
             productsContainer.addEventListener('keydown', function(e) {
                 if (e.target.classList.contains('product-name-input')) {
                     const input = e.target;
@@ -219,7 +205,6 @@
                 }
             });
 
-            // Product selection functionality
             productsContainer.addEventListener('click', function(e) {
                 if (e.target.classList.contains('suggestion-item') && !e.target.classList.contains('no-suggestions') && !e.target.classList.contains('error-suggestion')) {
                     const li = e.target;
@@ -228,18 +213,15 @@
                     const suggestionsList = row.querySelector('.product-suggestions');
                     const productName = li.dataset.productName;
 
-                    // Remove previous selection for this input
                     if (input.dataset.lastSelected) {
                         selectedProducts.delete(input.dataset.lastSelected);
                     }
 
-                    // Set new selection
                     input.value = productName;
                     input.dataset.lastSelected = productName;
                     selectedProducts.add(productName);
                     suggestionsList.innerHTML = '';
 
-                    // Add visual feedback
                     input.classList.add('selected-product');
                     setTimeout(() => {
                         input.classList.remove('selected-product');
@@ -247,7 +229,6 @@
                 }
             });
 
-            // Search recipes functionality
             searchBtn.addEventListener('click', function() {
                 const productInputs = productsContainer.querySelectorAll('.product-name-input');
                 const products = [];
@@ -255,7 +236,6 @@
                 productInputs.forEach(input => {
                     const value = input.value.trim();
                     if (value && input.dataset.lastSelected) {
-                        // Only include products that were actually selected from suggestions
                         products.push(input.dataset.lastSelected);
                     }
                 });
@@ -265,10 +245,8 @@
                     return;
                 }
 
-                // Show loading state
                 recipesContainer.innerHTML = '<p class="loading">Searching for recipes...</p>';
 
-                // Build query string
                 const queryParams = products.map(p => 'products=' + encodeURIComponent(p)).join('&');
 
                 fetch(`/recipes/search?${queryParams}`)
@@ -282,7 +260,6 @@
                     });
             });
 
-            // Clear all functionality
             clearBtn.addEventListener('click', function() {
                 const inputs = productsContainer.querySelectorAll('.product-name-input');
                 inputs.forEach(input => {
@@ -329,9 +306,7 @@
                 recipesContainer.innerHTML = html;
             }
 
-            // Global function for planning recipes
             window.planRecipe = function(recipeId, recipeName) {
-                // This will redirect to the recipe planning page with the recipe ID
                 window.location.href = `/mealcraft/plan-recipe/${recipeId}`;
             };
 

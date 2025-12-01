@@ -239,11 +239,10 @@ public class DataInitializer {
                 recipe1.setIngredients(List.of(recipeIngredient1, recipeIngredient2, recipeIngredient3));
                 recipe2.setIngredients(List.of(recipeIngredient21));
 
-                // Recipe 3: Cheese Sandwich (public recipe with Bread + Cheese)
                 Recipe recipe3 = Recipe.builder()
                         .name("Cheese Sandwich")
                         .createdAt(new Date())
-                        .ownerUser(null) // Public recipe
+                        .ownerUser(null)
                         .baseRecipe(null)
                         .imageUrl("https://example.com/cheese-sandwich.jpg")
                         .build();
@@ -262,11 +261,10 @@ public class DataInitializer {
 
                 recipe3.setIngredients(List.of(recipeIngredient31, recipeIngredient32));
 
-                // Recipe 4: Tomato Omelet (public recipe with Egg + Tomato)
                 Recipe recipe4 = Recipe.builder()
                         .name("Tomato Omelet")
                         .createdAt(new Date())
-                        .ownerUser(null) // Public recipe
+                        .ownerUser(null)
                         .baseRecipe(null)
                         .imageUrl("/images/imagesForDB/tomatoOmlette.png")
                         .build();
@@ -294,13 +292,13 @@ public class DataInitializer {
                         .build();
 
                 RecipeIngredient recipeIngredient51 = RecipeIngredient.builder()
-                        .product(product6)
+                        .product(product6) // Chicken
                         .recipe(recipe5)
                         .amount(1d)
                         .build();
 
                 RecipeIngredient recipeIngredient52 = RecipeIngredient.builder()
-                        .product(product7)
+                        .product(product7) // Rice
                         .recipe(recipe5)
                         .amount(1d)
                         .build();
@@ -316,25 +314,25 @@ public class DataInitializer {
                         .build();
 
                 RecipeIngredient recipeIngredient61 = RecipeIngredient.builder()
-                        .product(product3)
+                        .product(product3) // Bread
                         .recipe(recipe6)
                         .amount(2d)
                         .build();
 
                 RecipeIngredient recipeIngredient62 = RecipeIngredient.builder()
-                        .product(product5)
+                        .product(product5) // Cheese
                         .recipe(recipe6)
                         .amount(2d)
                         .build();
 
                 RecipeIngredient recipeIngredient63 = RecipeIngredient.builder()
-                        .product(product4)
+                        .product(product4) // Tomato
                         .recipe(recipe6)
                         .amount(1d)
                         .build();
 
                 RecipeIngredient recipeIngredient64 = RecipeIngredient.builder()
-                        .product(product6)
+                        .product(product6) // Chicken
                         .recipe(recipe6)
                         .amount(1d)
                         .build();
