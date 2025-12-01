@@ -4,11 +4,11 @@ import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,20 +30,15 @@ public class StatisticsService {
         this.dailyStatsRepository = dailyStatsRepository;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
-    public void recalcYesterdayStatsDaily() {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DATE, -1);
-        Date yesterday = cal.getTime();
-
-        Date from = startOfDay(yesterday);
-        Date to = endOfDay(yesterday);
+    public void recalcStatsForDay(Date targetDay) {
+        Date from = startOfDay(targetDay);
+        Date to = endOfDay(targetDay);
 
         long newUsers = userRepository.countByCreatedAtBetween(from, to);
         long newProducts = productRepository.countByCreatedAtBetween(from, to);
         long newRecipes = recipeRepository.countByCreatedAtBetween(from, to);
 
-        Date dayOnly = stripTime(yesterday);
+        Date dayOnly = stripTime(targetDay);
 
         Optional<DailyStats> existing = dailyStatsRepository.findByDay(dayOnly);
 
@@ -62,17 +57,29 @@ public class StatisticsService {
         dailyStatsRepository.save(stats);
     }
 
+    public void cleanupOldStats() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -365);
+        Date border = stripTime(cal.getTime());
+        dailyStatsRepository.deleteByDayBefore(border);
+    }
+
     public DailyStats getYesterdayStats() {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
         Date dayOnly = stripTime(cal.getTime());
-
         Optional<DailyStats> existing = dailyStatsRepository.findByDay(dayOnly);
-        if (existing.isPresent()) {
-            return existing.get();
-        } else {
-            return null;
-        }
+        return existing.orElse(null);
+    }
+
+    public DailyStats getStatsForDay(Date date) {
+        Date dayOnly = stripTime(date);
+        Optional<DailyStats> existing = dailyStatsRepository.findByDay(dayOnly);
+        return existing.orElse(null);
+    }
+
+    public List<DailyStats> getAllStats() {
+        return dailyStatsRepository.findAllByOrderByDayDesc();
     }
 
     private Date stripTime(Date date) {

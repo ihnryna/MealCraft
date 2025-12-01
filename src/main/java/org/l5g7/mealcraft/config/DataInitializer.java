@@ -10,13 +10,13 @@ import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
-import org.l5g7.mealcraft.app.recipes.Recipe;
-import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
 import org.l5g7.mealcraft.app.user.PasswordHasher;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
+import org.l5g7.mealcraft.app.statistics.DailyStats;
+import org.l5g7.mealcraft.app.statistics.DailyStatsRepository;
 import org.l5g7.mealcraft.enums.MealPlanColor;
 import org.l5g7.mealcraft.enums.MealStatus;
 import org.l5g7.mealcraft.enums.Role;
@@ -41,7 +41,10 @@ public class DataInitializer {
                                    UnitRepository unitRepository,
                                    ProductRepository productRepository,
                                    RecipeRepository recipeRepository,
-                                   MealPlanRepository mealPlanRepository, ShoppingItemRepository shoppingItemRepository, RecipeIngredientRepository recipeIngredientRepository) {
+                                   MealPlanRepository mealPlanRepository,
+                                   ShoppingItemRepository shoppingItemRepository,
+                                   RecipeIngredientRepository recipeIngredientRepository,
+                                   DailyStatsRepository dailyStatsRepository) {
         return args -> {
             if (userRepository.count() == 0) {
                 PasswordHasher encoder = new PasswordHasher();
@@ -163,7 +166,6 @@ public class DataInitializer {
                         .name("Base Soup")
                         .createdAt(new Date())
                         .ownerUser(null)
-                        .ingredients(List.of())
                         .build();
 
                 Recipe recipe1 = Recipe.builder()
@@ -206,9 +208,15 @@ public class DataInitializer {
                         .amount(1d)
                         .build();
 
+                RecipeIngredient baseIngredient = RecipeIngredient.builder()
+                        .product(product1)
+                        .recipe(baseRecipe)
+                        .amount(1d)
+                        .build();
+
+                baseRecipe.setIngredients(List.of(baseIngredient));
                 recipe1.setIngredients(List.of(recipeIngredient1, recipeIngredient2, recipeIngredient3));
                 recipe2.setIngredients(List.of(recipeIngredient21));
-
 
                 LocalDate localPlanDate1 = LocalDate.of(2025, 11, 3);
                 LocalDate localPlanDate2 = LocalDate.of(2025, 11, 5);
@@ -218,7 +226,6 @@ public class DataInitializer {
                 recipeRepository.save(baseRecipe);
                 recipeRepository.save(recipe1);
                 recipeRepository.save(recipe2);
-
 
                 MealPlan mealPlan1 = MealPlan.builder()
                         .userOwner(user)
@@ -241,13 +248,38 @@ public class DataInitializer {
                 mealPlanRepository.save(mealPlan1);
                 mealPlanRepository.save(mealPlan2);
 
+                for (RecipeIngredient ingredient : mealPlan2.getRecipe().getIngredients()) {
+                    shoppingItemRepository.save(new ShoppingItem(null, mealPlan2.getUserOwner(), ingredient.getProduct(), ingredient.getAmount(), false, null));
+                }
+                for (RecipeIngredient ingredient : mealPlan1.getRecipe().getIngredients()) {
+                    shoppingItemRepository.save(new ShoppingItem(null, mealPlan1.getUserOwner(), ingredient.getProduct(), ingredient.getAmount(), false, null));
+                }
 
-                for(RecipeIngredient ingredient : mealPlan2.getRecipe().getIngredients()){
-                    shoppingItemRepository.save(new ShoppingItem(null,mealPlan2.getUserOwner(),ingredient.getProduct(),ingredient.getAmount(),false,null));
-                }
-                for(RecipeIngredient ingredient : mealPlan1.getRecipe().getIngredients()){
-                    shoppingItemRepository.save(new ShoppingItem(null,mealPlan1.getUserOwner(),ingredient.getProduct(),ingredient.getAmount(),false,null));
-                }
+                Calendar startCal = Calendar.getInstance();
+                startCal.setTime(yesterday);
+                startCal.set(Calendar.HOUR_OF_DAY, 0);
+                startCal.set(Calendar.MINUTE, 0);
+                startCal.set(Calendar.SECOND, 0);
+                startCal.set(Calendar.MILLISECOND, 0);
+                Date from = startCal.getTime();
+
+                Calendar endCal = Calendar.getInstance();
+                endCal.setTime(yesterday);
+                endCal.set(Calendar.HOUR_OF_DAY, 23);
+                endCal.set(Calendar.MINUTE, 59);
+                endCal.set(Calendar.SECOND, 59);
+                endCal.set(Calendar.MILLISECOND, 999);
+                Date to = endCal.getTime();
+
+                long newUsersCount = userRepository.countByCreatedAtBetween(from, to);
+                long newProductsCount = productRepository.countByCreatedAtBetween(from, to);
+                long newRecipesCount = recipeRepository.countByCreatedAtBetween(from, to);
+
+                DailyStats stats = dailyStatsRepository.findByDay(from).orElse(DailyStats.builder().day(from).build());
+                stats.setNewUsersCount(newUsersCount);
+                stats.setNewProductsCount(newProductsCount);
+                stats.setNewRecipesCount(newRecipesCount);
+                dailyStatsRepository.save(stats);
             }
         };
     }

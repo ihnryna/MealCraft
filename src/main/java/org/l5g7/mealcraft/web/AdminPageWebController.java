@@ -5,7 +5,6 @@ import org.l5g7.mealcraft.app.notification.NotificationResponseDto;
 import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
-import org.l5g7.mealcraft.app.statistics.DailyStats;
 import org.l5g7.mealcraft.app.statistics.StatisticsService;
 import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
@@ -29,16 +28,14 @@ import java.util.List;
 public class AdminPageWebController {
 
     private final RestClient internalApiClient;
-    private final StatisticsService statisticsService;
 
     private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
     private static final String TITLE = "title";
     private static final String ADMIN_PAGE = "admin-page";
 
 
-    public AdminPageWebController(@Qualifier("internalApiClient") RestClient internalApiClient, StatisticsService statisticsService) {
+    public AdminPageWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
         this.internalApiClient = internalApiClient;
-        this.statisticsService = statisticsService;
     }
 
     @GetMapping("/home")
@@ -507,42 +504,6 @@ public class AdminPageWebController {
 
             return ADMIN_PAGE;
         }
-    }
-
-
-    @GetMapping("/unit/edit/{id}")
-    public String showEditUnitForm(@PathVariable Long id, Model model) {
-
-        UnitDto unit = internalApiClient
-                .get()
-                .uri("/units/{id}", id)
-                .retrieve()
-                .body(UnitDto.class);
-
-        model.addAttribute("unit", unit);
-        model.addAttribute("title", "Edit unit");
-        model.addAttribute("fragmentToLoad", "fragments/unit-form :: content");
-
-        return "admin-page";
-    }
-
-    @GetMapping("/stats")
-    public String showYesterdayStats(Model model) {
-        DailyStats stats = internalApiClient
-                .get()
-                .uri("/statistics/yesterday")
-                .retrieve()
-                .body(DailyStats.class);
-
-        if (stats == null) {
-            model.addAttribute("data", List.of());
-        } else {
-            model.addAttribute("data", List.of(stats));
-        }
-
-        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/stats :: content");
-        model.addAttribute(TITLE, "Yesterday statistics");
-        return ADMIN_PAGE;
     }
 
 }
