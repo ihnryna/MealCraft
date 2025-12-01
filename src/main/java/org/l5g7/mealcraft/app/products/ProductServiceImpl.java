@@ -228,8 +228,10 @@ public class ProductServiceImpl implements ProductService {
         if (currentUser == null) {
             products = productRepository.findAllByOwnerUserIsNullAndNameStartingWithIgnoreCase(prefix);
         } else {
-            products = productRepository
-                    .findAllByOwnerUserIsNullOrOwnerUser_IdAndNameStartingWithIgnoreCase(currentUser.getId(), prefix);
+            products = productRepository.findAll()
+                    .stream().filter(p -> p.getOwnerUser() == null || p.getOwnerUser().getId().equals(currentUser.getId()))
+                    .filter(p -> p.getName().toLowerCase().startsWith(prefix.toLowerCase()))
+                    .toList();
         }
 
         return products.stream()
