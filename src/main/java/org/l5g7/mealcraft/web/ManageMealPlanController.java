@@ -2,6 +2,7 @@ package org.l5g7.mealcraft.web;
 
 import org.l5g7.mealcraft.app.mealplan.MealPlanDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.l5g7.mealcraft.enums.MealPlanColor;
 import org.l5g7.mealcraft.enums.MealStatus;
@@ -63,13 +64,16 @@ public class ManageMealPlanController {
         model.addAttribute(MEAL_PLAN, mealPlanDto);
         model.addAttribute(TITLE, PLAN_YOUR_MEAL);
         model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
+        model.addAttribute("username", username);
+        addShoppingItemsToModel(model, username);
 
         return HOME_PAGE;
     }
 
     @GetMapping("/edit/{id}")
     public String showEditMealPlanForm(@PathVariable Long id, Model model) {
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
 
         ResponseEntity<MealPlanDto> response = internalApiClient.get()
                 .uri(MEAL_PLAN_ID_URI, id)
@@ -84,6 +88,9 @@ public class ManageMealPlanController {
         model.addAttribute(MEAL_PLAN, mealPlanDto);
         model.addAttribute(TITLE, PLAN_YOUR_MEAL);
         model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
+
+        model.addAttribute("username", username);
+        addShoppingItemsToModel(model, username);
 
         return HOME_PAGE;
     }
@@ -138,8 +145,6 @@ public class ManageMealPlanController {
                 .retrieve()
                 .toBodilessEntity();
 
-        System.out.println("DELETED MEAL PLAN ID: " + id);
-
         return REDIRECT_HOME_PAGE;
     }
 
@@ -164,6 +169,17 @@ public class ManageMealPlanController {
                 .toList();
 
         model.addAttribute("recipeList", recipeList);
+    }
+
+    public void addShoppingItemsToModel(Model model, String username) {
+        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
+                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
+
+        List<ShoppingItemDto> shoppingItems = response.getBody();
+        model.addAttribute("shoppingItems", shoppingItems);
     }
 
 }

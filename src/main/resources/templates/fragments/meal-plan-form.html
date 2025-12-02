@@ -85,7 +85,7 @@
                 <button type="button">Cancel</button>
             </a>
 
-            <a th:href="@{'/mealcraft/home/' + ${#dates.format(mealPlan.planDate, 'yyyy-MM-dd')}}"
+            <a th:href="@{'/mealcraft/meals/delete/' + ${mealPlan.id}}"
                th:if="${mealPlan.id} != null"
                style="margin-left: 10px; text-decoration: none;">
                 <button type="button">Delete</button>
@@ -157,102 +157,4 @@
 
 
     </script>
-    <style>
-
-        .search-box {
-            margin-top: 5px;
-            width: 500px;
-        }
-
-        .search-box input {
-            width: 100%;
-            flex: 1;
-            height: 20px;
-            background: transparent;
-            border: 2px #833e1f solid;
-            outline: 0;
-            font-size: 15px;
-            color: black;
-        }
-
-        ::placeholder {
-            color: black;
-        }
-
-        .result-box ul {
-            border-top: 1px solid #999;
-            padding: 10px 5px;
-        }
-
-        .result-box ul li {
-            font-size: 15px;
-            list-style: none;
-            border-radius: 2px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .result-box ul li:hover {
-            background-color: #b0dcba;
-        }
-
-        .servings-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 120px;
-            margin-top: 5px;
-        }
-
-        .servings-btn {
-            width: 30px;
-            height: 30px;
-            font-size: 20px;
-            line-height: 20px;
-            cursor: pointer;
-            border: 2px #833e1f solid;
-            background: sienna;
-            color: white;
-        }
-
-        #servings {
-            width: 40px;
-            text-align: center;
-            height: 30px;
-            font-size: 16px;
-            border: 2px #833e1f solid;
-            background: white;
-        }
-
-        .color-circle-wrapper {
-            cursor: pointer;
-        }
-
-        .color-radio {
-            display: none;
-        }
-
-        .color-circle {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: inline-block;
-            border: 2px solid transparent;
-            margin: 5px;
-        }
-
-        .color-picker {
-            margin-top: 20px;
-            display: flex;
-            justify-content: left;
-        }
-
-        .color-circle:hover {
-            transform: scale(1.15);
-        }
-
-        .color-radio:checked + .color-circle {
-            border: 3px solid black;
-        }
-    </style>
 </div>

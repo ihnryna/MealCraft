@@ -154,7 +154,7 @@ public class HomeWebController {
         model.addAttribute("weeks", weeks);
     }
 
-    private void addShoppingItemsToModel(Model model, String username) {
+    public void addShoppingItemsToModel(Model model, String username) {
         ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
                 .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
                 .retrieve()
