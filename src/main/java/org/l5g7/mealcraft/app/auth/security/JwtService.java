@@ -3,6 +3,7 @@ package org.l5g7.mealcraft.app.auth.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import org.l5g7.mealcraft.enums.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ public class JwtService {
                     .getPayload();
 
             return claims.getSubject();
-        } catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException | MalformedJwtException e) {
             return null;
         }
     }
