@@ -1,6 +1,7 @@
 package org.l5g7.mealcraft.app.recipes;
 
 import org.l5g7.mealcraft.app.products.Product;
+import org.l5g7.mealcraft.app.units.Unit;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Date;

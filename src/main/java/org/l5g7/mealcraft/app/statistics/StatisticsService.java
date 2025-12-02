@@ -64,6 +64,13 @@ public class StatisticsService {
         dailyStatsRepository.deleteByDayBefore(border);
     }
 
+    public DailyStats getYesterdayStats() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -1);
+        Date dayOnly = stripTime(cal.getTime());
+        return getStatsForDay(dayOnly);
+    }
+
     public DailyStats getStatsForDay(Date date) {
         Date dayOnly = stripTime(date);
         Optional<DailyStats> existing = dailyStatsRepository.findByDay(dayOnly);

@@ -9,7 +9,6 @@ import org.l5g7.mealcraft.app.user.CurrentUserProvider;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@CacheConfig(cacheNames = "products")
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
@@ -155,7 +153,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(allEntries = true)
     public void patchProduct(Long id, ProductDto patch) {
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
@@ -197,7 +194,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = "products", allEntries = true)
     public void deleteProductById(Long id) {
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
         Product product = productRepository.findById(id)
