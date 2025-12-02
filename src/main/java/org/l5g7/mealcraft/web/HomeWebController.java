@@ -214,7 +214,7 @@ public class HomeWebController {
             for (MealPlanDto ev : events) {
                 Date date = ev.getPlanDate();
                 LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate end = start.plusDays(ev.getServings());
+                LocalDate end = start.plusDays(ev.getServings()-1L);
                 for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
                     dayEventMapForDay.computeIfAbsent(i, k -> new ArrayList<>());
                     dayEventMapForDay.get(i).add(ev);

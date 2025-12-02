@@ -16,18 +16,22 @@
       <tr th:each="week : ${weeks}">
         <td th:each="day : ${week}">
 
-          <a class="day-cell" th:if="${day != null}" th:href="@{/mealcraft/home/{day}(day=${day})}">
+          <a class="day-cell" th:if="${day != null}" th:href="@{/mealcraft/home/{day}(day=${day})}"
+             th:with="slotCount=${day != null && dayEventMap.containsKey(day) ? dayEventMap.get(day).size() : 0}">
             <div class="day-number"
                  th:text="${day != null ? day.dayOfMonth : ''}"></div>
 
             <div class="slots">
-              <div th:each="slotIdx : ${#numbers.sequence(0,5)}">
+              <div th:with="count=${day != null and dayEventMap.containsKey(day) and dayEventMap.get(day).size() > 5 ? dayEventMap.get(day).size() : 5}">
+                <div th:each="slotIdx : ${#numbers.sequence(0, (count!=null ? count : 5))}">
+
                                 <span th:with="cell=${day != null and dayEventMap.containsKey(day) and dayEventMap.get(day).size() > slotIdx ? dayEventMap.get(day).get(slotIdx) : null}"
                                       th:text="${cell != null ? (cell.isStart ? 'COOK ' : '') + cell.name : ''}"
                                       th:classappend="${cell != null ? (cell.isStart ? ' slot-start' : (cell.isEnd ? ' slot-end' : ' slot-middle')) : ''}"
                                       th:style="${cell != null ? 'background-color:' + cell.color : ''}"
                                       th:class="${cell != null ? ('event' + (cell.isStart ? '-start' : (cell.isEnd ? '-end' : ''))) : ''}">
                                 </span>
+                </div>
               </div>
             </div>
           </a>
