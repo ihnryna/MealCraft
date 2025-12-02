@@ -2,7 +2,7 @@ package org.l5g7.mealcraft.springboottest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.dto.LoginUserDto;
 import org.l5g7.mealcraft.app.user.PasswordHasher;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
@@ -18,6 +18,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +56,7 @@ class UserIntegrationTest {
                 .password(passwordHasher.hashPassword("admin123"))
                 .role(Role.ADMIN)
                 .avatarUrl(null)
+                .createdAt(new Date())
                 .build();
         userRepository.save(admin);
 
@@ -79,6 +81,7 @@ class UserIntegrationTest {
                 .email("vika@mealcraft.org")
                 .password(passwordHasher.hashPassword("vika123"))
                 .role(Role.ADMIN)
+                .createdAt(new Date())
                 .avatarUrl(null)
                 .build();
         User saved = userRepository.save(u);
@@ -113,6 +116,7 @@ class UserIntegrationTest {
                 .password(passwordHasher.hashPassword("vika123"))
                 .role(Role.USER)
                 .avatarUrl(null)
+                .createdAt(new Date())
                 .build();
         User u2 = User.builder()
                 .username("ira")
@@ -120,6 +124,7 @@ class UserIntegrationTest {
                 .password(passwordHasher.hashPassword("ira123"))
                 .role(Role.USER)
                 .avatarUrl(null)
+                .createdAt(new Date())
                 .build();
         userRepository.saveAll(List.of(u1, u2));
 
@@ -136,10 +141,10 @@ class UserIntegrationTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<UserResponseDto> body = resp.getBody();
-        assertThat(body).isNotNull();
-        assertThat(body).hasSizeGreaterThanOrEqualTo(2);
-        assertThat(body).anyMatch(dto -> dto.username().equals("vika"));
-        assertThat(body).anyMatch(dto -> dto.username().equals("ira"));
+        assertThat(body).isNotNull()
+                .hasSizeGreaterThanOrEqualTo(2)
+                .anyMatch(dto -> dto.username().equals("vika"))
+                .anyMatch(dto -> dto.username().equals("ira"));
     }
 
     @Test
@@ -175,6 +180,7 @@ class UserIntegrationTest {
                 .password(passwordHasher.hashPassword("vika123"))
                 .role(Role.USER)
                 .avatarUrl(null)
+                .createdAt(new Date())
                 .build();
         userRepository.save(u);
 
@@ -216,6 +222,7 @@ class UserIntegrationTest {
                 .password(passwordHasher.hashPassword("vika123"))
                 .role(Role.USER)
                 .avatarUrl(null)
+                .createdAt(new Date())
                 .build();
         userRepository.save(u);
 
@@ -257,6 +264,7 @@ class UserIntegrationTest {
                 .password(passwordHasher.hashPassword("vika123"))
                 .role(Role.USER)
                 .avatarUrl(null)
+                .createdAt(new Date())
                 .build();
         userRepository.save(u);
 

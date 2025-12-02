@@ -1,9 +1,8 @@
 package org.l5g7.mealcraft.app.auth;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
-import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
+import org.l5g7.mealcraft.app.auth.dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.dto.RegisterUserDto;
 import org.l5g7.mealcraft.app.auth.security.JwtService;
 import org.l5g7.mealcraft.app.user.*;
 import org.l5g7.mealcraft.enums.Role;
@@ -11,26 +10,29 @@ import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogMarker;
 import org.l5g7.mealcraft.logging.LogUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
 
-    @Autowired
     private UserRepository userRepository;
 
-    @Autowired
     private UserService userService;
 
-    @Autowired
     private PasswordHasher passwordHasher;
 
-    @Autowired
     private JwtService jwtService;
+
+    public AuthService (UserRepository userRepository, UserService userService, PasswordHasher passwordHasher, JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.userService = userService;
+        this.passwordHasher = passwordHasher;
+        this.jwtService = jwtService;
+    }
 
     public String register(@Valid RegisterUserDto username) {
         LogUtils.logInfo("Registering user: " + username);
@@ -58,12 +60,12 @@ public class AuthService {
                 .findFirst()
                 .orElseThrow(() -> {
                     LogUtils.logWarn("User not found: " + loginUser.getUsernameOrEmail(), LogMarker.WARN.getMarkerName());
-                    return new RuntimeException("User not found");
+                    throw new EntityDoesNotExistException("User", loginUser.getUsernameOrEmail());
                 });
 
         if (!passwordHasher.hashPassword(loginUser.getPassword()).equals(user.getPassword())) {
             LogUtils.logWarn("Invalid password for user: " + loginUser.getUsernameOrEmail());
-            throw new RuntimeException("Invalid password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
         }
 
         String token = jwtService.generateToken(user.getUsername(), user.getRole());

@@ -1,18 +1,12 @@
 package org.l5g7.mealcraft.config;
 
-import org.l5g7.mealcraft.app.auth.security.JwtCookieFilter;
-import org.l5g7.mealcraft.enums.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,6 +14,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private static final String ADMIN_STR = "ADMIN";
+    private static final String USER_STR = "USER";
+    private static final String PREMIUM_USER_STR = "PREMIUM_USER";
+
 
     private final OncePerRequestFilter jwtCookieFilter;
 
@@ -47,9 +46,9 @@ public class SecurityConfig {
                                 "/templates/**"
                         ).permitAll()
                         .requestMatchers("/mealcraft/login", "/mealcraft/register", "/mealcraft/landing").permitAll()
-                        .requestMatchers("/mealcraft/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/mealcraft/**").hasAnyRole("ADMIN","USER","PREMIUM_USER")
-                        .anyRequest().hasAnyRole("ADMIN", "USER","PREMIUM_USER")
+                        .requestMatchers("/mealcraft/admin/**").hasRole(ADMIN_STR)
+                        .requestMatchers("/mealcraft/**").hasAnyRole(ADMIN_STR, USER_STR, PREMIUM_USER_STR)
+                        .anyRequest().hasAnyRole(ADMIN_STR, USER_STR, PREMIUM_USER_STR)
 
                 )
                 .addFilterBefore(jwtCookieFilter, UsernamePasswordAuthenticationFilter.class)
