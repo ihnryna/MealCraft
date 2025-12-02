@@ -1,8 +1,4 @@
-package org.l5g7.mealcraft.app.units.interfaces;
-
-import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
-import org.l5g7.mealcraft.app.units.dto.UnitDto;
-import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
+package org.l5g7.mealcraft.app.units;
 
 import java.util.List;
 

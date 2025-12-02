@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/recipes")
-//@PreAuthorize("hasRole('ADMIN')")
 public class AdminRecipeController {
 
     private final RecipeService recipeService;

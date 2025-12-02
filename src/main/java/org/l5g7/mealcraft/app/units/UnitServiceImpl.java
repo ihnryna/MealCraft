@@ -1,11 +1,5 @@
 package org.l5g7.mealcraft.app.units;
 
-import org.l5g7.mealcraft.app.units.Entity.Unit;
-import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
-import org.l5g7.mealcraft.app.units.dto.UnitDto;
-import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
-import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
-import org.l5g7.mealcraft.app.units.interfaces.UnitService;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogUtils;
@@ -139,24 +133,4 @@ public class UnitServiceImpl implements UnitService {
         }
         return "anonymous";
     }
-
-//    @Cacheable(cacheNames = "cacheTest")
-//    public String cachingTest() {
-//
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        return "Caching test successful";
-//    }
-//
-//    @CacheEvict(cacheNames = "cacheTest")
-//    public String delCachingTest() {
-//
-//        return "Cache evicted";
-//    }
-//
-
 }
