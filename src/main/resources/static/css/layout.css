@@ -106,7 +106,7 @@ body {
     display: block;
 }
 
-
+/*sidebar*/
 .sidebar {
     grid-area: sidebar;
     background-color: #f5f5f5;
@@ -128,6 +128,21 @@ body {
     color: gray;
 }
 
+.item-text {
+    display: inline-flex;
+    gap: 3px;
+    align-items: flex-end;
+}
+
+.small-text {
+    font-size: x-small;
+    color: #645b5b;
+    line-height: 1;
+}
+
+.checked .small-text {
+    color: gray;
+}
 
 .content {
     grid-area: content;

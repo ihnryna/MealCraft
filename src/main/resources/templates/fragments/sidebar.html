@@ -1,18 +1,18 @@
 <div th:fragment="sidebar" class="sidebar">
-  <h3>To buy:</h3>
-  <ul>
-    <li th:each="item : ${shoppingItems}">
-      <form th:action="@{/mealcraft/shopping/toggle}" method="post" style="display: inline;">
-        <input type="hidden" name="id" th:value="${item.id}">
-        <input type="checkbox" name="checked"
-               th:checked="${item.status}"
-               onchange="this.form.submit()">
-        <span th:text="${item.name}" th:classappend="${item.status} ? 'checked' : ''"></span>
-      </form>
-    </li>
-  </ul>
+    <h3>To buy:</h3>
+    <ul>
+        <li th:each="item : ${shoppingItems}">
+            <form th:action="@{/mealcraft/shopping/toggle}" method="post" style="display: inline;">
+                <input type="hidden" name="id" th:value="${item.id}">
+                <input type="checkbox" name="checked"
+                       th:checked="${item.status}"
+                       onchange="this.form.submit()">
+                <span class="item-text" th:classappend="${item.status} ? 'checked' : ''">
+                    <span th:text="${item.name}"></span>
+                    <span th:text="'(' + ${item.requiredQty} + ' ' + ${item.unitName} + ')'"
+                          class="small-text"></span>
+                </span>
+            </form>
+        </li>
+    </ul>
 </div>
-
-
-
-
