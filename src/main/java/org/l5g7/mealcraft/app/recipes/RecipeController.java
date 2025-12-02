@@ -1,6 +1,9 @@
 package org.l5g7.mealcraft.app.recipes;
 
 import jakarta.validation.Valid;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
+import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
@@ -10,9 +13,11 @@ import java.util.List;
 public class RecipeController {
 
     private final RecipeService recipeService;
+    private final ExternalRecipeService externalRecipeService;
 
-    public RecipeController(RecipeService recipeService) {
+    public RecipeController(RecipeService recipeService, ExternalRecipeService externalRecipeService) {
         this.recipeService = recipeService;
+        this.externalRecipeService = externalRecipeService;
     }
 
     @GetMapping
@@ -51,4 +56,14 @@ public class RecipeController {
         recipeService.deleteRecipeById(id);
     }
 
+    @GetMapping("/external/random")
+    public RecipeDto getExternalRandom() {
+        ExternalRecipe external = externalRecipeService.getRandomRecipe();
+        return ExternalRecipeParser.toRecipeDto(external);
+    }
+
+    @PostMapping("/import")
+    public void importRecipe(@RequestBody RecipeDto dto) {
+        recipeService.importRecipe(dto);
+    }
 }
