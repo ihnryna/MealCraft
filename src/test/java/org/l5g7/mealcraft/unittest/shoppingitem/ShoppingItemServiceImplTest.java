@@ -9,6 +9,7 @@ import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemServiceImpl;
+import org.l5g7.mealcraft.app.units.Unit;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
@@ -17,6 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,14 +42,87 @@ class ShoppingItemServiceImplTest {
 
     private User user;
     private Product product;
+    private Unit unit;
 
     @BeforeEach
     void setup() {
+        unit = new Unit();
+        unit.setId(7L);
+        unit.setName("kg");
+
         user = new User();
         user.setId(1L);
+
         product = new Product();
         product.setId(2L);
         product.setName("Milk");
+        product.setDefaultUnit(unit);
+    }
+
+    @Test
+    void getAllShoppingItems_returnsMappedDtos() {
+        ShoppingItem si = ShoppingItem.builder()
+                .id(100L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(2.5)
+                .status(false)
+                .build();
+        when(shoppingItemRepository.findAll()).thenReturn(List.of(si));
+
+        List<ShoppingItemDto> result = service.getAllShoppingItems();
+        assertEquals(1, result.size());
+        ShoppingItemDto dto = result.get(0);
+        assertEquals(100L, dto.getId());
+        assertEquals("Milk", dto.getName());
+        assertEquals(1L, dto.getUserOwnerId());
+        assertEquals(2L, dto.getProductId());
+        assertEquals(2.5, dto.getRequiredQty());
+        assertFalse(dto.getStatus());
+        assertEquals("kg", dto.getUnitName());
+    }
+
+    @Test
+    void getUserShoppingItems_filtersByUser_andMapsDtos() {
+        ShoppingItem si = ShoppingItem.builder()
+                .id(101L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(1.0)
+                .status(true)
+                .build();
+        when(shoppingItemRepository.findByUserOwnerId(1L)).thenReturn(List.of(si));
+
+        List<ShoppingItemDto> result = service.getUserShoppingItems(1L);
+        assertEquals(1, result.size());
+        assertEquals(101L, result.get(0).getId());
+        assertEquals(true, result.get(0).getStatus());
+    }
+
+    @Test
+    void getShoppingItemById_returnsMappedDto_whenFound() {
+        ShoppingItem si = ShoppingItem.builder()
+                .id(102L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(3.0)
+                .status(false)
+                .build();
+        when(shoppingItemRepository.findById(102L)).thenReturn(Optional.of(si));
+
+        ShoppingItemDto dto = service.getShoppingItemById(102L);
+        assertEquals(102L, dto.getId());
+        assertEquals("Milk", dto.getName());
+        assertEquals(1L, dto.getUserOwnerId());
+        assertEquals(2L, dto.getProductId());
+        assertEquals("kg", dto.getUnitName());
+        assertNull(dto.getBoughtAt());
+    }
+
+    @Test
+    void getShoppingItemById_throwsWhenNotFound() {
+        when(shoppingItemRepository.findById(999L)).thenReturn(Optional.empty());
+        assertThrows(EntityDoesNotExistException.class, () -> service.getShoppingItemById(999L));
     }
 
     @Test
@@ -83,10 +159,97 @@ class ShoppingItemServiceImplTest {
     }
 
     @Test
+    void updateShoppingItem_updatesAndSaves_whenFound() {
+        ShoppingItem existing = ShoppingItem.builder()
+                .id(200L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(1.0)
+                .status(false)
+                .build();
+        when(shoppingItemRepository.findById(200L)).thenReturn(Optional.of(existing));
+
+        User newUser = new User();
+        newUser.setId(5L);
+        Product newProduct = new Product();
+        newProduct.setId(6L);
+        when(userRepository.findById(5L)).thenReturn(Optional.of(newUser));
+        when(productRepository.findById(6L)).thenReturn(Optional.of(newProduct));
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(5L)
+                .productId(6L)
+                .requiredQty(9.0)
+                .status(true)
+                .build();
+
+        service.updateShoppingItem(200L, dto);
+
+        ArgumentCaptor<ShoppingItem> captor = ArgumentCaptor.forClass(ShoppingItem.class);
+        verify(shoppingItemRepository, times(1)).save(captor.capture());
+        ShoppingItem saved = captor.getValue();
+        assertEquals(newUser, saved.getUserOwner());
+        assertEquals(newProduct, saved.getProduct());
+        assertEquals(9.0, saved.getRequiredQty());
+        assertTrue(saved.getStatus());
+    }
+
+    @Test
     void updateShoppingItem_throwsWhenItemNotFound() {
         when(shoppingItemRepository.findById(100L)).thenReturn(Optional.empty());
         ShoppingItemDto dto = ShoppingItemDto.builder().userOwnerId(1L).productId(2L).build();
         assertThrows(EntityDoesNotExistException.class, () -> service.updateShoppingItem(100L, dto));
+    }
+
+    @Test
+    void patchShoppingItem_updatesSelectedFields_andSaves() {
+        ShoppingItem existing = ShoppingItem.builder()
+                .id(300L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(1.0)
+                .status(false)
+                .build();
+        when(shoppingItemRepository.findById(300L)).thenReturn(Optional.of(existing));
+
+        User newUser = new User();
+        newUser.setId(8L);
+        Product newProduct = new Product();
+        newProduct.setId(9L);
+        when(userRepository.findById(8L)).thenReturn(Optional.of(newUser));
+        when(productRepository.findById(9L)).thenReturn(Optional.of(newProduct));
+
+        Date boughtAt = new Date();
+        ShoppingItemDto patch = ShoppingItemDto.builder()
+                .requiredQty(5.0)
+                .status(true)
+                .userOwnerId(8L)
+                .productId(9L)
+                .boughtAt(boughtAt)
+                .build();
+
+        service.patchShoppingItem(300L, patch);
+
+        ArgumentCaptor<ShoppingItem> captor = ArgumentCaptor.forClass(ShoppingItem.class);
+        verify(shoppingItemRepository, times(1)).save(captor.capture());
+        ShoppingItem saved = captor.getValue();
+        assertEquals(5.0, saved.getRequiredQty());
+        assertTrue(saved.getStatus());
+        assertEquals(newUser, saved.getUserOwner());
+        assertEquals(newProduct, saved.getProduct());
+        assertEquals(boughtAt, saved.getBoughtAt());
+    }
+
+    @Test
+    void patchShoppingItem_throwsWhenItemNotFound() {
+        when(shoppingItemRepository.findById(404L)).thenReturn(Optional.empty());
+        assertThrows(EntityDoesNotExistException.class, () -> service.patchShoppingItem(404L, ShoppingItemDto.builder().build()));
+    }
+
+    @Test
+    void deleteShoppingItemById_callsRepositoryDelete() {
+        service.deleteShoppingItemById(777L);
+        verify(shoppingItemRepository, times(1)).deleteById(777L);
     }
 
     @Test
@@ -115,4 +278,3 @@ class ShoppingItemServiceImplTest {
         assertThrows(EntityDoesNotExistException.class, () -> service.toggleStatus(999L));
     }
 }
-
