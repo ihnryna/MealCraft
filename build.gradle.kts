@@ -53,6 +53,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation ("org.springframework.boot:spring-boot-starter-mail")
 }
 
 tasks.withType<Test> {

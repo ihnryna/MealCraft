@@ -1,11 +1,9 @@
 package org.l5g7.mealcraft.web;
 
 import jakarta.validation.constraints.NotNull;
-import org.l5g7.mealcraft.app.notification.NotificationResponseDto;
 import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
-import org.l5g7.mealcraft.app.statistics.StatisticsService;
 import org.l5g7.mealcraft.app.units.dto.UnitCreateDto;
 import org.l5g7.mealcraft.app.units.dto.UnitDto;
 import org.l5g7.mealcraft.app.units.dto.UnitUpdateDto;
@@ -354,20 +352,7 @@ public class AdminPageWebController {
     }
 
 
-    @GetMapping("/notification")
-    public String notificationsPage(Model model) {
-        ResponseEntity<List<NotificationResponseDto>> response = internalApiClient.get()
-                .uri("/notifications")
-                .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<NotificationResponseDto>>() {
-                });
 
-        List<NotificationResponseDto> data = response.getBody();
-        model.addAttribute("data", data);
-        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/notifications :: content");
-        model.addAttribute(TITLE, "Notifications");
-        return ADMIN_PAGE;
-    }
 
     @GetMapping("/shopping-item")
     public String shoppingItemsPage(Model model) {
