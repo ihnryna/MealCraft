@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.authtest;
+package org.l5g7.mealcraft.springsecuritytest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

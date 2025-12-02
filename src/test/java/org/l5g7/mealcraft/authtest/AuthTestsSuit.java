@@ -7,7 +7,6 @@ import org.junit.platform.suite.api.Suite;
 @SelectClasses({
     AuthControllerTest.class,
     AuthServiceTest.class,
-    AuthExceptionHandlerIT.class,
     JwtKeyTest.class,
     JwtServiceTest.class
 })
