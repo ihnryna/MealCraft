@@ -219,8 +219,8 @@ public class DataInitializer {
                 recipe1.setIngredients(List.of(recipeIngredient1, recipeIngredient2, recipeIngredient3));
                 recipe2.setIngredients(List.of(recipeIngredient21));
 
-                LocalDate localPlanDate1 = LocalDate.of(2025, 11, 3);
-                LocalDate localPlanDate2 = LocalDate.of(2025, 11, 5);
+                LocalDate localPlanDate1 = LocalDate.of(2025, 12, 3);
+                LocalDate localPlanDate2 = LocalDate.of(2025, 12, 5);
                 Date planDate1 = Date.from(localPlanDate1.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 Date planDate2 = Date.from(localPlanDate2.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
@@ -232,7 +232,7 @@ public class DataInitializer {
                         .userOwner(user)
                         .recipe(recipe1)
                         .planDate(planDate1)
-                        .servings(3)
+                        .servings(4)
                         .status(MealStatus.PLANNED)
                         .color(MealPlanColor.BLUE)
                         .build();

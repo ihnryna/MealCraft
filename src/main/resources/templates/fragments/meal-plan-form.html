@@ -6,12 +6,18 @@
     </div>
 
     <form id="meal-plan-form"
-          th:action="@{/mealcraft/home/meal-plan}"
+          th:action="@{/mealcraft/meals/save}"
           th:object="${mealPlan}"
           method="post">
 
-        <input type="hidden" th:field="*{id}">
-        <input type="hidden" th:field="*{userOwnerId}">
+        <input type="hidden" id="id"  th:field="*{id}">
+        <input type="hidden" id="userOwnerId" th:field="*{userOwnerId}">
+        <input type="hidden"
+               id="planDate"
+               th:value="${#dates.format(mealPlan.planDate, 'yyyy-MM-dd')}"
+               name="planDate">
+        <input type="hidden" id="status" th:field="*{status}">
+        <input type="hidden" id="recipeId" th:field="*{recipeId}">
 
         <div>
             <label for="recipe-input-box" style="margin-bottom: 10px">Choose recipe:</label>
@@ -69,9 +75,8 @@
 
 
         <div style="margin-top: 16px;">
-            <button type="submit"
-                    th:text="${mealPlan.id} == null ? 'Add' : 'Save'">
-                Add
+            <button type="submit">
+                Save
             </button>
         </div>
     </form>
@@ -87,8 +92,8 @@
             let result = []
             let input = inputBox.value;
             if (input.length) {
-                result = recipes.filter((keyword) => {
-                    return keyword.toLowerCase().includes(input.toLowerCase());
+                result = recipes.filter((recipe) => {
+                    return recipe.name.toLowerCase().includes(input.toLowerCase());
                 });
                 console.log(result)
             }
@@ -97,13 +102,14 @@
 
         function display(result) {
             const content = result.map((oneRecipe) => {
-                return "<li onclick=selectRecipe(this)>" + oneRecipe + "</li>";
+                return `<li onclick="selectRecipe(this)" data-id="${oneRecipe.id}">${oneRecipe.name}</li>`;
             });
             resultsBox.innerHTML = "<ul>" + content.join('') + "</ul>";
         }
 
         function selectRecipe(oneRecipe) {
             inputBox.value = oneRecipe.innerHTML;
+            document.getElementById("recipeId").value = oneRecipe.dataset.id;
             resultsBox.innerHTML = '';
         }
 

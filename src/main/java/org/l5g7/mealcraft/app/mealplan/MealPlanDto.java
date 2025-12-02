@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.l5g7.mealcraft.enums.MealStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -25,6 +26,7 @@ public class MealPlanDto {
     private Long recipeId;
 
     @NotNull
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date planDate;
 
     @NotNull

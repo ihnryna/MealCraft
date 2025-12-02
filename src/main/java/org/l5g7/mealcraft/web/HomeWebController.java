@@ -32,6 +32,9 @@ public class HomeWebController {
     private final RestClient internalApiClient;
     private final UserService userService;
     private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
+    private static final String USERNAME = "username";
+    private static final String TITLE = "title";
+
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
@@ -50,13 +53,13 @@ public class HomeWebController {
         }
 
         String username = auth.getName();
-        model.addAttribute("username", username);
+        model.addAttribute(USERNAME, username);
 
         addMonthCalendarToModel(model, month);
         addCalendarMealPlansToModel(model, username);
         addShoppingItemsToModel(model, username);
 
-        model.addAttribute("title", "MealCraft — Main Page");
+        model.addAttribute(TITLE, "MealCraft — Main Page");
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/calendar :: calendarFragment");
         return "home";
     }
@@ -67,9 +70,9 @@ public class HomeWebController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         String username = auth.getName();
-        model.addAttribute("username", username);
+        model.addAttribute(USERNAME, username);
 
-        model.addAttribute("title", "MealCraft — Main Page");
+        model.addAttribute(TITLE, "MealCraft — Main Page");
         addPageMealPlansToModel(model, username, day);
         addShoppingItemsToModel(model, username);
         model.addAttribute("day", day);
@@ -103,8 +106,8 @@ public class HomeWebController {
         }
 
         String username = auth.getName();
-        model.addAttribute("username", username);
-        model.addAttribute("title", "MealCraft — Recipe Craft");
+        model.addAttribute(USERNAME, username);
+        model.addAttribute(TITLE, "MealCraft — Recipe Craft");
         model.addAttribute(FRAGMENT_TO_LOAD, "craft-page :: content");
 
         return "home";
@@ -170,13 +173,15 @@ public class HomeWebController {
                 .toEntity(new ParameterizedTypeReference<>() {
                 });
         List<MealPlanDto> events = responseMeals.getBody();
-        Map<LocalDate, ArrayList<EventCell>> dayEventMap = new HashMap<>();
+        Map<LocalDate, ArrayList<EventCell>> dayEventMap = new TreeMap<>();
 
         if (events != null) {
+            events.sort(Comparator.comparing(MealPlanDto::getPlanDate));
+
             for (MealPlanDto ev : events) {
                 Date date = ev.getPlanDate();
                 LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate end = start.plusDays(ev.getServings());
+                LocalDate end = start.plusDays(ev.getServings() - 1L);
                 int slot = 0;
                 boolean foundSlot = false;
                 for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
@@ -201,9 +206,11 @@ public class HomeWebController {
                 });
 
         List<MealPlanDto> events = responseMeals.getBody();
-        Map<LocalDate, ArrayList<MealPlanDto>> dayEventMapForDay = new HashMap<>();
+        Map<LocalDate, ArrayList<MealPlanDto>> dayEventMapForDay = new TreeMap<>();
 
         if (events != null) {
+            events.sort(Comparator.comparing(MealPlanDto::getPlanDate));
+
             for (MealPlanDto ev : events) {
                 Date date = ev.getPlanDate();
                 LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
