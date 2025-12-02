@@ -9,4 +9,6 @@ public interface UnitService {
     UnitDto updateUnit(Long id, UnitUpdateDto updatedUnit);
     UnitDto patchUnit(Long id, UnitUpdateDto updates);
     void deleteUnit(Long id);
+    List<UnitDto> searchUnitsByPrefix(String prefix);
+    Unit getOrCreateUnitByName(String unitName);
 }

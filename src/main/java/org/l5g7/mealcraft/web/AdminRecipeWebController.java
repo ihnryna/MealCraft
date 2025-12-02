@@ -2,6 +2,7 @@ package org.l5g7.mealcraft.web;
 
 import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
+import org.l5g7.mealcraft.app.units.UnitDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ public class AdminRecipeWebController {
     private static final String REDIRECT_RECIPE_PAGE = "redirect:/mealcraft/admin/recipe";
     private static final String RECIPE_ID_URI        = "/recipes/{id}";
     private static final String RECIPE_FORM_FRAGMENT = "fragments/recipe-form :: content";
+    private static final String IMPORT_RECIPE_FORM_FRAGMENT = "fragments/recipe-import-form :: content";
 
     public AdminRecipeWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
         this.internalApiClient = internalApiClient;
@@ -180,5 +182,62 @@ public class AdminRecipeWebController {
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<ProductDto>>() {});
+    }
+
+    @GetMapping("/recipe/unit-suggestions")
+    @ResponseBody
+    public List<UnitDto> getUnitSuggestions(@RequestParam("query") String query) {
+
+        return internalApiClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/units/search")
+                        .queryParam("prefix", query)
+                        .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<UnitDto>>() {});
+    }
+
+    @GetMapping("/recipe/import")
+    public String showImportRecipeForm(Model model) {
+
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri("/recipes/external/random")
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute(RECIPE, recipe);
+        model.addAttribute(TITLE, "Import external recipe");
+        model.addAttribute(FRAGMENT_TO_LOAD, IMPORT_RECIPE_FORM_FRAGMENT);
+
+        return ADMIN_PAGE;
+    }
+
+    @PostMapping("/recipe/import")
+    public String importRecipe(@ModelAttribute("recipe") RecipeDto recipeDto, Model model) {
+        try {
+            internalApiClient
+                    .post()
+                    .uri("/recipes/import")
+                    .body(recipeDto)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            return REDIRECT_RECIPE_PAGE;
+
+        } catch (RestClientResponseException ex) {
+            String body = ex.getResponseBodyAsString();
+            String message = (body != null && !body.isBlank())
+                    ? body
+                    : "Failed to import recipe: " + ex.getStatusCode();
+
+            model.addAttribute(RECIPE, recipeDto);
+            model.addAttribute(TITLE, "Import external recipe");
+            model.addAttribute(FRAGMENT_TO_LOAD, IMPORT_RECIPE_FORM_FRAGMENT);
+            model.addAttribute("errorMessage", message);
+
+            return ADMIN_PAGE;
+        }
     }
 }

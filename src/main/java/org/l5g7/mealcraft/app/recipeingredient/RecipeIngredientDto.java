@@ -23,4 +23,6 @@ public class RecipeIngredientDto {
     @NotNull
     @Positive
     private Double amount;
+
+    private String unitName;
 }

@@ -1,10 +1,12 @@
 package org.l5g7.mealcraft.logging;
 
-import org.l5g7.mealcraft.MealCraftApplication;
 import org.slf4j.*;
 
 public class LogUtils {
-    private static final Logger log = LoggerFactory.getLogger(MealCraftApplication.class);
+
+    private LogUtils(){}
+
+    private static final Logger log = LoggerFactory.getLogger(LogUtils.class);
 
     public static void logInfo(String message) {
         log.info(message);

@@ -484,15 +484,29 @@ class ProductServiceUnitTests {
 
     @Test
     void searchProducts_userGetsPublicAndOwn() {
+        Product publicProduct = Product.builder()
+                .id(200L)
+                .name("Mineral Water")
+                .defaultUnit(unitOne)
+                .ownerUser(null)
+                .build();
+
+        Product anotherUserProduct = Product.builder()
+                .id(201L)
+                .name("Mint")
+                .defaultUnit(unitOne)
+                .ownerUser(anotherUser)
+                .build();
+
         when(currentUserProvider.getCurrentUserOrNullIfAdmin()).thenReturn(owner);
-        when(productRepository
-                .findAllByNameStartingWithIgnoreCaseAndOwnerUserIsNullOrOwnerUser_Id("Mi",1L))
-                .thenReturn(List.of(productOne));
+        when(productRepository.findAll())
+                .thenReturn(List.of(productOne, publicProduct, anotherUserProduct));
 
         var result = productService.searchProductsByPrefix("Mi");
 
-        verify(productRepository)
-                .findAllByNameStartingWithIgnoreCaseAndOwnerUserIsNullOrOwnerUser_Id("Mi", 1L);
-        assert(result.size() == 1);
+        verify(productRepository).findAll();
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(p -> p.getId().equals(100L)));
+        assertTrue(result.stream().anyMatch(p -> p.getId().equals(200L)));
     }
 }

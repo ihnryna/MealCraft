@@ -277,4 +277,37 @@ public class ProductServiceImpl implements ProductService {
         recipe.getIngredients().add(recipeIngredient);
     }
 
+    @Override
+    public Product getOrCreatePublicProduct(String name, Unit unit) {
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
+        if (currentUser != null) {
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", "create-public-product-not-allowed");
+        }
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Product name must not be blank");
+        }
+        if (unit == null) {
+            throw new IllegalArgumentException("Unit must not be null");
+        }
+
+        String trimmed = name.trim();
+
+        List<Product> publicProducts = productRepository.findAllByOwnerUserIsNull();
+        for (Product p : publicProducts) {
+            if (p.getName().equalsIgnoreCase(trimmed)) {
+                return p;
+            }
+        }
+
+        Product entity = Product.builder()
+                .name(trimmed)
+                .imageUrl(null)
+                .defaultUnit(unit)
+                .createdAt(new Date())
+                .build();
+
+        return productRepository.save(entity);
+    }
+
 }

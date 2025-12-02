@@ -4,11 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.products.ProductService;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.recipes.RecipeServiceImpl;
+import org.l5g7.mealcraft.app.units.UnitService;
 import org.l5g7.mealcraft.app.user.CurrentUserProvider;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
@@ -30,6 +32,8 @@ public class RecipeServiceUnitTests {
     private UserRepository userRepository;
     private RecipeProvider recipeProvider;
     private CurrentUserProvider currentUserProvider;
+    private UnitService unitService;
+    private ProductService productService;
 
     private RecipeServiceImpl recipeService;
 
@@ -46,7 +50,9 @@ public class RecipeServiceUnitTests {
                 productRepository,
                 userRepository,
                 recipeProvider,
-                currentUserProvider
+                currentUserProvider,
+                unitService,
+                productService
         );
     }
 

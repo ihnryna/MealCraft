@@ -2,8 +2,11 @@ package org.l5g7.mealcraft.app.recipes;
 
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.products.ProductService;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
+import org.l5g7.mealcraft.app.units.Unit;
+import org.l5g7.mealcraft.app.units.UnitService;
 import org.l5g7.mealcraft.app.user.CurrentUserProvider;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
@@ -24,16 +27,21 @@ public class RecipeServiceImpl implements RecipeService {
     private final UserRepository userRepository;
     private final RecipeProvider recipeProvider;
     private final CurrentUserProvider currentUserProvider;
+    private final UnitService unitService;
+    private final ProductService productService;
+
     private static final String ENTITY_NAME = "Recipe";
     private static final String ENTITY_PRODUCT = "Product";
 
     @Autowired
-    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider, CurrentUserProvider currentUserProvider) {
+    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider, CurrentUserProvider currentUserProvider, UnitService unitService, ProductService productService) {
         this.recipeRepository = recipeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.recipeProvider = recipeProvider;
         this.currentUserProvider = currentUserProvider;
+        this.unitService = unitService;
+        this.productService = productService;
     }
 
     @Transactional
@@ -486,6 +494,82 @@ public class RecipeServiceImpl implements RecipeService {
                             .ingredients(ingredients)
                             .build();
                 }).toList();
+    }
+
+    @Override
+    @Transactional
+    public void importRecipe(RecipeDto dto) {
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
+        if (currentUser != null) {
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", "import-not-allowed");
+        }
+
+        if (dto.getIngredients() == null || dto.getIngredients().isEmpty()) {
+            throw new IllegalArgumentException("Imported recipe must contain at least one ingredient");
+        }
+
+        Recipe entity = Recipe.builder()
+                .name(dto.getName())
+                .ownerUser(null)
+                .imageUrl(dto.getImageUrl())
+                .baseRecipe(null)
+                .createdAt(new Date())
+                .build();
+
+        List<RecipeIngredient> ingredients = new ArrayList<>();
+        Set<String> usedProductNames = new java.util.HashSet<>();
+
+        for (RecipeIngredientDto ingDto : dto.getIngredients()) {
+            if (ingDto == null) {
+                continue;
+            }
+
+            String rawName = ingDto.getProductName();
+            Double amount = ingDto.getAmount();
+
+            if ((rawName == null || rawName.isBlank())
+                    && (amount == null || amount <= 0)) {
+                continue;
+            }
+
+            if (rawName == null || rawName.isBlank()) {
+                throw new IllegalArgumentException("Ingredient must have product name");
+            }
+
+            String productName = rawName.trim();
+            String key = productName.toLowerCase();
+
+            if (!usedProductNames.add(key)) {
+                throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
+            }
+
+            if (amount == null || amount <= 0) {
+                throw new IllegalArgumentException("Ingredient amount must be positive");
+            }
+
+            String unitName = ingDto.getUnitName();
+            if (unitName == null || unitName.isBlank()) {
+                unitName = "pc";
+            }
+
+            Unit unit = unitService.getOrCreateUnitByName(unitName);
+            Product product = productService.getOrCreatePublicProduct(productName, unit);
+
+            RecipeIngredient ingredient = RecipeIngredient.builder()
+                    .recipe(entity)
+                    .product(product)
+                    .amount(amount)
+                    .build();
+
+            ingredients.add(ingredient);
+        }
+
+        if (ingredients.isEmpty()) {
+            throw new IllegalArgumentException("Imported recipe must contain at least one ingredient");
+        }
+
+        entity.setIngredients(ingredients);
+        recipeRepository.save(entity);
     }
 
 }
