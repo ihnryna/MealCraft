@@ -28,8 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@SuppressWarnings("java:S5786")
-public class ProductIntegrationTest {
+class ProductIntegrationTest {
 
     @LocalServerPort
     int port;
@@ -123,8 +122,8 @@ public class ProductIntegrationTest {
 
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
 
         ProductDto saved = products.get(0);
         assertThat(saved.getName()).isEqualTo("Sugar");
@@ -177,8 +176,8 @@ public class ProductIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
 
         Long id = products.get(0).getId();
 
@@ -236,10 +235,10 @@ public class ProductIntegrationTest {
 
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(2);
-        assertThat(products).anyMatch(p -> p.getName().equals("Apple"));
-        assertThat(products).anyMatch(p -> p.getName().equals("Banana"));
+        assertThat(products).isNotNull()
+                .hasSize(2)
+                .anyMatch(p -> p.getName().equals("Apple"))
+                .anyMatch(p -> p.getName().equals("Banana"));
     }
 
     @Test
@@ -267,8 +266,8 @@ public class ProductIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
         Long id = products.get(0).getId();
 
         ProductDto updateBody = ProductDto.builder()
@@ -329,8 +328,8 @@ public class ProductIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
         ProductDto before = products.get(0);
         Long id = before.getId();
 
@@ -389,8 +388,8 @@ public class ProductIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
         Long id = products.get(0).getId();
 
         HttpEntity<Void> deleteReq = new HttpEntity<>(headers);
@@ -411,8 +410,8 @@ public class ProductIntegrationTest {
         );
         assertThat(afterDeleteResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> after = afterDeleteResp.getBody();
-        assertThat(after).isNotNull();
-        assertThat(after).isEmpty();
+        assertThat(after).isNotNull()
+                .isEmpty();
     }
 
     @Test
@@ -453,8 +452,8 @@ public class ProductIntegrationTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> found = resp.getBody();
-        assertThat(found).isNotNull();
-        assertThat(found).hasSize(1);
+        assertThat(found).isNotNull()
+                .hasSize(1);
         assertThat(found.get(0).getName()).isEqualTo("Sugar");
     }
 
@@ -483,8 +482,8 @@ public class ProductIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
         Long id = products.get(0).getId();
 
         User other = User.builder()
@@ -548,8 +547,8 @@ public class ProductIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ProductDto> products = listResp.getBody();
-        assertThat(products).isNotNull();
-        assertThat(products).hasSize(1);
+        assertThat(products).isNotNull()
+                .hasSize(1);
         Long id = products.get(0).getId();
 
         User admin = User.builder()

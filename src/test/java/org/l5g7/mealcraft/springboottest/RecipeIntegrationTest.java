@@ -31,8 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@SuppressWarnings("java:S5786")
-public class RecipeIntegrationTest {
+class RecipeIntegrationTest {
 
     @LocalServerPort
     int port;
@@ -141,8 +140,8 @@ public class RecipeIntegrationTest {
 
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(1);
+        assertThat(recipes).isNotNull()
+            .hasSize(1);
 
         RecipeDto saved = recipes.get(0);
         assertThat(saved.getName()).isEqualTo("Pancakes");
@@ -201,8 +200,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(1);
+        assertThat(recipes).isNotNull()
+                .hasSize(1);
 
         Long id = recipes.get(0).getId();
 
@@ -255,8 +254,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(firstListResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> firstList = firstListResp.getBody();
-        assertThat(firstList).isNotNull();
-        assertThat(firstList).hasSize(1);
+        assertThat(firstList).isNotNull()
+                .hasSize(1);
         Long baseId = firstList.get(0).getId();
 
         RecipeDto second = RecipeDto.builder()
@@ -279,10 +278,10 @@ public class RecipeIntegrationTest {
 
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(2);
-        assertThat(recipes).anyMatch(r -> r.getName().equals("First recipe"));
-        assertThat(recipes).anyMatch(r -> r.getName().equals("Second recipe"));
+        assertThat(recipes).isNotNull()
+                .hasSize(2)
+                .anyMatch(r -> r.getName().equals("First recipe"))
+                .anyMatch(r -> r.getName().equals("Second recipe"));
         Optional<RecipeDto> secondOpt = recipes.stream()
                 .filter(r -> r.getName().equals("Second recipe"))
                 .findFirst();
@@ -320,8 +319,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(1);
+        assertThat(recipes).isNotNull()
+                .hasSize(1);
         Long id = recipes.get(0).getId();
 
         RecipeIngredientDto updatedIng = RecipeIngredientDto.builder()
@@ -394,8 +393,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(1);
+        assertThat(recipes).isNotNull()
+                .hasSize(1);
         Long id = recipes.get(0).getId();
 
         HttpEntity<Void> deleteReq = new HttpEntity<>(headers);
@@ -417,8 +416,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(afterDeleteResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> after = afterDeleteResp.getBody();
-        assertThat(after).isNotNull();
-        assertThat(after).isEmpty();
+        assertThat(after).isNotNull()
+                .isEmpty();
     }
 
     @Test
@@ -451,8 +450,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(1);
+        assertThat(recipes).isNotNull()
+                .hasSize(1);
         Long id = recipes.get(0).getId();
 
         User other = User.builder()
@@ -521,8 +520,8 @@ public class RecipeIntegrationTest {
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<RecipeDto> recipes = listResp.getBody();
-        assertThat(recipes).isNotNull();
-        assertThat(recipes).hasSize(1);
+        assertThat(recipes).isNotNull()
+                .hasSize(1);
         Long id = recipes.get(0).getId();
 
         User admin = User.builder()

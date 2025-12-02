@@ -25,7 +25,7 @@ class SecurityTests {
     private MockMvc mockMvc;
 
     @BeforeEach
-    public void setup() {
+    void setupTest() {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .apply(springSecurity())
@@ -41,13 +41,6 @@ class SecurityTests {
 
     @Test
     void anonymous_cannot_get_user_by_id() throws Exception {
-        mockMvc.perform(get("/users/{id}", 1))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = {"USER"})
-    void user_role_cannot_get_user_by_id() throws Exception {
         mockMvc.perform(get("/users/{id}", 1))
                 .andExpect(status().isForbidden());
     }

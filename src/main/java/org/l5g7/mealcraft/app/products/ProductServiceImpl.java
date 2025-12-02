@@ -9,7 +9,9 @@ import org.l5g7.mealcraft.app.user.CurrentUserProvider;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@CacheConfig(cacheNames = "products")
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
@@ -34,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(key = "'allProducts'")
     public List<ProductDto> getAllProducts() {
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
@@ -59,6 +63,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(key = "#id")
     public ProductDto getProductById(Long id) {
 
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
@@ -153,6 +158,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void patchProduct(Long id, ProductDto patch) {
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
@@ -194,6 +200,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void deleteProductById(Long id) {
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
         Product product = productRepository.findById(id)
@@ -216,6 +223,7 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
+    @Cacheable(key = "'searchPrefix_' + #prefix")
     public List<ProductDto> searchProductsByPrefix(String prefix) {
         User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
@@ -244,6 +252,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(allEntries = true)
     public void addProductToRecipe(Long recipeId, Long productId, Double amount) {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new EntityDoesNotExistException(
