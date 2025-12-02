@@ -2,7 +2,7 @@ package org.l5g7.mealcraft.springboottest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.dto.LoginUserDto;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
