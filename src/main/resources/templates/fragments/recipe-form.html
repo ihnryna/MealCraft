@@ -45,26 +45,22 @@
                        th:name="|ingredients[${iter.index}].productId|"
                        th:value="${ing.productId}">
 
-                <label>
-                    Product:
-                    <input type="text"
-                           class="product-name-input"
-                           th:value="${ing.productName}"
-                           autocomplete="off"
-                           required>
-                </label>
+                <label>Product:</label>
+                <input type="text"
+                       class="product-name-input"
+                       th:value="${ing.productName}"
+                       autocomplete="off"
+                       required>
 
                 <ul class="product-suggestions"></ul>
 
-                <label>
-                    Amount:
-                    <input type="number"
-                           step="0.5"
-                           min="0.5"
-                           th:name="|ingredients[${iter.index}].amount|"
-                           th:value="${ing.amount}"
-                           required>
-                </label>
+                <label>Amount:</label>
+                <input type="number"
+                       step="0.5"
+                       min="0.5"
+                       th:name="|ingredients[${iter.index}].amount|"
+                       th:value="${ing.amount}"
+                       required>
 
                 <div class="ingredient-error" style="color: red;"></div>
 
@@ -87,65 +83,167 @@
             const container = document.getElementById('ingredients-container');
             const form = document.getElementById('recipe-form');
 
-            function validateRow(row) {
-                const nameInput = row.querySelector('.product-name-input');
-                const productIdInput = row.querySelector('input[name$=".productId"]');
-                const amountInput = row.querySelector('input[name$=".amount"]');
-                const errorBox = row.querySelector('.ingredient-error');
+            let ingredientIndex = parseInt(container.dataset.initialCount || '0', 10);
+            const addButton = document.getElementById('add-ingredient');
 
-                if (errorBox) {
-                    errorBox.textContent = '';
-                }
+            function createIngredientRow(index) {
+                const row = document.createElement('div');
+                row.classList.add('ingredient-row');
+                row.dataset.index = index;
 
-                const name = nameInput?.value.trim() ?? '';
-                const productId = productIdInput?.value.trim() ?? '';
-                const amountStr = amountInput?.value.trim() ?? '';
+                row.innerHTML = `
+                    <input type="hidden" name="ingredients[${index}].id">
+                    <input type="hidden" name="ingredients[${index}].productId">
 
-                // порожній рядок — ігноруємо
-                if (name === '' && productId === '' && amountStr === '') {
-                    return true;
-                }
+                    <label>Product:</label>
+                    <input type="text"
+                           class="product-name-input"
+                           autocomplete="off"
+                           required>
 
-                const amount = Number.parseFloat(amountStr);
+                    <ul class="product-suggestions"></ul>
 
-                if (amountStr === '' || Number.isNaN(amount) || amount <= 0) {
-                    if (errorBox) {
-                        errorBox.textContent = 'Amount must be greater than zero.';
-                    }
-                    return false;
-                }
+                    <label>Amount:</label>
+                    <input type="number"
+                           step="0.5"
+                           min="0.5"
+                           name="ingredients[${index}].amount"
+                           required>
 
-                if (productId === '') {
-                    if (errorBox) {
-                        errorBox.textContent = 'Please select a product from the list.';
-                    }
-                    return false;
-                }
+                    <div class="ingredient-error" style="color: red;"></div>
 
-                return true;
+                    <button type="button" class="remove-ingredient">Remove</button>
+                `;
+
+                return row;
             }
 
-            function validateAllRows() {
-                const rows = container.querySelectorAll('.ingredient-row');
+            if (ingredientIndex === 0) {
+                const firstRow = createIngredientRow(ingredientIndex);
+                container.appendChild(firstRow);
+                ingredientIndex++;
+            }
+
+            addButton.addEventListener('click', function () {
+                const row = createIngredientRow(ingredientIndex);
+                container.appendChild(row);
+                ingredientIndex++;
+            });
+
+            container.addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-ingredient')) {
+                    const row = e.target.closest('.ingredient-row');
+                    if (row) {
+                        container.removeChild(row);
+                    }
+                }
+            });
+
+            container.addEventListener('input', function (e) {
+                if (e.target.classList.contains('product-name-input')) {
+                    const input = e.target;
+                    const row = input.closest('.ingredient-row');
+                    const suggestionsList = row.querySelector('.product-suggestions');
+                    const query = input.value.trim();
+
+                    const productIdInput = row.querySelector('input[name$=".productId"]');
+                    const errorBox = row.querySelector('.ingredient-error');
+
+                    if (productIdInput) {
+                        productIdInput.value = '';
+                    }
+                    if (errorBox) {
+                        errorBox.textContent = '';
+                    }
+
+                    if (query.length < 1) {
+                        suggestionsList.innerHTML = '';
+                        return;
+                    }
+
+                    fetch(`/mealcraft/admin/recipe/product-suggestions?query=` + encodeURIComponent(query))
+                        .then(response => response.json())
+                        .then(products => {
+                            suggestionsList.innerHTML = '';
+                            products.forEach(p => {
+                                const li = document.createElement('li');
+                                li.textContent = p.name + ' (' + p.defaultUnitName + ')';
+                                li.dataset.productId = p.id;
+                                li.classList.add('suggestion-item');
+                                suggestionsList.appendChild(li);
+                            });
+                        })
+                        .catch(err => {
+                            console.error('Error loading product suggestions', err);
+                        });
+                }
+            });
+
+            container.addEventListener('click', function (e) {
+                if (e.target.classList.contains('suggestion-item')) {
+                    const li = e.target;
+                    const row = li.closest('.ingredient-row');
+                    const input = row.querySelector('.product-name-input');
+                    const productIdInput = row.querySelector('input[name$=".productId"]');
+                    const suggestionsList = row.querySelector('.product-suggestions');
+                    const errorBox = row.querySelector('.ingredient-error');
+
+                    input.value = li.textContent;
+                    productIdInput.value = li.dataset.productId;
+
+                    if (errorBox) {
+                        errorBox.textContent = '';
+                    }
+
+                    suggestionsList.innerHTML = '';
+                }
+            });
+
+            form.addEventListener('submit', function (e) {
                 let hasError = false;
 
-                for (const row of rows) {
-                    if (!validateRow(row)) {
-                        hasError = true;
+                const rows = container.querySelectorAll('.ingredient-row');
+                rows.forEach(row => {
+                    const nameInput = row.querySelector('.product-name-input');
+                    const productIdInput = row.querySelector('input[name$=".productId"]');
+                    const amountInput = row.querySelector('input[name$=".amount"]');
+                    const errorBox = row.querySelector('.ingredient-error');
+
+                    if (errorBox) {
+                        errorBox.textContent = '';
                     }
-                }
 
-                return !hasError;
-            }
+                    const name = nameInput ? nameInput.value.trim() : '';
+                    const productId = productIdInput ? productIdInput.value.trim() : '';
+                    const amountStr = amountInput ? amountInput.value.trim() : '';
 
-            form.addEventListener('submit', (e) => {
-                if (!validateAllRows()) {
+                    if (name === '' && productId === '' && amountStr === '') {
+                        return;
+                    }
+
+                    if (amountStr === '' || isNaN(parseFloat(amountStr)) || parseFloat(amountStr) <= 0) {
+                        hasError = true;
+                        if (errorBox) {
+                            errorBox.textContent = 'Amount must be greater than zero.';
+                        }
+                        return;
+                    }
+
+                    if (productId === '') {
+                        hasError = true;
+                        if (errorBox) {
+                            errorBox.textContent = 'Please select a product from the list.';
+                        }
+                    }
+                });
+
+                if (hasError) {
                     e.preventDefault();
                 }
             });
+
         })();
     </script>
-
 
     <style>
         .ingredient-row {
