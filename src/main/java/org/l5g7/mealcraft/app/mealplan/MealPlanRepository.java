@@ -12,4 +12,5 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
     List<MealPlan> findAllByUserOwnerAndPlanDateBetween(User user, Date from, Date to);
     List<MealPlan> findMealPlanByUserOwnerAndStatusAndPlanDateBetween(User userOwner, MealStatus status, Date from, Date to);
     List<MealPlan> findMealPlanByUserOwnerAndStatusNotAndPlanDateBetween(User userOwner, MealStatus notStatus, Date from, Date to);
+    List<MealPlan> findAllByStatusAndPlanDateBetween(MealStatus status, Date from, Date to);
 }

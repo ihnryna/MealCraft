@@ -24,8 +24,7 @@ public class Notification {
     private Date createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "user_id",
-                nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
 }

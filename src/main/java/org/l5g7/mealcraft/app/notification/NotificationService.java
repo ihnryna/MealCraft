@@ -1,10 +1,7 @@
 package org.l5g7.mealcraft.app.notification;
 
-import java.util.List;
+import org.l5g7.mealcraft.app.user.User;
 
 public interface NotificationService {
-   List<NotificationResponseDto> getAllNotifications();
-   List<NotificationResponseDto> getUserNotifications(long userId);
-   void create(NotificationRequestDto notification);
-   void delete(long notificationId);
+    void createNotification(User user, String text);
 }
