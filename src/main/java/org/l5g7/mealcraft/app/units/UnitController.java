@@ -46,4 +46,19 @@ public class UnitController {
     public void deleteUnit(@PathVariable long id) {
         unitServiceImpl.deleteUnit(id);
     }
+
+    @GetMapping("/search")
+    public List<UnitDto> searchByPrefix(@RequestParam("prefix") String prefix) {
+        return unitServiceImpl.searchUnitsByPrefix(prefix);
+    }
+
+//    @GetMapping("/cache")
+//    public String cachingTest() {
+//        return unitServiceImpl.cachingTest();
+//    }
+//
+//    @GetMapping("/cache/evict")
+//    public String evictCache() {
+//        return unitServiceImpl.delCachingTest();
+//    }
 }

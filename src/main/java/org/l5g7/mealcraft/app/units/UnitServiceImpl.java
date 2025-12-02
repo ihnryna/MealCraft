@@ -1,6 +1,8 @@
 package org.l5g7.mealcraft.app.units;
 
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.user.CurrentUserProvider;
+import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogUtils;
@@ -22,12 +24,14 @@ public class UnitServiceImpl implements UnitService {
 
     private final UnitRepository repository;
     private final ProductRepository productRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     @Autowired
     public UnitServiceImpl(UnitRepository repository,
-                           ProductRepository productRepository) {
+                           ProductRepository productRepository, CurrentUserProvider currentUserProvider) {
         this.repository = repository;
         this.productRepository = productRepository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Cacheable(key = "'allUnits'")
@@ -157,6 +161,40 @@ public class UnitServiceImpl implements UnitService {
             LogUtils.logRemoveKey("user");
         }
     }
+
+    @Override
+    public Unit getOrCreateUnitByName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Unit name must not be blank");
+        }
+
+        String trimmed = name.trim();
+
+        return repository.findFirstByNameIgnoreCase(trimmed)
+                .orElseGet(() -> repository.save(
+                        Unit.builder()
+                                .name(trimmed)
+                                .build()
+                ));
+    }
+
+    @Override
+    public List<UnitDto> searchUnitsByPrefix(String prefix) {
+        String p = prefix == null ? "" : prefix.trim();
+        if (p.isEmpty()) {
+            return List.of();
+        }
+
+        List<Unit> units = repository.findAllByNameStartingWithIgnoreCase(p);
+
+        return units.stream()
+                .map(u -> UnitDto.builder()
+                        .id(u.getId())
+                        .name(u.getName())
+                        .build())
+                .toList();
+    }
+
 
     private String getAuthenticatedUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
