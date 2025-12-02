@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.l5g7.mealcraft.app.mealplan.MealPlan;
 import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
+import org.l5g7.mealcraft.app.notification.MealExpirationNotificationService;
+import org.l5g7.mealcraft.app.notification.NotificationService;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.enums.MealStatus;

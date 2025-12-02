@@ -2,6 +2,9 @@ package org.l5g7.mealcraft.unittest.notification;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.l5g7.mealcraft.app.notification.Notification;
+import org.l5g7.mealcraft.app.notification.NotificationRepository;
+import org.l5g7.mealcraft.app.notification.NotificationServiceImpl;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
