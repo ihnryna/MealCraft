@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.app.aop.LogInAspect;
+package org.l5g7.mealcraft.app.aop.loginaspect;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -10,6 +10,10 @@ import java.util.stream.Collectors;
 
 public class LogInAspectUtils {
 
+    private LogInAspectUtils(){
+
+    }
+
     public static String getClientIp(HttpServletRequest request) {
         String clientIp = request.getHeader("X-Forwarded-For");
         if (clientIp == null) {
@@ -18,7 +22,7 @@ public class LogInAspectUtils {
         return clientIp;
     }
 
-    public static HashMap<String, ArrayList<LocalDateTime>> filterOldLogs(HashMap<String, ArrayList<LocalDateTime>> oldLogs, int limitMinutes) {
+    public static Map<String, ArrayList<LocalDateTime>> filterOldLogs(Map<String, ArrayList<LocalDateTime>> oldLogs, int limitMinutes) {
 
         LocalDateTime now = LocalDateTime.now();
 

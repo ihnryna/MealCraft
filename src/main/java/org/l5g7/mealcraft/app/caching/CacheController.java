@@ -17,7 +17,7 @@ public class CacheController {
     }
 
     @GetMapping("/clear")
-    public ResponseEntity<?> clearCache() {
+    public ResponseEntity<String> clearCache() {
         return ResponseEntity.ok(cacheService.clearCache());
     }
 }

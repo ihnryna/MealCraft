@@ -3,16 +3,13 @@ package org.l5g7.mealcraft.app.auth;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
-import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
+import org.l5g7.mealcraft.app.auth.dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.dto.RegisterUserDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.util.Map;
 
 @RestController
@@ -34,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginUserDto loginUserDto, HttpServletResponse response) {
+    public ResponseEntity<String> login(@Valid @RequestBody LoginUserDto loginUserDto, HttpServletResponse response) {
 
         try {
             String token = authService.login(loginUserDto);
@@ -54,12 +51,12 @@ public class AuthController {
                 errorMsg = "Internal error";
             }
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", errorMsg));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", errorMsg).toString());
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<String> logout(HttpServletResponse response) {
         if(authService.logout()) {
             Cookie authTokenCookie = new Cookie(authToken, "");
             authTokenCookie.setPath("/");

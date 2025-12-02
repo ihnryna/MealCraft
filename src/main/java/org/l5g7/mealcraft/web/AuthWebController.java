@@ -1,8 +1,8 @@
 package org.l5g7.mealcraft.web;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
-import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
+import org.l5g7.mealcraft.app.auth.dto.LoginUserDto;
+import org.l5g7.mealcraft.app.auth.dto.RegisterUserDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;

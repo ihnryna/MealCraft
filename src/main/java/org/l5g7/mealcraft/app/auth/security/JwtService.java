@@ -1,44 +1,48 @@
 package org.l5g7.mealcraft.app.auth.security;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
 import org.l5g7.mealcraft.enums.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
 public class JwtService {
-    @Value("${jwt.secret}")
-    private String SECRET_KEY;
+
+    private SecretKey secretKey;
+
+    public JwtService(JwtKey jwtKey){
+        this.secretKey = jwtKey.getSecretKey();
+    }
 
     @Value("${jwt.expiration-ms}")
-    private long EXPIRATION_MS; // 1 day
+    private long expirationMs; // 1 day
 
     public String generateToken(String username, Role role) {
         Map<String, String> claims = new HashMap<>();
         claims.put("role", String.valueOf(role));
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .claims(claims)
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(secretKey)
                 .compact();
     }
 
     public String getUsernameFromToken(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
+                    .verifyWith(secretKey)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
 
             return claims.getSubject();
         } catch (ExpiredJwtException e) {
@@ -49,10 +53,10 @@ public class JwtService {
     public String getRolesFromToken(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
+                    .verifyWith(secretKey)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
 
             return claims.get("role").toString();
         } catch (ExpiredJwtException e) {

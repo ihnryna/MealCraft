@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MealCraftCacheManager implements CacheManager {
 
-    private final int TTL_MINUTES = 5;
+    private static final int TTL_MINUTES = 5;
 
     private final ConcurrentHashMap<String, CacheEntry> cacheMap = new ConcurrentHashMap<>();
 
