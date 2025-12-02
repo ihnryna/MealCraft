@@ -1,4 +1,4 @@
-package org.l5g7.mealcraft.app.units.dto;
+package org.l5g7.mealcraft.app.units;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

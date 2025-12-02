@@ -5,9 +5,6 @@ import org.l5g7.mealcraft.app.auth.Dto.LoginUserDto;
 import org.l5g7.mealcraft.app.auth.Dto.RegisterUserDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +19,9 @@ import java.util.List;
 @RequestMapping("/mealcraft")
 public class AuthWebController {
 
+    private static final String ERROR_ATTR = "error";
+    private static final String EMAIL_ATTR = "email";
+
     private final RestClient internalApiClient;
 
     public AuthWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
@@ -33,9 +33,9 @@ public class AuthWebController {
                                 @RequestParam(required = false) String email,
                                 Model model) {
         if (error != null)
-            model.addAttribute("error", "No such user");
+            model.addAttribute(ERROR_ATTR, "No such user");
         if (email != null)
-            model.addAttribute("email", email);
+            model.addAttribute(EMAIL_ATTR, email);
         return "login";
     }
 
@@ -60,20 +60,12 @@ public class AuthWebController {
                 servletResponse.addHeader(HttpHeaders.SET_COOKIE, setCookies.get(0));
             }
 
-            // наскільки я розумію, якщо не HttpStatus.OK, то ми випадаємо по Exception (RestClient автоматично кидає Exception при будь-якому статусі >= 400)
-
-            /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            System.out.println(auth.getAuthorities());
-            if(auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
-                return "redirect:/mealcraft/admin/home";
-            } else {*/
-
             return "redirect:/mealcraft/home";
 
 
         } catch (Exception e) {
-            model.addAttribute("error", "No such user");
-            model.addAttribute("email", email);
+            model.addAttribute(ERROR_ATTR, "No such user");
+            model.addAttribute(EMAIL_ATTR, email);
             return "redirect:/mealcraft/login?error=true&email=" + email;
         }
     }
@@ -102,9 +94,9 @@ public class AuthWebController {
                                       @RequestParam(required = false) String email,
                                       Model model) {
         if (error != null)
-            model.addAttribute("error", "User with such email or username already exists");
+            model.addAttribute(ERROR_ATTR, "User with such email or username already exists");
         if (email != null)
-            model.addAttribute("email", email);
+            model.addAttribute(EMAIL_ATTR, email);
         return "register";
     }
 
@@ -113,12 +105,11 @@ public class AuthWebController {
                              @RequestParam String email,
                              @RequestParam String password,
                              @RequestParam String password2,
-                             HttpServletResponse servletResponse,
                              Model model) {
         try {
             if (!password.equals(password2)) {
-                model.addAttribute("error", "Passwords do not match");
-                model.addAttribute("email", email);
+                model.addAttribute(ERROR_ATTR, "Passwords do not match");
+                model.addAttribute(EMAIL_ATTR, email);
                 return "redirect:/mealcraft/register";
             }
 
@@ -127,8 +118,8 @@ public class AuthWebController {
             userRegDto.setEmail(email);
             userRegDto.setPassword(password);
 
-
-            ResponseEntity<Void> response = internalApiClient.post()
+            internalApiClient
+                    .post()
                     .uri("/auth/register")
                     .body(userRegDto)
                     .retrieve()
@@ -136,10 +127,9 @@ public class AuthWebController {
 
             return "redirect:/mealcraft/login";
 
-
         } catch (Exception e) {
-            model.addAttribute("error", "User with such email or username already exists");
-            model.addAttribute("email", email);
+            model.addAttribute(ERROR_ATTR, "User with such email or username already exists");
+            model.addAttribute(EMAIL_ATTR, email);
             return "redirect:/mealcraft/register?error=true&email=" + email;
         }
     }

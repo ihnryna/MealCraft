@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.l5g7.mealcraft.app.user.User;
 import java.util.Date;
-import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Getter @Setter

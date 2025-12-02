@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.user.User;
 import java.util.Date;
@@ -39,6 +38,5 @@ public class Recipe {
     @OneToMany(mappedBy = "recipe",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
-    @Size(min = 1)
     private List<RecipeIngredient> ingredients;
 }

@@ -30,7 +30,6 @@ public class AppConfig {
     }
 
     @Bean(name = "internalApiClient")
-    @Qualifier("internalApiClient")
     public RestClient internalApiClient(RestClient.Builder builder,
                                         @Value("${jwt.cookie-name}") String jwtCookieName) {
         return builder

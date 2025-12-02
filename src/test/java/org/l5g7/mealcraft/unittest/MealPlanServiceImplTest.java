@@ -12,7 +12,7 @@ import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
-import org.l5g7.mealcraft.app.units.Entity.Unit;
+import org.l5g7.mealcraft.app.units.Unit;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.enums.MealPlanColor;
