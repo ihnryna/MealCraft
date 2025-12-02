@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xml:lang="en">
+      xml:lang="en" lang="en">
 <head>
     <meta charset="UTF-8">
     <title th:text="${title} ?: 'MealCraft'">MealCraft</title>
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/calendar.css">
+    <link rel="stylesheet" href="/css/day.css">
     <!-- Bootstrap Icons CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Font -->
@@ -22,44 +23,8 @@
 
     <!-- Main Content -->
     <main class="content">
-        <h1 th:text="${month}">Month</h1>
-        <table class="calendar">
-            <thead>
-            <tr>
-                <th>Mon</th>
-                <th>Tue</th>
-                <th>Wed</th>
-                <th>Thu</th>
-                <th>Fri</th>
-                <th>Sat</th>
-                <th>Sun</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="week : ${weeks}">
-                <td th:each="day : ${week}">
-
-                    <div class="day-cell" th:href="@{/mealcraft/home/day}">
-                        <div class="day-number"
-                             th:text="${day != null ? day.dayOfMonth : ''}"></div>
-
-                        <div class="slots">
-                            <div th:each="slotIdx : ${#numbers.sequence(0,5)}">
-                                <span th:with="cell=${day != null and dayEventMap.containsKey(day) and dayEventMap.get(day).size() > slotIdx ? dayEventMap.get(day).get(slotIdx) : null}"
-                                      th:text="${cell != null ? (cell.isStart ? 'COOK ' : '') + cell.name : ''}"
-                                      th:classappend="${cell != null ? (cell.isStart ? ' slot-start' : (cell.isEnd ? ' slot-end' : ' slot-middle')) : ''}"
-                                      th:style="${cell != null ? 'background-color:' + cell.color : ''}"
-                                      th:class="${cell != null ? ('event' + (cell.isStart ? '-start' : (cell.isEnd ? '-end' : ''))) : ''}">
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <div th:replace="__${fragmentToLoad}__"></div>
     </main>
-
 
     <script>
         document.documentElement.style.setProperty(

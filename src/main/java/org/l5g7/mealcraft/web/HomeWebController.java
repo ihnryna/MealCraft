@@ -7,6 +7,7 @@ import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClient;
@@ -29,6 +31,7 @@ public class HomeWebController {
 
     private final RestClient internalApiClient;
     private final UserService userService;
+    private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
@@ -36,13 +39,75 @@ public class HomeWebController {
     }
 
     @GetMapping("/mealcraft/home")
-    public String showHome(Model model) {
+    public String showHome(@RequestParam(value = "month", required = false)
+                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                           LocalDate month,
+                           Model model) {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
             return "redirect:/mealcraft/admin/home";
         }
 
-        YearMonth currentMonth = YearMonth.now();
+        String username = auth.getName();
+        model.addAttribute("username", username);
+
+        addMonthCalendarToModel(model, month);
+        addCalendarMealPlansToModel(model, username);
+        addShoppingItemsToModel(model, username);
+
+        model.addAttribute("title", "MealCraft — Main Page");
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/calendar :: calendarFragment");
+        return "home";
+    }
+
+
+    @GetMapping("/mealcraft/home/{day}")
+    public String showDayPage(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day, Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        String username = auth.getName();
+        model.addAttribute("username", username);
+
+        model.addAttribute("title", "MealCraft — Main Page");
+        addPageMealPlansToModel(model, username, day);
+        addShoppingItemsToModel(model, username);
+        model.addAttribute("day", day);
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/day :: dayFragment");
+        return "home";
+    }
+
+
+    @PostMapping("/mealcraft/shopping/toggle")
+    public String toggleChecked(@RequestParam Long id) {
+
+        internalApiClient.patch()
+                .uri("/shopping-items/toggle/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
+        return "redirect:/mealcraft/home";
+    }
+
+    @PostMapping("/mealcraft/user/color")
+    public String setUserColor(@RequestParam String color, HttpSession session) {
+        session.setAttribute("themeColor", color);
+        return "redirect:/mealcraft/home";
+    }
+
+    private void putAtSlot(List<EventCell> list, int slot, EventCell cell) {
+        while (list.size() <= slot) {
+            list.add(null);
+        }
+        list.set(slot, cell);
+    }
+
+    private void addMonthCalendarToModel(Model model, LocalDate month) {
+
+        LocalDate now = (month != null) ? month : LocalDate.now();
+        model.addAttribute("prevMonth", now.minusMonths(1));
+        model.addAttribute("nextMonth", now.plusMonths(1));
+
+        YearMonth currentMonth = (month != null) ? YearMonth.from(month) : YearMonth.now();
         LocalDate firstOfMonth = currentMonth.atDay(1);
         DayOfWeek firstDayOfWeek = firstOfMonth.getDayOfWeek();
 
@@ -64,17 +129,30 @@ public class HomeWebController {
             weeks.add(week);
         }
 
+        String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+        model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
 
-        String username = auth.getName();
-        model.addAttribute("username", username);
+        model.addAttribute("weeks", weeks);
+    }
 
+    private void addShoppingItemsToModel(Model model, String username) {
+        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
+                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
+
+        List<ShoppingItemDto> shoppingItems = response.getBody();
+        model.addAttribute("shoppingItems", shoppingItems);
+    }
+
+    private void addCalendarMealPlansToModel(Model model, String username) {
 
         ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
                 .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<MealPlanDto>>() {
+                .toEntity(new ParameterizedTypeReference<>() {
                 });
-
         List<MealPlanDto> events = responseMeals.getBody();
         Map<LocalDate, ArrayList<EventCell>> dayEventMap = new HashMap<>();
 
@@ -86,85 +164,44 @@ public class HomeWebController {
                 int slot = 0;
                 boolean foundSlot = false;
                 for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                    dayEventMap.computeIfAbsent(i, k -> new ArrayList<>());
                     if (!foundSlot) {
-                        if (dayEventMap.containsKey(i)) {
-                            slot = dayEventMap.get(i).size();
-                            foundSlot = true;
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-                            //dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                        } else {
-                            foundSlot = true;
-                            dayEventMap.put(i, new ArrayList<>());
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-
-                        }
-                    } else {
-                        if (dayEventMap.containsKey(i)) {
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-
-                            //dayEventMap.get(i).add(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                        } else {
-                            dayEventMap.put(i, new ArrayList<>());
-                            putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
-                            System.out.println(slot+" "+ev.getName());
-
-
-                            /*dayEventMap.put(i, new ArrayList<>(
-                                    List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor())))
-                            );*/
-                        }
-                        //dayEventMap.put(i, new ArrayList<>(List.of(new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()))));
+                        slot = dayEventMap.get(i).size();
+                        foundSlot = true;
                     }
+                    putAtSlot(dayEventMap.get(i), slot, new EventCell(i.isEqual(start), i.isEqual(end), ev.getName(), slot, ev.getColor()));
                 }
             }
         }
 
         model.addAttribute("dayEventMap", dayEventMap);
+    }
 
-
-        String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-        model.addAttribute("month", monthNames[currentMonth.getMonthValue() - 1]);
-
-        model.addAttribute("weeks", weeks);
-        model.addAttribute("title", "MealCraft — Main Page");
-
-        ResponseEntity<List<ShoppingItemDto>> response = internalApiClient.get()
-                .uri("/shopping-items/getUserShoppingItems/{id}", userService.getUserByUsername(username).id())
+    private void addPageMealPlansToModel(Model model, String username, LocalDate day) {
+        ResponseEntity<List<MealPlanDto>> responseMeals = internalApiClient.get()
+                .uri("/meal-plans/user/{id}", userService.getUserByUsername(username).id())
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<ShoppingItemDto>>() {
+                .toEntity(new ParameterizedTypeReference<>() {
                 });
 
-        List<ShoppingItemDto> shoppingItems = response.getBody();
+        List<MealPlanDto> events = responseMeals.getBody();
+        Map<LocalDate, ArrayList<MealPlanDto>> dayEventMapForDay = new HashMap<>();
 
-        model.addAttribute("shoppingItems", shoppingItems);
-
-        return "home";
-    }
-
-    @PostMapping("/mealcraft/shopping/toggle")
-    public String toggleChecked(@RequestParam Long id) {
-
-        internalApiClient.patch()
-                .uri("/shopping-items/toggle/{id}", id)
-                .retrieve()
-                .toBodilessEntity();
-        return "redirect:/mealcraft/home";
-    }
-
-    @PostMapping("/mealcraft/user/color")
-    public String setUserColor(@RequestParam String color, HttpSession session) {
-        session.setAttribute("themeColor", color);
-        return "redirect:/mealcraft/home";
-    }
-
-    private void putAtSlot(List<EventCell> list, int slot, EventCell cell) {
-        while (list.size() <= slot) {
-            list.add(null); // додаємо пусті слоти
+        if (events != null) {
+            for (MealPlanDto ev : events) {
+                Date date = ev.getPlanDate();
+                LocalDate start = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate end = start.plusDays(ev.getServings());
+                for (LocalDate i = start; i.isBefore(end) || i.isEqual(end); i = i.plusDays(1)) {
+                    dayEventMapForDay.computeIfAbsent(i, k -> new ArrayList<>());
+                    dayEventMapForDay.get(i).add(ev);
+                }
+            }
         }
-        list.set(slot, cell);
+
+        model.addAttribute("dayEventMapForDay", dayEventMapForDay);
+        Date d = Date.from(day.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        model.addAttribute("dayDate", d);
     }
 
 }

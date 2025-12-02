@@ -163,3 +163,31 @@ body {
 }
 
 
+.month-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 20px;
+    margin-bottom: 20px;
+    margin-top: 40px;
+}
+
+.month-nav .nav-btn {
+    font-size: 28px;
+    color: var(--premium-color, #222);
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.month-nav .nav-btn:hover {
+    transform: scale(1.1);
+}
+
+.month-title {
+    font-size: 24px;
+}
+
+
+

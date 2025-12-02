@@ -1,14 +1,16 @@
 package org.l5g7.mealcraft.webmvctest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.l5g7.mealcraft.app.auth.security.JwtCookieFilter;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
+import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
 import org.l5g7.mealcraft.app.recipes.*;
 import org.l5g7.mealcraft.app.units.Entity.Unit;
 import org.l5g7.mealcraft.app.units.interfaces.UnitRepository;
+import org.l5g7.mealcraft.app.user.CurrentUserProviderImpl;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
@@ -43,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 classes = {JwtCookieFilter.class }
         )
 )
-@Import({RecipeServiceImpl.class})
+@Import({RecipeServiceImpl.class, CurrentUserProviderImpl.class})
 class RecipeControllerWithServiceWebMvcTest {
     @Autowired
     private MockMvc mockMvc;
@@ -60,8 +62,8 @@ class RecipeControllerWithServiceWebMvcTest {
     @MockitoBean
     private UnitRepository unitRepository;
 
+
     @Test
-    @Disabled
     @WithMockUser(username = "user")
     void getAllRecipes_returns200_andBody() throws Exception {
         List<Recipe> entities = new ArrayList<>();
@@ -108,8 +110,21 @@ class RecipeControllerWithServiceWebMvcTest {
                 .ownerUser(owner)
                 .baseRecipe(baseRecipe)
                 .imageUrl("https://example.com/borshch.jpg")
-                //.ingredients(List.of(product1, product2)) TODO: fix ingredients mapping
                 .build();
+
+        RecipeIngredient recipeIngredient11 = RecipeIngredient.builder()
+                .product(product1)
+                .recipe(recipe1)
+                .amount(1d)
+                .build();
+
+        RecipeIngredient recipeIngredient12 = RecipeIngredient.builder()
+                .product(product2)
+                .recipe(recipe1)
+                .amount(2.3d)
+                .build();
+
+        recipe1.setIngredients(List.of(recipeIngredient11, recipeIngredient12));
 
         Recipe recipe2 = Recipe.builder()
                 .id(2L)
@@ -118,11 +133,21 @@ class RecipeControllerWithServiceWebMvcTest {
                 .ownerUser(null)
                 .baseRecipe(null)
                 .imageUrl(null)
-                //.ingredients(List.of(product1)) TODO: fix ingredients mapping
                 .build();
+
+        RecipeIngredient recipeIngredient21 = RecipeIngredient.builder()
+                .product(product1)
+                .recipe(recipe2)
+                .amount(3d)
+                .build();
+
+        recipe2.setIngredients(List.of(recipeIngredient21));
+
         entities.add(recipe1);
         entities.add(recipe2);
         when(recipeRepository.findAll()).thenReturn(entities);
+        when(recipeRepository.findAllByOwnerUserIsNullOrOwnerUser_Id(1L)).thenReturn(entities);
+        when(userRepository.findByUsername("user")).thenReturn(Optional.of(owner));
 
         mockMvc.perform(get("/recipes"))
                 .andExpect(status().isOk())
@@ -130,19 +155,23 @@ class RecipeControllerWithServiceWebMvcTest {
                 .andExpect(jsonPath("$[0].name").value("Borshch"))
                 .andExpect(jsonPath("$[0].ownerUserId").value(1))
                 .andExpect(jsonPath("$[0].baseRecipeId").value(2))
-                .andExpect(jsonPath("$[0].ingredientsId[0]").value(1))
-                .andExpect(jsonPath("$[0].ingredientsId[1]").value(2))
+                .andExpect(jsonPath("$[0].ingredients[0].productId").value(1))
+                .andExpect(jsonPath("$[0].ingredients[0].productName").value("Beetroot"))
+                .andExpect(jsonPath("$[0].ingredients[0].amount").value(1.0))
+                .andExpect(jsonPath("$[0].ingredients[1].productId").value(2))
+                .andExpect(jsonPath("$[0].ingredients[1].productName").value("Water"))
+                .andExpect(jsonPath("$[0].ingredients[1].amount").value(2.3))
                 .andExpect(jsonPath("$[0].imageUrl").value("https://example.com/borshch.jpg"))
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].name").value("Stewed beetroot"))
                 .andExpect(jsonPath("$[1].ownerUserId").value(nullValue()))
                 .andExpect(jsonPath("$[1].baseRecipeId").value(nullValue()))
-                .andExpect(jsonPath("$[1].ingredientsId[0]").value(1))
-                .andExpect(jsonPath("$[1].imageUrl").value(nullValue()));
+                .andExpect(jsonPath("$[1].ingredients[0].productId").value(1))
+                .andExpect(jsonPath("$[1].ingredients[0].productName").value("Beetroot"))
+                .andExpect(jsonPath("$[1].ingredients[0].amount").value(3.0))                .andExpect(jsonPath("$[1].imageUrl").value(nullValue()));
     }
 
     @Test
-    @Disabled
     @WithMockUser(username = "user")
     void postRecipe_returns200() throws Exception {
 
@@ -183,6 +212,9 @@ class RecipeControllerWithServiceWebMvcTest {
                 .defaultUnit(unit1)
                 .build();
 
+        RecipeIngredientDto recipeIngredientDto1 = RecipeIngredientDto.builder().productId(1L).amount(2d).build();
+        RecipeIngredientDto recipeIngredientDto2 = RecipeIngredientDto.builder().productId(2L).amount(3d).build();
+
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(unitRepository.findById(1L)).thenReturn(Optional.of(unit1));
         when(unitRepository.findById(2L)).thenReturn(Optional.of(unit2));
@@ -190,14 +222,16 @@ class RecipeControllerWithServiceWebMvcTest {
         when(productRepository.findById(2L)).thenReturn(Optional.of(product2));
         when(recipeRepository.findById(2L)).thenReturn(Optional.ofNullable(baseRecipe));
         when(productRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(product1, product2));
+        when(userRepository.findByUsername("user")).thenReturn(Optional.of(owner));
 
         RecipeDto recipeDto = RecipeDto.builder()
                 .name("Stewed beetroot")
                 .ownerUserId(1L)
                 .baseRecipeId(2L)
-                //.ingredientsId(List.of(1L, 2L)) TODO: fix ingredients mapping
                 .imageUrl("https://example.com/stewed-beetroot.jpg")
                 .build();
+
+        recipeDto.setIngredients(List.of(recipeIngredientDto1, recipeIngredientDto2));
 
         mockMvc.perform(post("/recipes")
                         .with(csrf())
@@ -208,9 +242,14 @@ class RecipeControllerWithServiceWebMvcTest {
     }
 
     @Test
-    @Disabled
     @WithMockUser(username = "user")
     void postRecipeWithNullFields_returns200() throws Exception {
+        User owner = User.builder()
+                .id(1L)
+                .username("user")
+                .email("user@example.com")
+                .password("password")
+                .build();
 
         Unit unit2 = Unit.builder()
                 .id(2L)
@@ -239,11 +278,16 @@ class RecipeControllerWithServiceWebMvcTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product1));
         when(productRepository.findById(2L)).thenReturn(Optional.of(product2));
         when(productRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(product1, product2));
+        when(userRepository.findByUsername("user")).thenReturn(Optional.of(owner));
+
 
         RecipeDto recipeDto = RecipeDto.builder()
                 .name("Stewed beetroot")
-                //.ingredientsId(List.of(1L, 2L)) TODO: fix ingredients mapping
+                .ingredients(List.of())
                 .build();
+
+        RecipeIngredientDto recipeIngredientDto = RecipeIngredientDto.builder().productId(1L).amount(2d).build();
+        recipeDto.setIngredients(List.of(recipeIngredientDto));
 
         mockMvc.perform(post("/recipes")
                         .with(csrf())
@@ -254,7 +298,6 @@ class RecipeControllerWithServiceWebMvcTest {
     }
 
     @Test
-    @Disabled
     @WithMockUser(username = "user")
     void postRecipeWithoutName_returns400() throws Exception {
 
@@ -269,13 +312,11 @@ class RecipeControllerWithServiceWebMvcTest {
                 .defaultUnit(unit2)
                 .build();
 
-
         when(unitRepository.findById(2L)).thenReturn(Optional.of(unit2));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product1));
         when(productRepository.findAllById(List.of(1L))).thenReturn(List.of(product1));
 
         RecipeDto recipeDto = RecipeDto.builder()
-                //.ingredientsId(List.of(1L)) TODO: fix ingredients mapping
                 .build();
 
         mockMvc.perform(post("/recipes")

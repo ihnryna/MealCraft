@@ -4,14 +4,13 @@ import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
+import org.l5g7.mealcraft.app.user.CurrentUserProvider;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.RecipeProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,20 +23,23 @@ public class RecipeServiceImpl implements RecipeService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final RecipeProvider recipeProvider;
+    private final CurrentUserProvider currentUserProvider;
     private static final String ENTITY_NAME = "Recipe";
+    private static final String ENTITY_PRODUCT = "Product";
 
     @Autowired
-    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider) {
+    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider, CurrentUserProvider currentUserProvider) {
         this.recipeRepository = recipeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.recipeProvider = recipeProvider;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional
     @Override
     public List<RecipeDto> getAllRecipes() {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         List<Recipe> entities;
 
@@ -75,7 +77,7 @@ public class RecipeServiceImpl implements RecipeService {
     @Transactional
     @Override
     public RecipeDto getRecipeById(Long id) {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         Optional<Recipe> recipe = recipeRepository.findById(id);
 
@@ -116,7 +118,7 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public void createRecipe(RecipeDto recipeDto) {
 
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         if (recipeDto.getIngredients() == null || recipeDto.getIngredients().isEmpty()) {
             throw new IllegalArgumentException("Recipe must contain at least one ingredient");
@@ -159,7 +161,7 @@ public class RecipeServiceImpl implements RecipeService {
 
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new EntityDoesNotExistException(
-                            "Product",
+                            ENTITY_PRODUCT,
                             "id",
                             String.valueOf(productId)
                     ));
@@ -181,12 +183,14 @@ public class RecipeServiceImpl implements RecipeService {
     @Transactional
     @Override
     public void updateRecipe(Long id, RecipeDto recipeDto) {
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
-        Optional<Recipe> existing = recipeRepository.findById(id);
-        if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-        }
+        Recipe recipe = recipeRepository.findById(id)
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        ENTITY_NAME,
+                        "id",
+                        String.valueOf(id)
+                ));
 
         if (recipeDto.getIngredients() == null || recipeDto.getIngredients().isEmpty()) {
             throw new IllegalArgumentException("Recipe must contain at least one ingredient");
@@ -216,57 +220,123 @@ public class RecipeServiceImpl implements RecipeService {
             baseRecipe = null;
         }
 
-        existing.ifPresent(recipe -> {
-            User owner = recipe.getOwnerUser();
+        User owner = recipe.getOwnerUser();
+        verifyUserSituation(owner, currentUser, id);
 
-            if (owner == null) {
-                if (currentUser != null) {
-                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-                }
-            } else {
-                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-                }
+        recipe.setName(recipeDto.getName());
+        recipe.setOwnerUser(user);
+        recipe.setImageUrl(recipeDto.getImageUrl());
+        recipe.setBaseRecipe(baseRecipe);
+
+        List<RecipeIngredient> ingredients = new ArrayList<>();
+
+        Set<Long> usedProducts = new HashSet<>();
+
+        for (RecipeIngredientDto ingDto : recipeDto.getIngredients()) {
+            Long productId = ingDto.getProductId();
+            verifyIngredients(ingDto, usedProducts);
+
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            ENTITY_PRODUCT,
+                            "id",
+                            String.valueOf(productId)
+                    ));
+
+            User productOwner = product.getOwnerUser();
+            verifyCurrentUserAndOwner(productOwner, currentUser, id);
+
+            RecipeIngredient ingredient = RecipeIngredient.builder()
+                    .recipe(recipe)
+                    .product(product)
+                    .amount(ingDto.getAmount())
+                    .build();
+
+            ingredients.add(ingredient);
+        }
+
+        recipe.getIngredients().clear();
+        recipe.getIngredients().addAll(ingredients);
+
+        recipeRepository.save(recipe);
+    }
+
+    private void verifyIngredients(RecipeIngredientDto ingDto, Set<Long> usedProducts) {
+        Long productId = ingDto.getProductId();
+        if (productId == null) {
+            throw new IllegalArgumentException("Product must be selected for each ingredient");
+        }
+
+        if (!usedProducts.add(productId)) {
+            throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
+        }
+
+        if (ingDto.getAmount() == null || ingDto.getAmount().doubleValue() <= 0) {
+            throw new IllegalArgumentException("Ingredient amount must be positive");
+        }
+    }
+
+    private void verifyUserSituation(User owner, User currentUser, Long id) {
+        if (owner == null) {
+            if (currentUser != null) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        } else {
+            if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
+                throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
+            }
+        }
+    }
+
+    @Transactional
+    @Override
+    public void patchRecipe(Long id, RecipeDto patch) {
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
+
+        Recipe recipe = recipeRepository.findById(id)
+                .orElseThrow(() -> new EntityDoesNotExistException(
+                        ENTITY_NAME,
+                        "id",
+                        String.valueOf(id)
+                ));
+
+        User owner = recipe.getOwnerUser();
+        verifyUserSituation(owner, currentUser, id);
+
+        if (patch.getName() != null) {
+            recipe.setName(patch.getName());
+        }
+
+        if (patch.getImageUrl() != null) {
+            recipe.setImageUrl(patch.getImageUrl());
+        }
+
+        if (patch.getIngredients() != null) {
+
+            if (patch.getIngredients().isEmpty()) {
+                throw new IllegalArgumentException("Recipe must contain at least one ingredient");
             }
 
-            recipe.setName(recipeDto.getName());
-            recipe.setOwnerUser(user);
-            recipe.setImageUrl(recipeDto.getImageUrl());
-            recipe.setBaseRecipe(baseRecipe);
-
             List<RecipeIngredient> ingredients = new ArrayList<>();
-
             Set<Long> usedProducts = new HashSet<>();
 
-            for (RecipeIngredientDto ingDto : recipeDto.getIngredients()) {
+            for (RecipeIngredientDto ingDto : patch.getIngredients()) {
+                if (ingDto == null) {
+                    continue;
+                }
+
                 Long productId = ingDto.getProductId();
-                if (productId == null) {
-                    throw new IllegalArgumentException("Product must be selected for each ingredient");
-                }
-
-                if (!usedProducts.add(productId)) {
-                    throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
-                }
-
-                if (ingDto.getAmount() == null || ingDto.getAmount().doubleValue() <= 0) {
-                    throw new IllegalArgumentException("Ingredient amount must be positive");
-                }
+                verifyIngredients(ingDto, usedProducts);
 
                 Product product = productRepository.findById(productId)
                         .orElseThrow(() -> new EntityDoesNotExistException(
-                                "Product",
+                                ENTITY_PRODUCT,
                                 "id",
                                 String.valueOf(productId)
                         ));
 
                 User productOwner = product.getOwnerUser();
-                if (productOwner != null && (currentUser == null || !productOwner.getId().equals(currentUser.getId()))) {
-                    throw new EntityDoesNotExistException(
-                            "Product",
-                            "id",
-                            String.valueOf(productId)
-                    );
-                }
+                verifyCurrentUserAndOwner(productOwner,currentUser,productId);
 
                 RecipeIngredient ingredient = RecipeIngredient.builder()
                         .recipe(recipe)
@@ -279,125 +349,43 @@ public class RecipeServiceImpl implements RecipeService {
 
             recipe.getIngredients().clear();
             recipe.getIngredients().addAll(ingredients);
-
-            recipeRepository.save(recipe);
-        });
-    }
-
-    @Transactional
-    @Override
-    public void patchRecipe(Long id, RecipeDto patch) {
-        User currentUser = getCurrentUserOrNullIfAdmin();
-
-        Optional<Recipe> existing = recipeRepository.findById(id);
-        if (existing.isEmpty()) {
-            throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
         }
 
-        existing.ifPresent(recipe -> {
-            User owner = recipe.getOwnerUser();
+        if (patch.getOwnerUserId() != null) {
+            recipe.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            "User",
+                            "id",
+                            String.valueOf(patch.getOwnerUserId())
+                    )));
+        }
 
-            if (owner == null) {
-                if (currentUser != null) {
-                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-                }
-            } else {
-                if (currentUser == null || !owner.getId().equals(currentUser.getId())) {
-                    throw new EntityDoesNotExistException(ENTITY_NAME, "id", String.valueOf(id));
-                }
-            }
+        if (patch.getBaseRecipeId() != null) {
+            recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
+                    .orElseThrow(() -> new EntityDoesNotExistException(
+                            ENTITY_NAME,
+                            "id",
+                            String.valueOf(patch.getBaseRecipeId())
+                    )));
+        }
+        recipeRepository.save(recipe);
+    }
 
-            if (patch.getName() != null) {
-                recipe.setName(patch.getName());
-            }
-
-            if (patch.getImageUrl() != null) {
-                recipe.setImageUrl(patch.getImageUrl());
-            }
-
-            if (patch.getIngredients() != null) {
-
-                if (patch.getIngredients().isEmpty()) {
-                    throw new IllegalArgumentException("Recipe must contain at least one ingredient");
-                }
-
-                List<RecipeIngredient> ingredients = new ArrayList<>();
-                Set<Long> usedProducts = new HashSet<>();
-
-                for (RecipeIngredientDto ingDto : patch.getIngredients()) {
-                    if (ingDto == null) {
-                        continue;
-                    }
-
-                    Long productId = ingDto.getProductId();
-                    if (productId == null) {
-                        throw new IllegalArgumentException("Product must be selected for each ingredient");
-                    }
-
-                    if (!usedProducts.add(productId)) {
-                        throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
-                    }
-
-                    if (ingDto.getAmount() == null || ingDto.getAmount().doubleValue() <= 0) {
-                        throw new IllegalArgumentException("Ingredient amount must be positive");
-                    }
-
-                    Product product = productRepository.findById(productId)
-                            .orElseThrow(() -> new EntityDoesNotExistException(
-                                    "Product",
-                                    "id",
-                                    String.valueOf(productId)
-                            ));
-
-                    User productOwner = product.getOwnerUser();
-                    if (productOwner != null && (currentUser == null || !productOwner.getId().equals(currentUser.getId()))) {
-                        throw new EntityDoesNotExistException(
-                                "Product",
-                                "id",
-                                String.valueOf(productId)
-                        );
-                    }
-
-                    RecipeIngredient ingredient = RecipeIngredient.builder()
-                            .recipe(recipe)
-                            .product(product)
-                            .amount(ingDto.getAmount())
-                            .build();
-
-                    ingredients.add(ingredient);
-                }
-
-                recipe.getIngredients().clear();
-                recipe.getIngredients().addAll(ingredients);
-            }
-
-            if (patch.getOwnerUserId() != null) {
-                recipe.setOwnerUser(userRepository.findById(patch.getOwnerUserId())
-                        .orElseThrow(() -> new EntityDoesNotExistException(
-                                "User",
-                                "id",
-                                String.valueOf(patch.getOwnerUserId())
-                        )));
-            }
-
-            if (patch.getBaseRecipeId() != null) {
-                recipe.setBaseRecipe(recipeRepository.findById(patch.getBaseRecipeId())
-                        .orElseThrow(() -> new EntityDoesNotExistException(
-                                ENTITY_NAME,
-                                "id",
-                                String.valueOf(patch.getBaseRecipeId())
-                        )));
-            }
-
-            recipeRepository.save(recipe);
-        });
+    private void verifyCurrentUserAndOwner(User productOwner, User currentUser, Long productId) {
+        if (productOwner != null && (currentUser == null || !productOwner.getId().equals(currentUser.getId()))) {
+            throw new EntityDoesNotExistException(
+                    ENTITY_PRODUCT,
+                    "id",
+                    String.valueOf(productId)
+            );
+        }
     }
 
     @Transactional
     @Override
     public void deleteRecipeById(Long id) {
 
-        User currentUser = getCurrentUserOrNullIfAdmin();
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
 
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new EntityDoesNotExistException(
@@ -440,18 +428,4 @@ public class RecipeServiceImpl implements RecipeService {
                 .build();
     }
 
-    private User getCurrentUserOrNullIfAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (isAdmin) {
-            return null;
-        }
-
-        String name = authentication.getName();
-        return userRepository.findByUsername(name)
-                .orElseThrow(() -> new EntityDoesNotExistException("User", "name", name));
-    }
 }

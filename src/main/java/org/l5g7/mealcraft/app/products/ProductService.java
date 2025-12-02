@@ -11,6 +11,6 @@ public interface ProductService {
     void patchProduct(Long id, ProductDto patch);
     void deleteProductById(Long id);
     List<ProductDto> searchProductsByPrefix(String prefix);
-
+    void addProductToRecipe(Long recipeId, Long productId, Double amount);
 }
 

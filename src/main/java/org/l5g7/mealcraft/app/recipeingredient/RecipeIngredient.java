@@ -1,10 +1,7 @@
 package org.l5g7.mealcraft.app.recipeingredient;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 
@@ -14,6 +11,7 @@ import org.l5g7.mealcraft.app.recipes.Recipe;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = "recipe")
 public class RecipeIngredient {
 
     @Id
