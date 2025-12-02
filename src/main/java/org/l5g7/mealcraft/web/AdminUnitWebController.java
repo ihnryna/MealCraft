@@ -5,13 +5,12 @@ import org.l5g7.mealcraft.app.units.UnitDto;
 import org.l5g7.mealcraft.app.units.UnitUpdateDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
@@ -29,7 +28,6 @@ public class AdminUnitWebController {
     private static final String REDIRECT_UNITS_URI = "redirect:/mealcraft/admin/unit";
     private static final String UNIT_FORM_FRAGMENT = "fragments/unit-form :: content";
 
-
     public AdminUnitWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
         this.internalApiClient = internalApiClient;
     }
@@ -39,8 +37,7 @@ public class AdminUnitWebController {
         ResponseEntity<List<UnitDto>> response = internalApiClient.get()
                 .uri(UNITS_URI)
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
-                });
+                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
 
         List<UnitDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -93,18 +90,9 @@ public class AdminUnitWebController {
 
             return REDIRECT_UNITS_URI;
 
-        } catch (RestClientResponseException ex) {
+        } catch (HttpClientErrorException ex) {
 
-            String body = ex.getResponseBodyAsString();
-            String message;
-
-            if (!body.isBlank()) {
-                message = body;
-            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
-                message = "Unit with this name already exists";
-            } else {
-                message = "Failed to save unit: " + ex.getStatusCode();
-            }
+            String message = ex.getResponseBodyAsString();
 
             model.addAttribute("unit", unitDto);
             model.addAttribute(TITLE, unitDto.getId() == null ? "Create unit" : "Edit unit");
@@ -113,6 +101,21 @@ public class AdminUnitWebController {
 
             return ADMIN_PAGE;
         }
+    }
+
+    @GetMapping("/unit/edit/{id}")
+    public String showEditUnitForm(@PathVariable Long id, Model model) {
+        UnitDto unit = internalApiClient
+                .get()
+                .uri(UNIT_ID_URI, id)
+                .retrieve()
+                .body(UnitDto.class);
+
+        model.addAttribute("unit", unit);
+        model.addAttribute(TITLE, "Edit unit");
+        model.addAttribute(FRAGMENT_TO_LOAD, UNIT_FORM_FRAGMENT);
+
+        return ADMIN_PAGE;
     }
 
     @GetMapping("/unit/delete/{id}")
@@ -126,26 +129,16 @@ public class AdminUnitWebController {
 
             return REDIRECT_UNITS_URI;
 
-        } catch (RestClientResponseException ex) {
+        } catch (HttpClientErrorException ex) {
 
             ResponseEntity<List<UnitDto>> response = internalApiClient.get()
                     .uri(UNITS_URI)
                     .retrieve()
-                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
-                    });
+                    .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {});
 
             List<UnitDto> data = response.getBody();
 
-            String body = ex.getResponseBodyAsString();
-            String message;
-
-            if (!body.isBlank()) {
-                message = body;
-            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
-                message = "This unit cannot be deleted because it is used by existing products.";
-            } else {
-                message = "Failed to delete unit: " + ex.getStatusCode();
-            }
+            String message = ex.getResponseBodyAsString();
 
             model.addAttribute("data", data);
             model.addAttribute("errorMessage", message);
