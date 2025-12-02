@@ -14,14 +14,17 @@
 }
 
 .day-cell {
+    height: 100%;
     cursor: pointer;
     transition: background-color 0.2s;
-    height: 120px;
-    display: block;
     text-decoration: none;
     color: inherit;
     width: 100%;
     box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    min-height: 80px;
 }
 
 .day-cell:hover {

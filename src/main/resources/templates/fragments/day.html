@@ -2,7 +2,7 @@
     <h1 th:text="'Date: ' + ${day}">Date</h1>
 
     <div class="info-blocks">
-        <div th:each="slotIdx : ${#numbers.sequence(0,5)}" style="padding: 10px">
+        <div th:each="slotIdx : ${#numbers.sequence(0,10)}" style="padding: 10px">
 
             <a th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"
                th:text="${cell != null ? (cell.planDate==dayDate ? 'COOK ' : '') + cell.name : ''}"

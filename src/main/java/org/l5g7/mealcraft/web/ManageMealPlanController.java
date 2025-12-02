@@ -28,6 +28,7 @@ public class ManageMealPlanController {
     private final RestClient internalApiClient;
     private final UserService userService;
     private static final String TITLE = "title";
+    private static final String USERNAME = "username";
     private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
     private static final String MEAL_PLAN = "mealPlan";
     private static final String HOME_PAGE = "home";
@@ -64,7 +65,7 @@ public class ManageMealPlanController {
         model.addAttribute(MEAL_PLAN, mealPlanDto);
         model.addAttribute(TITLE, PLAN_YOUR_MEAL);
         model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
-        model.addAttribute("username", username);
+        model.addAttribute(USERNAME, username);
         addShoppingItemsToModel(model, username);
 
         return HOME_PAGE;
@@ -89,7 +90,7 @@ public class ManageMealPlanController {
         model.addAttribute(TITLE, PLAN_YOUR_MEAL);
         model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
 
-        model.addAttribute("username", username);
+        model.addAttribute(USERNAME, username);
         addShoppingItemsToModel(model, username);
 
         return HOME_PAGE;
@@ -133,6 +134,10 @@ public class ManageMealPlanController {
             model.addAttribute(TITLE, PLAN_YOUR_MEAL);
             model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
             model.addAttribute("errorMessage", message);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth.getName();
+            model.addAttribute(USERNAME, username);
+            addShoppingItemsToModel(model, username);
             return HOME_PAGE;
         }
     }
