@@ -82,7 +82,7 @@ body {
     display: none;
     position: absolute;
     right: 0;
-    top: 120%;
+    top: 100%;
     background: #333;
     border-radius: 8px;
     overflow: hidden;
