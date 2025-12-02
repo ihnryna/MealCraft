@@ -124,3 +124,9 @@ input:-webkit-autofill:focus {
     -webkit-text-fill-color: #fff !important;
 }
 
+.result-box ul li{
+    list-style: none;
+    border-radius: 2px;
+    padding: 15px 10px;
+    cursor: pointer;
+}

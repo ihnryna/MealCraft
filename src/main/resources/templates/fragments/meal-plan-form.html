@@ -1,0 +1,240 @@
+<div th:fragment="content">
+    <h2 th:text="${title}">Plan your meal</h2>
+
+    <div th:if="${errorMessage}">
+        <p th:text="${errorMessage}" style="color: red;"></p>
+    </div>
+
+    <form id="meal-plan-form"
+          th:action="@{/mealcraft/home/meal-plan}"
+          th:object="${mealPlan}"
+          method="post">
+
+        <input type="hidden" th:field="*{id}">
+        <input type="hidden" th:field="*{userOwnerId}">
+
+        <div>
+            <label for="recipe-input-box" style="margin-bottom: 10px">Choose recipe:</label>
+
+            <div class="search-box">
+                <div class="row">
+                    <input type="text" class="recipe-input-box" id="recipe-input-box" placeholder="Start typing here"
+                           autocomplete="off">
+                </div>
+                <div class="result-box">
+                </div>
+            </div>
+
+            <input id="name"
+                   type="hidden"
+                   th:field="*{name}"
+                   required>
+        </div>
+
+        <div style="margin-top: 16px;">
+            <label for="servings">Servings:</label>
+
+            <div class="servings-wrapper">
+                <button type="button" id="minus-btn" class="servings-btn">−</button>
+
+                <input id="servings"
+                       type="text"
+                       th:field="*{servings}"
+                       value="1"
+                       readonly>
+
+                <button type="button" id="plus-btn" class="servings-btn">+</button>
+            </div>
+        </div>
+
+        <div>
+            <label for="colorI">Choose color:</label>
+            <div class="color-picker">
+                <div th:each="c : ${mealColors}" class="color-circle-wrapper">
+                    <label>
+                        <input id="colorI"
+                               type="radio"
+                               name="color"
+                               th:value="${c.hex}"
+                               th:field="*{color}"
+                               class="color-radio">
+
+                        <span class="color-circle"
+                              th:style="'background-color:' + ${c.hex}"></span>
+                        ㅤ
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <div style="margin-top: 16px;">
+            <button type="submit"
+                    th:text="${mealPlan.id} == null ? 'Add' : 'Save'">
+                Add
+            </button>
+        </div>
+    </form>
+
+    <script th:inline="javascript">
+        let recipes = /*[[${recipeList}]]*/ [];
+        if (recipes.length === 0)
+            recipes = ['sonarQube']
+        const resultsBox = document.querySelector(".result-box")
+        const inputBox = document.querySelector(".recipe-input-box")
+
+        inputBox.onkeyup = function () {
+            let result = []
+            let input = inputBox.value;
+            if (input.length) {
+                result = recipes.filter((keyword) => {
+                    return keyword.toLowerCase().includes(input.toLowerCase());
+                });
+                console.log(result)
+            }
+            display(result);
+        }
+
+        function display(result) {
+            const content = result.map((oneRecipe) => {
+                return "<li onclick=selectRecipe(this)>" + oneRecipe + "</li>";
+            });
+            resultsBox.innerHTML = "<ul>" + content.join('') + "</ul>";
+        }
+
+        function selectRecipe(oneRecipe) {
+            inputBox.value = oneRecipe.innerHTML;
+            resultsBox.innerHTML = '';
+        }
+
+        const servingsInput = document.getElementById("servings");
+        const plusBtn = document.getElementById("plus-btn");
+        const minusBtn = document.getElementById("minus-btn");
+
+        plusBtn.onclick = function () {
+            servingsInput.value = Number.parseInt(servingsInput.value) + 1;
+        };
+
+        minusBtn.onclick = function () {
+            let current = Number.parseInt(servingsInput.value);
+            if (current > 1) {
+                servingsInput.value = current - 1;
+            }
+        };
+
+        function selectColor(circle) {
+            const circles = document.querySelectorAll('.color-circle');
+            for (const el of circles) {
+                el.classList.remove('selected');
+            }
+            const radios = document.querySelectorAll('.color-radio');
+            for (const radio of radios) {
+                radio.checked = false;
+            }
+            circle.classList.add('selected');
+            circle.previousElementSibling.checked = true;
+
+            document.querySelector('input[name="color"]').value = circle.dataset.value;
+        }
+
+
+    </script>
+    <style>
+
+        .search-box {
+            margin-top: 5px;
+            width: 500px;
+        }
+
+        input {
+            width: 100%;
+            flex: 1;
+            height: 20px;
+            background: transparent;
+            border: 2px #833e1f solid;
+            outline: 0;
+            font-size: 15px;
+            color: black;
+        }
+
+        ::placeholder {
+            color: black;
+        }
+
+        .result-box ul {
+            border-top: 1px solid #999;
+            padding: 10px 5px;
+        }
+
+        .result-box ul li {
+            font-size: 15px;
+            list-style: none;
+            border-radius: 2px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .result-box ul li:hover {
+            background-color: #b0dcba;
+        }
+
+        .servings-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 120px;
+            margin-top: 5px;
+        }
+
+        .servings-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            line-height: 20px;
+            cursor: pointer;
+            border: 2px #833e1f solid;
+            background: sienna;
+            color: white;
+        }
+
+        #servings {
+            width: 40px;
+            text-align: center;
+            height: 30px;
+            font-size: 16px;
+            border: 2px #833e1f solid;
+            background: white;
+        }
+
+        .color-circle-wrapper {
+            cursor: pointer;
+        }
+
+        .color-radio {
+            display: none;
+        }
+
+        .color-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid transparent;
+            margin: 5px;
+        }
+
+        .color-picker {
+            margin-top: 20px;
+            display: flex;
+            justify-content: left;
+        }
+
+        .color-circle:hover {
+            transform: scale(1.15);
+        }
+
+        .color-radio:checked + .color-circle {
+            border: 3px solid black;
+        }
+    </style>
+</div>
