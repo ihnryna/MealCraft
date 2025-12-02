@@ -113,11 +113,43 @@ public class DataInitializer {
                         .createdAt(yesterday)
                         .build();
 
+                Product product4 = Product.builder()
+                        .name("Tomato")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .createdAt(yesterday)
+                        .build();
+
+                Product product5 = Product.builder()
+                        .name("Cheese")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .createdAt(yesterday)
+                        .build();
+
+                Product product6 = Product.builder()
+                        .name("Chicken")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .createdAt(yesterday)
+                        .build();
+
+                Product product7 = Product.builder()
+                        .name("Rice")
+                        .imageUrl(null)
+                        .defaultUnit(unit1)
+                        .createdAt(yesterday)
+                        .build();
+
                 unitRepository.save(unit1);
                 unitRepository.save(unit2);
                 productRepository.save(product1);
                 productRepository.save(product2);
                 productRepository.save(product3);
+                productRepository.save(product4);
+                productRepository.save(product5);
+                productRepository.save(product6);
+                productRepository.save(product7);
 
                 Product userOnlyProduct1 = Product.builder()
                         .name("User secret cheese")
@@ -207,6 +239,105 @@ public class DataInitializer {
                 recipe1.setIngredients(List.of(recipeIngredient1, recipeIngredient2, recipeIngredient3));
                 recipe2.setIngredients(List.of(recipeIngredient21));
 
+                Recipe recipe3 = Recipe.builder()
+                        .name("Cheese Sandwich")
+                        .createdAt(new Date())
+                        .ownerUser(null)
+                        .baseRecipe(null)
+                        .imageUrl("https://example.com/cheese-sandwich.jpg")
+                        .build();
+
+                RecipeIngredient recipeIngredient31 = RecipeIngredient.builder()
+                        .product(product3) // Bread
+                        .recipe(recipe3)
+                        .amount(2d)
+                        .build();
+
+                RecipeIngredient recipeIngredient32 = RecipeIngredient.builder()
+                        .product(product5) // Cheese
+                        .recipe(recipe3)
+                        .amount(1d)
+                        .build();
+
+                recipe3.setIngredients(List.of(recipeIngredient31, recipeIngredient32));
+
+                Recipe recipe4 = Recipe.builder()
+                        .name("Tomato Omelet")
+                        .createdAt(new Date())
+                        .ownerUser(null)
+                        .baseRecipe(null)
+                        .imageUrl("/images/imagesForDB/tomatoOmlette.png")
+                        .build();
+
+                RecipeIngredient recipeIngredient41 = RecipeIngredient.builder()
+                        .product(product2) // Egg
+                        .recipe(recipe4)
+                        .amount(3d)
+                        .build();
+
+                RecipeIngredient recipeIngredient42 = RecipeIngredient.builder()
+                        .product(product4) // Tomato
+                        .recipe(recipe4)
+                        .amount(2d)
+                        .build();
+
+                recipe4.setIngredients(List.of(recipeIngredient41, recipeIngredient42));
+
+                Recipe recipe5 = Recipe.builder()
+                        .name("Chicken Rice Bowl")
+                        .createdAt(new Date())
+                        .ownerUser(user)
+                        .baseRecipe(null)
+                        .imageUrl("https://example.com/chicken-rice.jpg")
+                        .build();
+
+                RecipeIngredient recipeIngredient51 = RecipeIngredient.builder()
+                        .product(product6) // Chicken
+                        .recipe(recipe5)
+                        .amount(1d)
+                        .build();
+
+                RecipeIngredient recipeIngredient52 = RecipeIngredient.builder()
+                        .product(product7) // Rice
+                        .recipe(recipe5)
+                        .amount(1d)
+                        .build();
+
+                recipe5.setIngredients(List.of(recipeIngredient51, recipeIngredient52));
+
+                Recipe recipe6 = Recipe.builder()
+                        .name("Ultimate Sandwich")
+                        .createdAt(new Date())
+                        .ownerUser(premiumUser)
+                        .baseRecipe(null)
+                        .imageUrl("https://example.com/ultimate-sandwich.jpg")
+                        .build();
+
+                RecipeIngredient recipeIngredient61 = RecipeIngredient.builder()
+                        .product(product3) // Bread
+                        .recipe(recipe6)
+                        .amount(2d)
+                        .build();
+
+                RecipeIngredient recipeIngredient62 = RecipeIngredient.builder()
+                        .product(product5) // Cheese
+                        .recipe(recipe6)
+                        .amount(2d)
+                        .build();
+
+                RecipeIngredient recipeIngredient63 = RecipeIngredient.builder()
+                        .product(product4) // Tomato
+                        .recipe(recipe6)
+                        .amount(1d)
+                        .build();
+
+                RecipeIngredient recipeIngredient64 = RecipeIngredient.builder()
+                        .product(product6) // Chicken
+                        .recipe(recipe6)
+                        .amount(1d)
+                        .build();
+
+                recipe6.setIngredients(List.of(recipeIngredient61, recipeIngredient62, recipeIngredient63, recipeIngredient64));
 
                 LocalDate localPlanDate1 = LocalDate.of(2025, 12, 3);
                 LocalDate localPlanDate2 = LocalDate.of(2025, 12, 5);
@@ -216,6 +347,10 @@ public class DataInitializer {
                 recipeRepository.save(baseRecipe);
                 recipeRepository.save(recipe1);
                 recipeRepository.save(recipe2);
+                recipeRepository.save(recipe3);
+                recipeRepository.save(recipe4);
+                recipeRepository.save(recipe5);
+                recipeRepository.save(recipe6);
 
 
                 MealPlan mealPlan1 = MealPlan.builder()

@@ -10993,3 +10993,27 @@ header.masthead h1, header.masthead .h1 {
 #portfolio .container-fluid .portfolio-box:hover .portfolio-box-caption, #portfolio .container-sm .portfolio-box:hover .portfolio-box-caption, #portfolio .container-md .portfolio-box:hover .portfolio-box-caption, #portfolio .container-lg .portfolio-box:hover .portfolio-box-caption, #portfolio .container-xl .portfolio-box:hover .portfolio-box-caption, #portfolio .container-xxl .portfolio-box:hover .portfolio-box-caption {
     opacity: 1;
 }
+
+/* Apply Public Pixel globally */
+:root {
+    --bs-font-sans-serif: 'Public Pixel', sans-serif;
+    --bs-body-font-family: 'Public Pixel', sans-serif;
+}
+
+body {
+    font-family: 'Public Pixel', sans-serif !important;
+}
+
+/* Force headings and buttons to use it explicitly */
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6,
+.btn,
+.navbar-brand,
+.nav-link {
+    font-family: 'Public Pixel', sans-serif !important;
+}
+

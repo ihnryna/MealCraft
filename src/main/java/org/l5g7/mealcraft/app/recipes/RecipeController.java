@@ -25,6 +25,11 @@ public class RecipeController {
        return recipeService.getRecipeById(id);
     }
 
+    @GetMapping("/search")
+    public List<RecipeDto> getRecipesByProducts(@RequestParam List<String> products) {
+        return recipeService.getRecipesByProducts(products);
+    }
+
     @PostMapping
     public void createRecipe(@Valid @RequestBody RecipeDto recipe) {
         recipeService.createRecipe(recipe);

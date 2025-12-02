@@ -1,0 +1,561 @@
+<div th:fragment="content">
+    <div class="craft-container">
+        <div id="SearchFields" class="search-section">
+            <h2>Find Recipes by Available Products</h2>
+            <p>Add the products you have available, and we'll show you recipes you can make!</p>
+
+            <div id="products-container">
+                <div class="product-row">
+                    <label>Product:</label>
+                    <input type="text" class="product-name-input" autocomplete="off" placeholder="Start typing product name...">
+                    <ul class="product-suggestions"></ul>
+                    <button type="button" class="remove-product">Remove</button>
+                </div>
+            </div>
+
+            <button type="button" id="add-product">+ Add Product</button>
+            <button type="button" id="search-recipes">Search Recipes</button>
+            <button type="button" id="clear-all">Clear All</button>
+        </div>
+
+        <div id="OfferedMeals" class="recipes-section">
+            <h2>Available Recipes</h2>
+            <div id="recipes-container">
+                <p class="no-recipes">Add some products above and click "Search Recipes" to find what you can cook!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const productsContainer = document.getElementById('products-container');
+            const addProductBtn = document.getElementById('add-product');
+            const searchBtn = document.getElementById('search-recipes');
+            const clearBtn = document.getElementById('clear-all');
+            const recipesContainer = document.getElementById('recipes-container');
+
+            let productIndex = 1;
+            let selectedProducts = new Set();
+
+            function createProductRow(index) {
+                const row = document.createElement('div');
+                row.classList.add('product-row');
+                row.dataset.index = index;
+
+                row.innerHTML = `
+                    <label>Product:</label>
+                    <input type="text" class="product-name-input" autocomplete="off" placeholder="Start typing product name...">
+                    <ul class="product-suggestions"></ul>
+                    <button type="button" class="remove-product">Remove</button>
+                `;
+
+                return row;
+            }
+
+            addProductBtn.addEventListener('click', function() {
+                const row = createProductRow(productIndex);
+                productsContainer.appendChild(row);
+                productIndex++;
+            });
+
+            productsContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-product')) {
+                    const row = e.target.closest('.product-row');
+                    const input = row.querySelector('.product-name-input');
+                    const productName = input.value.trim();
+
+                    if (productName) {
+                        selectedProducts.delete(productName);
+                    }
+
+                    if (productsContainer.children.length > 1) {
+                        row.remove();
+                    } else {
+                        input.value = '';
+                        row.querySelector('.product-suggestions').innerHTML = '';
+                    }
+                }
+            });
+
+            let searchTimeouts = new Map();
+
+            function performProductSearch(input, row, query) {
+                const suggestionsList = row.querySelector('.product-suggestions');
+
+                if (query.length < 1) {
+                    suggestionsList.innerHTML = '';
+                    return;
+                }
+
+                fetch(`/products/search?prefix=` + encodeURIComponent(query))
+                    .then(response => response.json())
+                    .then(products => {
+                        suggestionsList.innerHTML = '';
+                        if (products && products.length > 0) {
+                            products.forEach(p => {
+                                const li = document.createElement('li');
+                                li.textContent = p.name + (p.defaultUnitName ? ' (' + p.defaultUnitName + ')' : '');
+                                li.dataset.productName = p.name;
+                                li.classList.add('suggestion-item');
+                                suggestionsList.appendChild(li);
+                            });
+                        } else {
+                            const li = document.createElement('li');
+                            li.textContent = 'No products found';
+                            li.classList.add('no-suggestions');
+                            suggestionsList.appendChild(li);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error loading product suggestions', err);
+                        suggestionsList.innerHTML = '<li class="error-suggestion">Error loading suggestions</li>';
+                    });
+            }
+
+            productsContainer.addEventListener('input', function(e) {
+                if (e.target.classList.contains('product-name-input')) {
+                    const input = e.target;
+                    const row = input.closest('.product-row');
+                    const query = input.value.trim();
+                    const inputId = input.dataset.inputId || Math.random().toString(36).substr(2, 9);
+
+                    if (!input.dataset.inputId) {
+                        input.dataset.inputId = inputId;
+                    }
+
+                    input.classList.add('typing');
+
+                    if (searchTimeouts.has(inputId)) {
+                        clearTimeout(searchTimeouts.get(inputId));
+                    }
+
+                    const currentValue = input.value.trim();
+                    if (currentValue && selectedProducts.has(currentValue)) {
+                    } else {
+                        Array.from(selectedProducts).forEach(product => {
+                            if (input.dataset.lastSelected === product) {
+                                selectedProducts.delete(product);
+                                input.dataset.lastSelected = '';
+                            }
+                        });
+                    }
+
+                    const timeoutId = setTimeout(() => {
+                        input.classList.remove('typing');
+                        performProductSearch(input, row, query);
+                        searchTimeouts.delete(inputId);
+                    }, 300);
+
+                    searchTimeouts.set(inputId, timeoutId);
+                }
+            });
+
+            productsContainer.addEventListener('keyup', function(e) {
+                if (e.target.classList.contains('product-name-input')) {
+                    const input = e.target;
+                    const row = input.closest('.product-row');
+                    const suggestionsList = row.querySelector('.product-suggestions');
+                    const query = input.value.trim();
+
+                    if (query.length === 0) {
+                        suggestionsList.innerHTML = '';
+                        if (input.dataset.lastSelected) {
+                            selectedProducts.delete(input.dataset.lastSelected);
+                            input.dataset.lastSelected = '';
+                        }
+                    }
+                }
+            });
+
+            productsContainer.addEventListener('keydown', function(e) {
+                if (e.target.classList.contains('product-name-input')) {
+                    const input = e.target;
+                    const row = input.closest('.product-row');
+                    const suggestionsList = row.querySelector('.product-suggestions');
+                    const suggestions = suggestionsList.querySelectorAll('.suggestion-item:not(.no-suggestions):not(.error-suggestion)');
+
+                    let currentIndex = Array.from(suggestions).findIndex(item => item.classList.contains('highlighted'));
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (suggestions.length > 0) {
+                            if (currentIndex >= 0) {
+                                suggestions[currentIndex].classList.remove('highlighted');
+                            }
+                            currentIndex = (currentIndex + 1) % suggestions.length;
+                            suggestions[currentIndex].classList.add('highlighted');
+                        }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (suggestions.length > 0) {
+                            if (currentIndex >= 0) {
+                                suggestions[currentIndex].classList.remove('highlighted');
+                            }
+                            currentIndex = currentIndex <= 0 ? suggestions.length - 1 : currentIndex - 1;
+                            suggestions[currentIndex].classList.add('highlighted');
+                        }
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (currentIndex >= 0 && suggestions[currentIndex]) {
+                            suggestions[currentIndex].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        suggestionsList.innerHTML = '';
+                    }
+                }
+            });
+
+            productsContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('suggestion-item') && !e.target.classList.contains('no-suggestions') && !e.target.classList.contains('error-suggestion')) {
+                    const li = e.target;
+                    const row = li.closest('.product-row');
+                    const input = row.querySelector('.product-name-input');
+                    const suggestionsList = row.querySelector('.product-suggestions');
+                    const productName = li.dataset.productName;
+
+                    if (input.dataset.lastSelected) {
+                        selectedProducts.delete(input.dataset.lastSelected);
+                    }
+
+                    input.value = productName;
+                    input.dataset.lastSelected = productName;
+                    selectedProducts.add(productName);
+                    suggestionsList.innerHTML = '';
+
+                    input.classList.add('selected-product');
+                    setTimeout(() => {
+                        input.classList.remove('selected-product');
+                    }, 1000);
+                }
+            });
+
+            searchBtn.addEventListener('click', function() {
+                const productInputs = productsContainer.querySelectorAll('.product-name-input');
+                const products = [];
+
+                productInputs.forEach(input => {
+                    const value = input.value.trim();
+                    if (value && input.dataset.lastSelected) {
+                        products.push(input.dataset.lastSelected);
+                    }
+                });
+
+                if (products.length === 0) {
+                    recipesContainer.innerHTML = '<p class="no-recipes">Please select products from the suggestions to search for recipes.</p>';
+                    return;
+                }
+
+                recipesContainer.innerHTML = '<p class="loading">Searching for recipes...</p>';
+
+                const queryParams = products.map(p => 'products=' + encodeURIComponent(p)).join('&');
+
+                fetch(`/recipes/search?${queryParams}`)
+                    .then(response => response.json())
+                    .then(recipes => {
+                        displayRecipes(recipes);
+                    })
+                    .catch(err => {
+                        console.error('Error searching recipes:', err);
+                        recipesContainer.innerHTML = '<p class="error">Error searching for recipes. Please try again.</p>';
+                    });
+            });
+
+            clearBtn.addEventListener('click', function() {
+                const inputs = productsContainer.querySelectorAll('.product-name-input');
+                inputs.forEach(input => {
+                    input.value = '';
+                    const suggestionsList = input.closest('.product-row').querySelector('.product-suggestions');
+                    suggestionsList.innerHTML = '';
+                });
+                selectedProducts.clear();
+                recipesContainer.innerHTML = '<p class="no-recipes">Add some products above and click "Search Recipes" to find what you can cook!</p>';
+            });
+
+            function displayRecipes(recipes) {
+                if (recipes.length === 0) {
+                    recipesContainer.innerHTML = '<p class="no-recipes">No recipes found with the selected products. Try adding more products or different ones!</p>';
+                    return;
+                }
+
+                let html = '<div class="recipe-grid">';
+                recipes.forEach(recipe => {
+                    const ingredientsList = recipe.ingredients.map(ing =>
+                        `${ing.productName} (${ing.amount})`
+                    ).join(', ');
+
+                    html += `
+                        <div class="recipe-card" data-recipe-id="${recipe.id}">
+                            <div class="recipe-image">
+                                ${recipe.imageUrl ?
+                                    `<img src="${recipe.imageUrl}" alt="${recipe.name}" onerror="this.style.display='none'">` :
+                                    '<div class="no-image">📖</div>'
+                                }
+                            </div>
+                            <div class="recipe-info">
+                                <h3 class="recipe-name">${recipe.name}</h3>
+                                <p class="recipe-ingredients">Ingredients: ${ingredientsList}</p>
+                                <button class="plan-recipe-btn" onclick="planRecipe(${recipe.id}, '${recipe.name}')">
+                                    Plan This Recipe
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                recipesContainer.innerHTML = html;
+            }
+
+            window.planRecipe = function(recipeId, recipeName) {
+                window.location.href = `/mealcraft/plan-recipe/${recipeId}`;
+            };
+
+        })();
+    </script>
+
+    <style>
+        .craft-container {
+            display: flex;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .search-section {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .recipes-section {
+            flex: 2;
+            max-width: 50%;
+        }
+
+        .search-section h2, .recipes-section h2 {
+            font-family: 'Public Pixel', sans-serif;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .product-row {
+            margin-bottom: 1rem;
+            position: relative;
+            display: grid;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .product-row label {
+            font-family: 'Public Pixel', sans-serif;
+            min-width: 70px;
+        }
+
+        .product-name-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.5rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Public Pixel', sans-serif;
+        }
+
+        .product-name-input:focus {
+            outline: none;
+            border-color: var(--premium-color, #007bff);
+        }
+
+        .product-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 70px;
+            right: 80px;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .suggestion-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .suggestion-item:hover, .suggestion-item.highlighted {
+            background-color: #f0f0f0;
+        }
+
+        .suggestion-item.highlighted {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .no-suggestions, .error-suggestion {
+            padding: 0.5rem;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.9rem;
+            color: #999;
+            font-style: italic;
+            cursor: default;
+        }
+
+        .error-suggestion {
+            color: #dc3545;
+        }
+
+        .selected-product {
+            border-color: #28a745 !important;
+            background-color: #f8fff9;
+        }
+
+        .product-name-input.typing {
+            border-color: var(--premium-color, #007bff);
+        }
+
+        .remove-product {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .remove-product:hover {
+            background: #c82333;
+        }
+
+        #add-product, #search-recipes, #clear-all {
+            background: var(--premium-color, #007bff);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Public Pixel', sans-serif;
+        }
+
+        #add-product:hover, #search-recipes:hover {
+            background: #0056b3;
+        }
+
+        #clear-all {
+            background: #6c757d;
+        }
+
+        #clear-all:hover {
+            background: #545b62;
+        }
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .recipe-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: white;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .recipe-image {
+            height: 150px;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recipe-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .no-image {
+            font-size: 3rem;
+            color: #6c757d;
+        }
+
+        .recipe-info {
+            padding: 1rem;
+        }
+
+        .recipe-name {
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 1.1rem;
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+
+        .recipe-ingredients {
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+            color: #666;
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+
+        .plan-recipe-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .plan-recipe-btn:hover {
+            background: #218838;
+        }
+
+        .no-recipes, .loading, .error {
+            text-align: center;
+            padding: 2rem;
+            font-family: 'Public Pixel', sans-serif;
+            color: #666;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .craft-container {
+                flex-direction: column;
+            }
+
+            .search-section {
+                max-width: none;
+            }
+
+            .recipe-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</div>
