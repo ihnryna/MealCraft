@@ -31,10 +31,11 @@ public class ManageMealPlanController {
     private static final String MEAL_PLAN = "mealPlan";
     private static final String HOME_PAGE = "home";
     private static final String REDIRECT_HOME_PAGE = "redirect:/mealcraft/home";
-
-
-
     private static final String MEAL_PLAN_FORM_FRAGMENT = "fragments/meal-plan-form :: content";
+    private static final String MEAL_PLAN_ID_URI        = "/meal-plans/{id}";
+
+    private static final String PLAN_YOUR_MEAL = "Plan your meal";
+    private static final String MEAL_COLORS = "mealColors";
 
 
     public ManageMealPlanController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
@@ -58,9 +59,30 @@ public class ManageMealPlanController {
 
 
         addRecipeListToModel(model);
-        model.addAttribute("mealColors", MealPlanColor.values());
+        model.addAttribute(MEAL_COLORS, MealPlanColor.values());
         model.addAttribute(MEAL_PLAN, mealPlanDto);
-        model.addAttribute(TITLE, "Plan your meal");
+        model.addAttribute(TITLE, PLAN_YOUR_MEAL);
+        model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
+
+        return HOME_PAGE;
+    }
+
+    @GetMapping("/edit/{id}")
+    public String showEditMealPlanForm(@PathVariable Long id, Model model) {
+
+
+        ResponseEntity<MealPlanDto> response = internalApiClient.get()
+                .uri(MEAL_PLAN_ID_URI, id)
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
+
+        MealPlanDto mealPlanDto = response.getBody();
+
+        addRecipeListToModel(model);
+        model.addAttribute(MEAL_COLORS, MealPlanColor.values());
+        model.addAttribute(MEAL_PLAN, mealPlanDto);
+        model.addAttribute(TITLE, PLAN_YOUR_MEAL);
         model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
 
         return HOME_PAGE;
@@ -70,13 +92,21 @@ public class ManageMealPlanController {
     public String saveMealPlan(@ModelAttribute("mealPlan") MealPlanDto mealPlanDto, Model model) {
 
         try {
-            internalApiClient
-                    .post()
-                    .uri("/meal-plans")
-                    .body(mealPlanDto)
-                    .retrieve()
-                    .toBodilessEntity();
-
+            if (mealPlanDto.getId() == null) {
+                internalApiClient
+                        .post()
+                        .uri("/meal-plans")
+                        .body(mealPlanDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            } else {
+                internalApiClient
+                        .put()
+                        .uri(MEAL_PLAN_ID_URI, mealPlanDto.getId())
+                        .body(mealPlanDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
             return REDIRECT_HOME_PAGE;
 
         } catch (RestClientResponseException ex) {
@@ -90,21 +120,30 @@ public class ManageMealPlanController {
                 message = "Failed to save meal plan: " + ex.getStatusCode();
             }
 
-
             addRecipeListToModel(model);
-
             model.addAttribute(MEAL_PLAN, mealPlanDto);
-            model.addAttribute("mealColors", MealPlanColor.values());
-            model.addAttribute(TITLE, "Create meal plan");
+            model.addAttribute(MEAL_COLORS, MealPlanColor.values());
+            model.addAttribute(TITLE, PLAN_YOUR_MEAL);
             model.addAttribute(FRAGMENT_TO_LOAD, MEAL_PLAN_FORM_FRAGMENT);
             model.addAttribute("errorMessage", message);
-
             return HOME_PAGE;
         }
     }
 
+    @GetMapping("/delete/{id}")
+    public String deleteMealPlan(@PathVariable Long id) {
+        internalApiClient
+                .delete()
+                .uri(MEAL_PLAN_ID_URI, id)
+                .retrieve()
+                .toBodilessEntity();
+
+        System.out.println("DELETED MEAL PLAN ID: " + id);
+
+        return REDIRECT_HOME_PAGE;
+    }
+
     private void addRecipeListToModel(Model model) {
-        //TODO: USERS+PUBLIC recipes
 
         ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
                 .uri("/recipes")

@@ -25,7 +25,7 @@
             <div class="search-box">
                 <div class="row">
                     <input type="text" class="recipe-input-box" id="recipe-input-box" placeholder="Start typing here"
-                           autocomplete="off">
+                           autocomplete="off" th:value="${mealPlan.id != null ? mealPlan.name : ''}">
                 </div>
                 <div class="result-box">
                 </div>
@@ -75,9 +75,21 @@
 
 
         <div style="margin-top: 16px;">
-            <button type="submit">
-                Save
+            <button type="submit"
+                    th:text="${mealPlan.id} == null ? 'Add' : 'Save'">
+                Add
             </button>
+
+            <a th:href="@{'/mealcraft/home/' + ${#dates.format(mealPlan.planDate, 'yyyy-MM-dd')}}"
+               style="margin-left: 10px; text-decoration: none;">
+                <button type="button">Cancel</button>
+            </a>
+
+            <a th:href="@{'/mealcraft/home/' + ${#dates.format(mealPlan.planDate, 'yyyy-MM-dd')}}"
+               th:if="${mealPlan.id} != null"
+               style="margin-left: 10px; text-decoration: none;">
+                <button type="button">Delete</button>
+            </a>
         </div>
     </form>
 
@@ -152,7 +164,7 @@
             width: 500px;
         }
 
-        input {
+        .search-box input {
             width: 100%;
             flex: 1;
             height: 20px;
