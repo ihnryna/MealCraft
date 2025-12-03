@@ -5,7 +5,10 @@
         <p th:text="${errorMessage}" style="color: red;"></p>
     </div>
 
-    <a th:href="@{/mealcraft/admin/recipe/new}">+ Add recipe</a>
+    <a th:with="formAction=${#authorization.expression('hasRole(''ROLE_ADMIN'')')}
+               ? '/mealcraft/admin/recipe/new'
+               : '/mealcraft/home/recipes/create'"
+       th:href="@{${formAction}}">+ Add recipe</a>
     <a th:href="@{/mealcraft/admin/recipe/import}" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">+ Add random recipe</a>
 
     <table class="table">
@@ -38,11 +41,26 @@
             </td>
 
             <td>
-                <a th:href="@{|/mealcraft/admin/recipe/new-from/${r.id}|}">Create based on</a>
+                <a th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}" th:href="@{|/mealcraft/admin/recipe/new-from/${r.id}|}">Create based on</a>
                 |
-                <a th:href="@{|/mealcraft/admin/recipe/edit/${r.id}|}">Edit</a>
+                <a th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                   th:href="@{/mealcraft/admin/recipe/edit/{id}(id=${r.id})}">
+                    Edit
+                </a>
+                <a th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                   th:href="@{/mealcraft/home/recipes/edit/{id}(id=${r.id})}">
+                    Edit
+                </a>
                 |
-                <form th:action="@{|/mealcraft/admin/recipe/delete/${r.id}|}"
+                <form th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                      th:action="@{|/mealcraft/admin/recipe/delete/${r.id}|}"
+                      method="post"
+                      style="display:inline;"
+                      onsubmit="return confirm('Are you sure you want to delete this recipe?');">
+                    <button type="submit">Delete</button>
+                </form>
+                <form th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                      th:action="@{|/mealcraft/home/recipes/delete/${r.id}|}"
                       method="post"
                       style="display:inline;"
                       onsubmit="return confirm('Are you sure you want to delete this recipe?');">

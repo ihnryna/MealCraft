@@ -15,11 +15,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -37,7 +35,7 @@ public class HomeWebController {
     private static final String TITLE = "title";
     private static final String RECIPE = "recipe";
     private static final String RECIPE_FORM_FRAGMENT = "fragments/recipe-form :: content";
-
+    private static final String REDIRECT_HOME_PAGE = "redirect:/mealcraft/home";
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
@@ -129,6 +127,58 @@ public class HomeWebController {
         return "home";
     }
 
+    @PostMapping("/mealcraft/user/recipe")
+    public String saveRecipe(@ModelAttribute("recipe") RecipeDto recipeDto, Model model) {
+
+        String title = (recipeDto.getId() == null)
+                ? "Create your own recipe"
+                : "Edit your own recipe";
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        recipeDto.setOwnerUserId(userService.getUserByUsername(username).id());
+
+        try {
+            if (recipeDto.getId() == null) {
+                internalApiClient
+                        .post()
+                        .uri("/recipes")
+                        .body(recipeDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            } else {
+                internalApiClient
+                        .put()
+                        .uri("/recipes/{id}", recipeDto.getId())
+                        .body(recipeDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
+
+            return REDIRECT_HOME_PAGE;
+
+        } catch (RestClientResponseException ex) {
+
+            String message;
+            String body = ex.getResponseBodyAsString();
+
+            if (!body.isBlank()) {
+                message = body;
+            } else {
+                message = "Failed to save recipe: " + ex.getStatusCode();
+            }
+
+            model.addAttribute(RECIPE, recipeDto);
+            model.addAttribute(TITLE, title);
+            model.addAttribute(FRAGMENT_TO_LOAD, RECIPE_FORM_FRAGMENT);
+            model.addAttribute(USERNAME, username);
+            addShoppingItemsToModel(model, username);
+            model.addAttribute("errorMessage", message);
+
+            return "home";
+        }
+    }
+
 
     @PostMapping("/mealcraft/shopping/toggle")
     public String toggleChecked(@RequestParam Long id) {
@@ -137,13 +187,13 @@ public class HomeWebController {
                 .uri("/shopping-items/toggle/{id}", id)
                 .retrieve()
                 .toBodilessEntity();
-        return "redirect:/mealcraft/home";
+        return REDIRECT_HOME_PAGE;
     }
 
     @PostMapping("/mealcraft/user/color")
     public String setUserColor(@RequestParam String color, HttpSession session) {
         session.setAttribute("themeColor", color);
-        return "redirect:/mealcraft/home";
+        return REDIRECT_HOME_PAGE;
     }
 
     @GetMapping("/mealcraft/craft")

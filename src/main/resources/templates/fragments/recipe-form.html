@@ -6,7 +6,10 @@
     </div>
 
     <form id="recipe-form"
-          th:action="@{/mealcraft/admin/recipe}"
+          th:with="formAction=${#authorization.expression('hasRole(''ROLE_ADMIN'')')}
+               ? '/mealcraft/admin/recipe'
+               : '/mealcraft/user/recipe'"
+          th:action="@{${formAction}}"
           th:object="${recipe}"
           method="post">
 
@@ -161,7 +164,7 @@
                         return;
                     }
 
-                    fetch(`/mealcraft/admin/recipe/product-suggestions?query=` + encodeURIComponent(query))
+                    fetch(`/products/search?prefix=` + encodeURIComponent(query))
                         .then(response => response.json())
                         .then(products => {
                             suggestionsList.innerHTML = '';
