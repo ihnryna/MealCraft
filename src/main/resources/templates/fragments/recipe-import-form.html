@@ -1,11 +1,13 @@
-<div th:fragment="content">
-    <h2 th:text="${title}">Import external recipe</h2>
+<div th:fragment="content" class="mc-form-wrapper">
+    <h2 class="mc-form-title" th:text="${title}">Import external recipe</h2>
 
-    <div th:if="${errorMessage}">
-        <p th:text="${errorMessage}" style="color: red;"></p>
+    <div th:if="${errorMessage}"
+         class="mc-form-message mc-form-message-error">
+        <p th:text="${errorMessage}"></p>
     </div>
 
     <form id="recipe-import-form"
+          class="mc-form"
           th:action="@{/mealcraft/admin/recipe/import}"
           th:object="${recipe}"
           method="post">
@@ -13,19 +15,21 @@
         <input type="hidden" th:field="*{id}">
         <input type="hidden" th:field="*{baseRecipeId}">
 
-        <div>
+        <div class="mc-form-group">
             <label for="name">Recipe name:</label>
             <input id="name"
                    type="text"
                    th:field="*{name}"
+                   class="mc-input"
                    required>
         </div>
 
-        <div>
+        <div class="mc-form-group">
             <label for="imageUrl">Image URL:</label>
             <input id="imageUrl"
                    type="text"
-                   th:field="*{imageUrl}">
+                   th:field="*{imageUrl}"
+                   class="mc-input">
         </div>
 
         <h3>Ingredients</h3>
@@ -45,43 +49,55 @@
                        th:name="|ingredients[${iter.index}].productId|"
                        th:value="${ ing.productId }">
 
-                <label>Product:</label>
-                <input type="text"
-                       class="product-name-input"
-                       th:name="|ingredients[${iter.index}].productName|"
-                       th:value="${ ing.productName }"
-                       autocomplete="off"
-                       required>
+                <div class="ingredient-main">
+                    <div class="ingredient-field product-field">
+                        <label>Product:</label>
+                        <input type="text"
+                               class="product-name-input mc-input"
+                               th:name="|ingredients[${iter.index}].productName|"
+                               th:value="${ ing.productName }"
+                               autocomplete="off"
+                               required>
+                        <ul class="product-suggestions"></ul>
+                    </div>
 
-                <ul class="product-suggestions"></ul>
+                    <div class="ingredient-field unit-field">
+                        <label>Unit:</label>
+                        <input type="text"
+                               class="unit-name-input mc-input"
+                               th:name="|ingredients[${iter.index}].unitName|"
+                               th:value="${ ing.unitName }"
+                               autocomplete="off">
+                        <ul class="unit-suggestions"></ul>
+                    </div>
 
-                <label>Unit:</label>
-                <input type="text"
-                       class="unit-name-input"
-                       th:name="|ingredients[${iter.index}].unitName|"
-                       th:value="${ ing.unitName }"
-                       autocomplete="off">
+                    <div class="ingredient-field amount-field">
+                        <label>Amount:</label>
+                        <input type="number"
+                               step="0.1"
+                               min="0.1"
+                               th:name="|ingredients[${iter.index}].amount|"
+                               th:value="${ ing.amount }"
+                               class="mc-input"
+                               required>
+                    </div>
 
-                <ul class="unit-suggestions"></ul>
+                    <button type="button"
+                            class="remove-ingredient mc-btn mc-btn-secondary">
+                        REMOVE
+                    </button>
+                </div>
 
-                <label>Amount:</label>
-                <input type="number"
-                       step="0.1"
-                       min="0.1"
-                       th:name="|ingredients[${iter.index}].amount|"
-                       th:value="${ ing.amount }"
-                       required>
-
-                <div class="ingredient-error" style="color: red;"></div>
-
-                <button type="button" class="remove-ingredient">Remove</button>
+                <div class="ingredient-error mc-field-error"></div>
             </div>
         </div>
 
-        <button type="button" id="add-ingredient">+ Add ingredient</button>
+        <button type="button" id="add-ingredient" class="mc-btn" style="margin-top: 0.5rem;">
+            + ADD INGREDIENT
+        </button>
 
-        <div style="margin-top: 16px;">
-            <button type="submit">Import</button>
+        <div class="mc-form-actions">
+            <button type="submit" class="mc-btn">IMPORT</button>
         </div>
     </form>
 
@@ -102,33 +118,43 @@
                     <input type="hidden" name="ingredients[${index}].id">
                     <input type="hidden" name="ingredients[${index}].productId">
 
-                    <label>Product:</label>
-                    <input type="text"
-                           class="product-name-input"
-                           name="ingredients[${index}].productName"
-                           autocomplete="off"
-                           required>
+                    <div class="ingredient-main">
+                        <div class="ingredient-field product-field">
+                            <label>Product:</label>
+                            <input type="text"
+                                   class="product-name-input mc-input"
+                                   name="ingredients[${index}].productName"
+                                   autocomplete="off"
+                                   required>
+                            <ul class="product-suggestions"></ul>
+                        </div>
 
-                    <ul class="product-suggestions"></ul>
+                        <div class="ingredient-field unit-field">
+                            <label>Unit:</label>
+                            <input type="text"
+                                   class="unit-name-input mc-input"
+                                   name="ingredients[${index}].unitName"
+                                   autocomplete="off">
+                            <ul class="unit-suggestions"></ul>
+                        </div>
 
-                    <label>Unit:</label>
-                    <input type="text"
-                           class="unit-name-input"
-                           name="ingredients[${index}].unitName"
-                           autocomplete="off">
+                        <div class="ingredient-field amount-field">
+                            <label>Amount:</label>
+                            <input type="number"
+                                   step="0.1"
+                                   min="0.1"
+                                   name="ingredients[${index}].amount"
+                                   class="mc-input"
+                                   required>
+                        </div>
 
-                    <ul class="unit-suggestions"></ul>
+                        <button type="button"
+                                class="remove-ingredient mc-btn mc-btn-secondary">
+                            REMOVE
+                        </button>
+                    </div>
 
-                    <label>Amount:</label>
-                    <input type="number"
-                           step="0.1"
-                           min="0.1"
-                           name="ingredients[${index}].amount"
-                           required>
-
-                    <div class="ingredient-error" style="color: red;"></div>
-
-                    <button type="button" class="remove-ingredient">Remove</button>
+                    <div class="ingredient-error mc-field-error"></div>
                 `;
 
                 return row;
@@ -300,8 +326,45 @@
 
     <style>
         .ingredient-row {
-            margin-bottom: 8px;
-            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .ingredient-main {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .ingredient-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .product-field,
+        .unit-field {
+            flex: 1 1 0;
+            position: relative; /* для списку підказок */
+        }
+
+        .amount-field {
+            flex: 0 0 110px;
+        }
+
+        .ingredient-field label {
+            text-transform: none;
+        }
+
+        .remove-ingredient {
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .ingredient-error {
+            margin-top: 0.25rem;
         }
 
         .product-suggestions,
@@ -313,8 +376,11 @@
             max-height: 120px;
             overflow-y: auto;
             position: absolute;
-            background: white;
+            background: #ffffff;
             z-index: 10;
+            left: 0;
+            right: 0;
+            top: calc(100% + 2px);
         }
 
         .product-suggestions .suggestion-item,

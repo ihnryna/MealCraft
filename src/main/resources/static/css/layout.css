@@ -3,12 +3,16 @@
 }
 
 :root {
-    --premium-color: #222; /* default for IDE */
+    --premium-color: #222;
+    --mc-bg: #f3f0e4;
+    --mc-panel: #fdfbf3;
 }
 
 body {
     margin: 0;
+    background: var(--mc-bg);
 }
+
 
 .layout {
     display: grid;
@@ -116,7 +120,7 @@ body {
 /*sidebar*/
 .sidebar {
     grid-area: sidebar;
-    background-color: #f5f5f5;
+    background: var(--mc-bg);
     padding: 10px;
 }
 
@@ -155,6 +159,7 @@ body {
     grid-area: content;
     padding: 20px;
     overflow-y: auto;
+    background: var(--mc-panel);
 }
 
 .color-strip {

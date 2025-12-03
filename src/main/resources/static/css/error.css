@@ -1,0 +1,56 @@
+:root {
+    --mc-bg: #f3f0e4;
+    --mc-panel: #fdfbf3;
+    --mc-border: #3b3b3b;
+    --mc-border-soft: #9c8d75;
+    --mc-green: #4caf50;
+    --mc-green-dark: #357a38;
+    --mc-red: #d32f2f;
+    --mc-red-dark: #9a0007;
+    --mc-gray: #6c757d;
+}
+
+.mc-error-banner {
+    margin: 1rem auto;
+    padding: 0.6rem 0.8rem;
+    max-width: 1000px;
+    background: #ffe6e6;
+    border: 3px solid var(--mc-red);
+    box-shadow: 3px 3px 0 #1e1e1e;
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.8rem;
+    color: var(--mc-red-dark);
+}
+
+.mc-error-banner strong {
+    text-transform: uppercase;
+}
+
+.mc-error-inline {
+    margin-top: 0.25rem;
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.7rem;
+    color: var(--mc-red-dark);
+}
+
+.mc-error-inline-list {
+    margin: 0.4rem 0 0;
+    padding-left: 1.2rem;
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.7rem;
+    color: var(--mc-red-dark);
+}
+
+.mc-error-inline-list li {
+    margin-bottom: 0.15rem;
+}
+
+.mc-error-field {
+    border-color: var(--mc-red) !important;
+    background: #fff4f4 !important;
+}
+
+.mc-error-field:focus {
+    border-color: var(--mc-red-dark) !important;
+    box-shadow: 2px 2px 0 #b71c1c !important;
+}

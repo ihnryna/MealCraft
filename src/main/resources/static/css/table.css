@@ -1,0 +1,174 @@
+:root {
+    --mc-bg: #f3f0e4;
+    --mc-panel: #fdfbf3;
+    --mc-border: #3b3b3b;
+    --mc-border-soft: #9c8d75;
+    --mc-green: #4caf50;
+    --mc-green-dark: #357a38;
+    --mc-red: #d32f2f;
+    --mc-red-dark: #9a0007;
+    --mc-gray: #6c757d;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.8rem;
+    border: 3px solid var(--mc-border-soft);
+    background: var(--mc-panel);
+    box-shadow: inset 0 0 0 2px #e0d3b8, 4px 4px 0 #1e1e1e;
+}
+
+.table thead th {
+    border: 3px solid var(--mc-border-soft);
+    padding: 0.45rem 0.6rem;
+    text-align: left;
+    background: #e8dec7;
+    text-transform: uppercase;
+    font-weight: normal;
+    color: #222;
+}
+
+.table tbody td {
+    border: 3px solid var(--mc-border-soft);
+    padding: 0.45rem 0.6rem;
+    background: #faf7ee;
+    vertical-align: middle;
+}
+
+.table tbody tr:nth-child(even) td {
+    background: #f5efe0;
+}
+
+.table tbody tr {
+    transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background 0.12s ease-out;
+    transform-origin: center;
+}
+
+.table tbody tr:hover {
+    transform: scale(1.01);
+    box-shadow: 2px 2px 0 #b0a082;
+}
+
+.table tbody tr:hover td {
+    background: #f1f7e9;
+}
+
+.table td img {
+    border: 3px solid var(--mc-border-soft);
+    background: #f0e8d5;
+    box-shadow: 2px 2px 0 #1e1e1e;
+}
+
+.table td a:not(.mc-table-btn) {
+    text-decoration: none;
+    color: #1b4f72;
+}
+
+.table td a:not(.mc-table-btn):hover {
+    text-decoration: none;
+    color: #1b4f72;
+}
+
+.mc-table-top-link {
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1.2rem;
+    border-radius: 0;
+    border: 3px solid var(--mc-border);
+    background: var(--mc-gray);
+    color: #fff;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 0.5rem;
+    box-shadow: 3px 3px 0 #1e1e1e;
+    cursor: pointer;
+    transition: transform 0.05s ease-out,
+    box-shadow 0.05s ease-out,
+    background 0.1s ease-out;
+}
+
+.mc-table-top-link:hover {
+    background: #545b62;
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 #1e1e1e;
+}
+
+.mc-table-top-link:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 #1e1e1e;
+}
+
+.mc-table-btn {
+    display: inline-block;
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0;
+    border: 3px solid var(--mc-border);
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #1e1e1e;
+    background: var(--mc-green);
+    color: #fff;
+    transition: transform 0.05s ease-out,
+    box-shadow 0.05s ease-out,
+    background 0.1s ease-out;
+}
+
+.mc-table-btn:hover {
+    background: var(--mc-green-dark);
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #1e1e1e;
+}
+
+.mc-table-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 #1e1e1e;
+}
+
+.mc-table-btn-secondary {
+    background: var(--mc-gray);
+}
+
+.mc-table-btn-secondary:hover {
+    background: #545b62;
+}
+
+.mc-table-btn-danger {
+    background: var(--mc-red);
+}
+
+.mc-table-btn-danger:hover {
+    background: var(--mc-red-dark);
+}
+
+.table td form button.mc-table-btn {
+    font-family: 'Public Pixel', sans-serif;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0;
+}
+
+@media (max-width: 700px) {
+    .table {
+        font-size: 0.7rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: 0.35rem 0.4rem;
+    }
+
+    .mc-table-top-link {
+        margin-bottom: 0.3rem;
+        width: 100%;
+        text-align: center;
+    }
+}
