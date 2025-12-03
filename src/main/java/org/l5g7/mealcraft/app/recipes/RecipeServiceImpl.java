@@ -1,5 +1,6 @@
 package org.l5g7.mealcraft.app.recipes;
 
+import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.products.ProductService;
@@ -29,12 +30,13 @@ public class RecipeServiceImpl implements RecipeService {
     private final CurrentUserProvider currentUserProvider;
     private final UnitService unitService;
     private final ProductService productService;
+    private final MealPlanRepository mealPlanRepository;
 
     private static final String ENTITY_NAME = "Recipe";
     private static final String ENTITY_PRODUCT = "Product";
 
     @Autowired
-    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider, CurrentUserProvider currentUserProvider, UnitService unitService, ProductService productService) {
+    public RecipeServiceImpl(RecipeRepository recipeRepository, ProductRepository productRepository, UserRepository userRepository, RecipeProvider recipeProvider, CurrentUserProvider currentUserProvider, UnitService unitService, ProductService productService, MealPlanRepository mealPlanRepository) {
         this.recipeRepository = recipeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
@@ -42,6 +44,7 @@ public class RecipeServiceImpl implements RecipeService {
         this.currentUserProvider = currentUserProvider;
         this.unitService = unitService;
         this.productService = productService;
+        this.mealPlanRepository = mealPlanRepository;
     }
 
     @Transactional
@@ -401,6 +404,7 @@ public class RecipeServiceImpl implements RecipeService {
                         "id",
                         String.valueOf(id)
                 ));
+
         User owner = recipe.getOwnerUser();
 
         if (owner == null) {
@@ -413,6 +417,10 @@ public class RecipeServiceImpl implements RecipeService {
             }
         }
 
+        if (mealPlanRepository.existsByRecipe(recipe)) {
+            throw new IllegalStateException("Cannot delete recipe because it is used in a meal plan");
+        }
+
         List<Recipe> children = recipeRepository.findAllByBaseRecipe(recipe);
         if (!children.isEmpty()) {
             for (Recipe child : children) {
@@ -420,6 +428,7 @@ public class RecipeServiceImpl implements RecipeService {
             }
             recipeRepository.saveAll(children);
         }
+
         recipeRepository.deleteById(id);
     }
 
