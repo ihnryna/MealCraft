@@ -45,38 +45,32 @@
                        th:name="|ingredients[${iter.index}].productId|"
                        th:value="${ ing.productId }">
 
-                <label th:for="|productName_${iter.index}|">Product:</label>
+                <label>Product:</label>
                 <input type="text"
                        class="product-name-input"
-                       th:id="|productName_${iter.index}|"
                        th:name="|ingredients[${iter.index}].productName|"
-                       th:value="${ing.productName}"
+                       th:value="${ ing.productName }"
                        autocomplete="off"
                        required>
 
-
                 <ul class="product-suggestions"></ul>
 
-                <label>
-                    Unit:
-                    <input type="text"
-                           class="unit-name-input"
-                           th:name="|ingredients[${iter.index}].unitName|"
-                           th:value="${ ing.unitName }"
-                           autocomplete="off">
-                </label>
+                <label>Unit:</label>
+                <input type="text"
+                       class="unit-name-input"
+                       th:name="|ingredients[${iter.index}].unitName|"
+                       th:value="${ ing.unitName }"
+                       autocomplete="off">
 
                 <ul class="unit-suggestions"></ul>
 
-                <label>
-                    Amount:
-                    <input type="number"
-                           step="0.1"
-                           min="0.1"
-                           th:name="|ingredients[${iter.index}].amount|"
-                           th:value="${ ing.amount }"
-                           required>
-                </label>
+                <label>Amount:</label>
+                <input type="number"
+                       step="0.1"
+                       min="0.1"
+                       th:name="|ingredients[${iter.index}].amount|"
+                       th:value="${ ing.amount }"
+                       required>
 
                 <div class="ingredient-error" style="color: red;"></div>
 
@@ -96,7 +90,7 @@
             const container = document.getElementById('ingredients-container');
             const form = document.getElementById('recipe-import-form');
 
-            let ingredientIndex = Number.parseInt(container.dataset.initialCount || '0', 10);
+            let ingredientIndex = parseInt(container.dataset.initialCount || '0', 10);
             const addButton = document.getElementById('add-ingredient');
 
             function createIngredientRow(index) {
@@ -108,35 +102,29 @@
                     <input type="hidden" name="ingredients[${index}].id">
                     <input type="hidden" name="ingredients[${index}].productId">
 
-                    <label>
-                        Product:
-                        <input type="text"
-                               class="product-name-input"
-                               name="ingredients[${index}].productName"
-                               autocomplete="off"
-                               required>
-                    </label>
+                    <label>Product:</label>
+                    <input type="text"
+                           class="product-name-input"
+                           name="ingredients[${index}].productName"
+                           autocomplete="off"
+                           required>
 
                     <ul class="product-suggestions"></ul>
 
-                    <label>
-                        Unit:
-                        <input type="text"
-                               class="unit-name-input"
-                               name="ingredients[${index}].unitName"
-                               autocomplete="off">
-                    </label>
+                    <label>Unit:</label>
+                    <input type="text"
+                           class="unit-name-input"
+                           name="ingredients[${index}].unitName"
+                           autocomplete="off">
 
                     <ul class="unit-suggestions"></ul>
 
-                    <label>
-                        Amount:
-                        <input type="number"
-                               step="0.1"
-                               min="0.1"
-                               name="ingredients[${index}].amount"
-                               required>
-                    </label>
+                    <label>Amount:</label>
+                    <input type="number"
+                           step="0.1"
+                           min="0.1"
+                           name="ingredients[${index}].amount"
+                           required>
 
                     <div class="ingredient-error" style="color: red;"></div>
 
@@ -162,7 +150,7 @@
                 if (e.target.classList.contains('remove-ingredient')) {
                     const row = e.target.closest('.ingredient-row');
                     if (row) {
-                        row.remove();
+                        container.removeChild(row);
                     }
                 }
             });
@@ -193,13 +181,13 @@
                         .then(response => response.json())
                         .then(products => {
                             suggestionsList.innerHTML = '';
-                            for (const p of products) {
+                            products.forEach(p => {
                                 const li = document.createElement('li');
                                 li.textContent = p.name + ' (' + p.defaultUnitName + ')';
                                 li.dataset.productId = p.id;
                                 li.classList.add('suggestion-item');
                                 suggestionsList.appendChild(li);
-                            }
+                            });
                         })
                         .catch(err => {
                             console.error('Error loading product suggestions', err);
@@ -221,13 +209,13 @@
                         .then(response => response.json())
                         .then(units => {
                             suggestionsList.innerHTML = '';
-                            for (const u of units) {
+                            units.forEach(u => {
                                 const li = document.createElement('li');
                                 li.textContent = u.name;
                                 li.dataset.unitName = u.name;
                                 li.classList.add('unit-suggestion-item');
                                 suggestionsList.appendChild(li);
-                            }
+                            });
                         })
                         .catch(err => {
                             console.error('Error loading unit suggestions', err);
@@ -269,7 +257,7 @@
                 let hasError = false;
 
                 const rows = container.querySelectorAll('.ingredient-row');
-                for (const row of rows) {
+                rows.forEach(row => {
                     const nameInput = row.querySelector('.product-name-input');
                     const amountInput = row.querySelector('input[name$=".amount"]');
                     const errorBox = row.querySelector('.ingredient-error');
@@ -282,7 +270,7 @@
                     const amountStr = amountInput ? amountInput.value.trim() : '';
 
                     if (name === '' && amountStr === '') {
-                        continue;
+                        return;
                     }
 
                     if (name === '') {
@@ -290,17 +278,17 @@
                         if (errorBox) {
                             errorBox.textContent = 'Product name is required.';
                         }
-                        continue;
+                        return;
                     }
 
-                    const amount = Number.parseFloat(amountStr);
-                    if (amountStr === '' || Number.isNaN(amount) || amount <= 0) {
+                    const amount = parseFloat(amountStr);
+                    if (amountStr === '' || isNaN(amount) || amount <= 0) {
                         hasError = true;
                         if (errorBox) {
                             errorBox.textContent = 'Amount must be greater than zero.';
                         }
                     }
-                }
+                });
 
                 if (hasError) {
                     e.preventDefault();
