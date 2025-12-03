@@ -243,7 +243,9 @@ class ShoppingItemServiceImplTest {
     @Test
     void patchShoppingItem_throwsWhenItemNotFound() {
         when(shoppingItemRepository.findById(404L)).thenReturn(Optional.empty());
-        assertThrows(EntityDoesNotExistException.class, () -> service.patchShoppingItem(404L, ShoppingItemDto.builder().build()));
+        ShoppingItemDto dto = ShoppingItemDto.builder().build();
+
+        assertThrows(EntityDoesNotExistException.class, () -> service.patchShoppingItem(404L, dto));
     }
 
     @Test
@@ -277,4 +279,182 @@ class ShoppingItemServiceImplTest {
         when(shoppingItemRepository.findById(999L)).thenReturn(Optional.empty());
         assertThrows(EntityDoesNotExistException.class, () -> service.toggleStatus(999L));
     }
+
+    @Test
+    void addShoppingItem_createsNew_whenNoExistingItems() {
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(3.0)
+                .build();
+
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of());
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+
+        service.addShoppingItem(dto);
+
+        verify(shoppingItemRepository, times(1)).save(any(ShoppingItem.class));
+    }
+
+    @Test
+    void addShoppingItem_accumulatesQty_whenItemExistsAndStatusFalse() {
+        ShoppingItem existing = ShoppingItem.builder()
+                .id(10L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(2.0)
+                .status(false)
+                .build();
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(5.0)
+                .build();
+
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of(existing));
+
+        service.addShoppingItem(dto);
+
+        ArgumentCaptor<ShoppingItem> captor = ArgumentCaptor.forClass(ShoppingItem.class);
+        verify(shoppingItemRepository).save(captor.capture());
+        assertEquals(7.0, captor.getValue().getRequiredQty());
+    }
+
+    @Test
+    void addShoppingItem_findsCompletedItem_statusTrue_andReplacesQty() {
+        ShoppingItem completed = ShoppingItem.builder()
+                .id(20L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(4.0)
+                .status(true)
+                .build();
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(6.0)
+                .build();
+
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of(completed))
+                .thenReturn(List.of());
+
+        service.addShoppingItem(dto);
+
+        verify(shoppingItemRepository, atLeastOnce()).save(any());
+    }
+
+    @Test
+    void addShoppingItem_deletesItem_whenQtyGoesBelowThreshold() {
+        ShoppingItem existing = ShoppingItem.builder()
+                .id(30L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(0.02)
+                .status(false)
+                .build();
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(-0.03) // subtraction makes result negative
+                .build();
+
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of(existing));
+
+        service.addShoppingItem(dto);
+
+        verify(shoppingItemRepository).delete(existing);
+    }
+
+
+    @Test
+    void removeShoppingItem_deletesWholeItem_whenQtyBecomesZeroOrLess() {
+        ShoppingItem existing = ShoppingItem.builder()
+                .id(40L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(2.0)
+                .status(false)
+                .build();
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(2.0)
+                .build();
+
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of(existing));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+
+        service.removeShoppingItem(dto);
+
+        verify(shoppingItemRepository).delete(existing);
+    }
+
+    @Test
+    void removeShoppingItem_reducesQty_whenEnoughLeft() {
+        ShoppingItem existing = ShoppingItem.builder()
+                .id(41L)
+                .userOwner(user)
+                .product(product)
+                .requiredQty(10.0)
+                .status(false)
+                .build();
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(3.0)
+                .build();
+
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of(existing));
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+
+        service.removeShoppingItem(dto);
+
+        ArgumentCaptor<ShoppingItem> captor = ArgumentCaptor.forClass(ShoppingItem.class);
+        verify(shoppingItemRepository).save(captor.capture());
+        assertEquals(7.0, captor.getValue().getRequiredQty());
+    }
+
+    @Test
+    void removeShoppingItem_doesNothing_whenNoMatchingProduct() {
+        ShoppingItem other = ShoppingItem.builder()
+                .id(50L)
+                .userOwner(user)
+                .product(new Product()) // different product
+                .requiredQty(5.0)
+                .build();
+
+        ShoppingItemDto dto = ShoppingItemDto.builder()
+                .userOwnerId(1L)
+                .productId(2L)
+                .requiredQty(1.0)
+                .build();
+
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(shoppingItemRepository.findByUserOwnerId(1L))
+                .thenReturn(List.of(other));
+
+        service.removeShoppingItem(dto);
+
+        verify(shoppingItemRepository, never()).save(any());
+        verify(shoppingItemRepository, never()).delete(any());
+    }
+
 }

@@ -33,7 +33,7 @@ public class ExternalRecipeService implements RecipeProvider {
         try {
             root = objectMapper.readTree(body);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("JSON pares failed",e);
         }
 
         JsonNode meal = root.path("meals").get(0);

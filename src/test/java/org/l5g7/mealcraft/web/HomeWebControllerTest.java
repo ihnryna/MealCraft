@@ -6,6 +6,7 @@ import org.l5g7.mealcraft.app.user.UserResponseDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.l5g7.mealcraft.enums.Role;
 import org.mockito.Mockito;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -38,73 +40,18 @@ class HomeWebControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
-//    @Test
-//    void showHome_asUser_displaysCalendar() throws Exception {
-//        Authentication auth = new UsernamePasswordAuthenticationToken("testUser", "password",
-//                List.of(new SimpleGrantedAuthority("ROLE_USER")));
-//        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-//        when(securityContext.getAuthentication()).thenReturn(auth);
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        UserResponseDto userDto = new UserResponseDto(1L, "testUser", "test@example.com", Role.USER, null);
-//        when(userService.getUserByUsername("testUser")).thenReturn(userDto);
-//
-//        when(internalApiClient.get()
-//                        .uri("/shopping-items/getUserShoppingItems/{id}", 1L)
-//                        .retrieve()
-//                        .toEntity(Mockito.any(ParameterizedTypeReference.class)))
-//                .thenReturn(ResponseEntity.ok(List.of()));
-//
-//        when(internalApiClient.get()
-//                        .uri("/meal-plans/user/{id}", 1L)
-//                        .retrieve()
-//                        .toEntity(Mockito.any(ParameterizedTypeReference.class)))
-//                .thenReturn(ResponseEntity.ok(List.of()));
-//
-//        mockMvc.perform(get("/mealcraft/home"))
-//                .andExpect(status().isOk());
-//    }
+    @Test
+    void showHome_asAdmin_redirectsToAdminHome() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin", "password",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
 
-//    @Test
-//    void showHome_asAdmin_redirectsToAdminHome() throws Exception {
-//        Authentication auth = new UsernamePasswordAuthenticationToken("admin", "password",
-//                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
-//        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-//        when(securityContext.getAuthentication()).thenReturn(auth);
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        mockMvc.perform(get("/mealcraft/home"))
-//                .andExpect(status().is3xxRedirection())
-//                .andExpect(redirectedUrl("/mealcraft/admin/home"));
-//    }
-//
-//    @Test
-//    void showDayPage_displaysDay() throws Exception {
-//        Authentication auth = new UsernamePasswordAuthenticationToken("testUser", "password");
-//        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-//        when(securityContext.getAuthentication()).thenReturn(auth);
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        UserResponseDto userDto = new UserResponseDto(1L, "testUser", "test@example.com", Role.USER, null);
-//        when(userService.getUserByUsername("testUser")).thenReturn(userDto);
-//
-//        when(internalApiClient.get()
-//                        .uri("/shopping-items/getUserShoppingItems/{id}", 1L)
-//                        .retrieve()
-//                        .toEntity(Mockito.any(ParameterizedTypeReference.class)))
-//                .thenReturn(ResponseEntity.ok(List.of()));
-//
-//        when(internalApiClient.get()
-//                        .uri("/meal-plans/user/{id}", 1L)
-//                        .retrieve()
-//                        .toEntity(Mockito.any(ParameterizedTypeReference.class)))
-//                .thenReturn(ResponseEntity.ok(List.of()));
-//
-//        mockMvc.perform(get("/mealcraft/home/2025-01-15"))
-//                .andExpect(status().isOk())
-//                .andExpect(view().name("home"))
-//                .andExpect(model().attributeExists("day", "dayEventMapForDay", "dayDate"));
-//    }
+        mockMvc.perform(get("/mealcraft/home"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/mealcraft/admin/home"));
+    }
 
     @Test
     void toggleChecked_redirectsToHome() throws Exception {
