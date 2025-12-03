@@ -1,33 +1,42 @@
 <div th:fragment="content">
-    <div class="craft-container">
-        <div id="SearchFields" class="search-section">
-            <h2>Find Recipes by Available Products</h2>
-            <p>Add the products you have available, and we'll show you recipes you can make!</p>
+    <div class="mc-form-wrapper">
+        <div class="mc-form">
+            <h2 class="mc-form-title">Find Recipes by Available Products</h2>
+            <p class="mc-form-subtitle">
+                Add the products you have available, and we'll show you recipes you can make!
+            </p>
 
-            <div id="products-container">
-                <div class="product-row">
-                    <label>Product:</label>
-                    <input type="text" class="product-name-input" autocomplete="off" placeholder="Start typing product name...">
-                    <ul class="product-suggestions"></ul>
-                    <button type="button" class="remove-product">Remove</button>
+            <div class="craft-container">
+                <div id="SearchFields" class="search-section">
+                    <div id="products-container">
+                        <div class="product-row">
+                            <label>Product:</label>
+                            <input type="text" class="product-name-input mc-input" autocomplete="off"
+                                   placeholder="Start typing product name...">
+                            <ul class="product-suggestions"></ul>
+                            <button type="button" class="remove-product mc-btn mc-btn-danger">Remove</button>
+                        </div>
+                    </div>
+
+                    <div class="search-actions">
+                        <button type="button" id="add-product" class="mc-btn">+ Add Product</button>
+                        <button type="button" id="search-recipes" class="mc-btn">Search Recipes</button>
+                        <button type="button" id="clear-all" class="mc-btn mc-btn-secondary">Clear All</button>
+                    </div>
                 </div>
-            </div>
 
-            <button type="button" id="add-product">+ Add Product</button>
-            <button type="button" id="search-recipes">Search Recipes</button>
-            <button type="button" id="clear-all">Clear All</button>
-        </div>
-
-        <div id="OfferedMeals" class="recipes-section">
-            <h2>Available Recipes</h2>
-            <div id="recipes-container">
-                <p class="no-recipes">Add some products above and click "Search Recipes" to find what you can cook!</p>
+                <div id="OfferedMeals" class="recipes-section">
+                    <h3 class="recipes-title">Available Recipes</h3>
+                    <div id="recipes-container">
+                        <p class="no-recipes">Add some products above and click "Search Recipes" to find what you can cook!</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        (function() {
+        (function () {
             const productsContainer = document.getElementById('products-container');
             const addProductBtn = document.getElementById('add-product');
             const searchBtn = document.getElementById('search-recipes');
@@ -40,25 +49,25 @@
             function createProductRow(index) {
                 const row = document.createElement('div');
                 row.classList.add('product-row');
-                row.dataset.index = index;
 
                 row.innerHTML = `
                     <label>Product:</label>
-                    <input type="text" class="product-name-input" autocomplete="off" placeholder="Start typing product name...">
+                    <input type="text" class="product-name-input mc-input" autocomplete="off"
+                           placeholder="Start typing product name...">
                     <ul class="product-suggestions"></ul>
-                    <button type="button" class="remove-product">Remove</button>
+                    <button type="button" class="remove-product mc-btn mc-btn-danger">Remove</button>
                 `;
 
                 return row;
             }
 
-            addProductBtn.addEventListener('click', function() {
+            addProductBtn.addEventListener('click', function () {
                 const row = createProductRow(productIndex);
                 productsContainer.appendChild(row);
                 productIndex++;
             });
 
-            productsContainer.addEventListener('click', function(e) {
+            productsContainer.addEventListener('click', function (e) {
                 if (e.target.classList.contains('remove-product')) {
                     const row = e.target.closest('.product-row');
                     const input = row.querySelector('.product-name-input');
@@ -112,7 +121,7 @@
                     });
             }
 
-            productsContainer.addEventListener('input', function(e) {
+            productsContainer.addEventListener('input', function (e) {
                 if (e.target.classList.contains('product-name-input')) {
                     const input = e.target;
                     const row = input.closest('.product-row');
@@ -130,8 +139,7 @@
                     }
 
                     const currentValue = input.value.trim();
-                    if (currentValue && selectedProducts.has(currentValue)) {
-                    } else {
+                    if (!currentValue || !selectedProducts.has(currentValue)) {
                         Array.from(selectedProducts).forEach(product => {
                             if (input.dataset.lastSelected === product) {
                                 selectedProducts.delete(product);
@@ -150,7 +158,7 @@
                 }
             });
 
-            productsContainer.addEventListener('keyup', function(e) {
+            productsContainer.addEventListener('keyup', function (e) {
                 if (e.target.classList.contains('product-name-input')) {
                     const input = e.target;
                     const row = input.closest('.product-row');
@@ -167,7 +175,7 @@
                 }
             });
 
-            productsContainer.addEventListener('keydown', function(e) {
+            productsContainer.addEventListener('keydown', function (e) {
                 if (e.target.classList.contains('product-name-input')) {
                     const input = e.target;
                     const row = input.closest('.product-row');
@@ -205,8 +213,11 @@
                 }
             });
 
-            productsContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('suggestion-item') && !e.target.classList.contains('no-suggestions') && !e.target.classList.contains('error-suggestion')) {
+            productsContainer.addEventListener('click', function (e) {
+                if (e.target.classList.contains('suggestion-item') &&
+                    !e.target.classList.contains('no-suggestions') &&
+                    !e.target.classList.contains('error-suggestion')) {
+
                     const li = e.target;
                     const row = li.closest('.product-row');
                     const input = row.querySelector('.product-name-input');
@@ -223,13 +234,11 @@
                     suggestionsList.innerHTML = '';
 
                     input.classList.add('selected-product');
-                    setTimeout(() => {
-                        input.classList.remove('selected-product');
-                    }, 1000);
+                    setTimeout(() => input.classList.remove('selected-product'), 1000);
                 }
             });
 
-            searchBtn.addEventListener('click', function() {
+            searchBtn.addEventListener('click', function () {
                 const productInputs = productsContainer.querySelectorAll('.product-name-input');
                 const products = [];
 
@@ -260,7 +269,7 @@
                     });
             });
 
-            clearBtn.addEventListener('click', function() {
+            clearBtn.addEventListener('click', function () {
                 const inputs = productsContainer.querySelectorAll('.product-name-input');
                 inputs.forEach(input => {
                     input.value = '';
@@ -287,16 +296,13 @@
                         <div class="recipe-card" data-recipe-id="${recipe.id}">
                             <div class="recipe-image">
                                 ${recipe.imageUrl ?
-                                    `<img src="${recipe.imageUrl}" alt="${recipe.name}" onerror="this.style.display='none'">` :
-                                    '<div class="no-image">📖</div>'
-                                }
+                        `<img src="${recipe.imageUrl}" alt="${recipe.name}" onerror="this.style.display='none'">` :
+                        '<div class="no-image">📖</div>'
+                    }
                             </div>
                             <div class="recipe-info">
                                 <h3 class="recipe-name">${recipe.name}</h3>
                                 <p class="recipe-ingredients">Ingredients: ${ingredientsList}</p>
-                                <button class="plan-recipe-btn" onclick="planRecipe(${recipe.id}, '${recipe.name}')">
-                                    Plan This Recipe
-                                </button>
                             </div>
                         </div>
                     `;
@@ -305,183 +311,264 @@
 
                 recipesContainer.innerHTML = html;
             }
-
-            window.planRecipe = function(recipeId, recipeName) {
-                window.location.href = `/mealcraft/plan-recipe/${recipeId}`;
-            };
-
         })();
     </script>
 
     <style>
+        :root {
+            --mc-bg: #f3f0e4;
+            --mc-panel: #fdfbf3;
+            --mc-border: #3b3b3b;
+            --mc-border-soft: #9c8d75;
+            --mc-green: #4caf50;
+            --mc-green-dark: #357a38;
+            --mc-red: #d32f2f;
+            --mc-red-dark: #9a0007;
+            --mc-gray: #6c757d;
+        }
+
+        .mc-form-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            margin: 1.5rem auto;
+            padding: 0.5rem;
+            background: var(--mc-bg);
+            border: 3px solid var(--mc-border);
+            box-shadow: 4px 4px 0 #1e1e1e;
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+            transform-origin: center top;
+        }
+
+        .mc-form-wrapper:hover {
+            transform: scale(1.02);
+            box-shadow: 6px 6px 0 #1e1e1e;
+        }
+
+        .mc-form {
+            border: 3px solid var(--mc-border-soft);
+            background: var(--mc-panel);
+            padding: 1.2rem;
+            box-shadow: inset 0 0 0 2px #e0d3b8;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .mc-form-title {
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 1.1rem;
+            margin: 0 0 0.75rem 0;
+            color: #222;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .mc-form-subtitle {
+            margin: 0 0 1rem 0;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.75rem;
+        }
+
+        .mc-input {
+            padding: 0.45rem 0.5rem;
+            border: 3px solid var(--mc-border-soft);
+            background: #faf7ee;
+            border-radius: 0;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.85rem;
+            min-width: 0;
+            outline: none;
+            transition: transform 0.1s ease-out,
+            border-color 0.1s ease-out,
+            box-shadow 0.1s ease-out,
+            background 0.1s ease-out;
+            transform-origin: center top;
+        }
+
+        .mc-input:hover {
+            box-shadow: 2px 2px 0 #b0a082;
+        }
+
+        .mc-input:focus {
+            border-color: var(--mc-green);
+            background: #f6fff4;
+            box-shadow: 2px 2px 0 #2e7d32;
+            transform: scaleY(1.03);
+        }
+
+        .mc-btn {
+            background: var(--mc-green);
+            color: #fff;
+            border: 3px solid var(--mc-border);
+            padding: 0.4rem 1rem;
+            border-radius: 0;
+            cursor: pointer;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 3px 3px 0 #1e1e1e;
+            transition: transform 0.05s ease-out,
+            box-shadow 0.05s ease-out,
+            background 0.1s ease-out;
+        }
+
+        .mc-btn:hover {
+            background: var(--mc-green-dark);
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 #1e1e1e;
+        }
+
+        .mc-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #1e1e1e;
+        }
+
+        .mc-btn-secondary {
+            background: var(--mc-gray);
+        }
+
+        .mc-btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .mc-btn-danger {
+            background: var(--mc-red);
+        }
+
+        .mc-btn-danger:hover {
+            background: var(--mc-red-dark);
+        }
+
         .craft-container {
             display: flex;
-            gap: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1rem;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
         }
 
         .search-section {
             flex: 1;
-            max-width: 400px;
+            max-width: 420px;
+            border-right: 3px solid var(--mc-border-soft);
+            padding-right: 1rem;
         }
 
         .recipes-section {
-            flex: 2;
-            max-width: 50%;
+            flex: 1.4;
+            padding-left: 1rem;
         }
 
-        .search-section h2, .recipes-section h2 {
+        .recipes-title {
+            margin: 0 0 0.75rem 0;
             font-family: 'Public Pixel', sans-serif;
-            color: #333;
-            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .search-actions {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .product-row {
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             position: relative;
             display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.4rem;
             align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
         }
 
         .product-row label {
             font-family: 'Public Pixel', sans-serif;
-            min-width: 70px;
+            font-size: 0.75rem;
         }
 
         .product-name-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 0.5rem;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-family: 'Public Pixel', sans-serif;
-        }
-
-        .product-name-input:focus {
-            outline: none;
-            border-color: var(--premium-color, #007bff);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .product-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 70px;
-            right: 80px;
-            z-index: 1000;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            max-height: 150px;
-            overflow-y: auto;
             list-style: none;
             margin: 0;
             padding: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 3px solid var(--mc-border-soft);
+            max-height: 140px;
+            overflow-y: auto;
+            position: absolute;
+            background: #ffffff;
+            z-index: 10;
+            left: 80px;
+            right: 95px;
+            top: calc(100% + 3px);
+            box-shadow: 3px 3px 0 #1e1e1e;
         }
 
-        .suggestion-item {
-            padding: 0.5rem;
+        /* сховати скролбар, щоб не було «полосок» */
+        .product-suggestions::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+        .product-suggestions {
+            scrollbar-width: none;
+        }
+
+        .suggestion-item,
+        .no-suggestions,
+        .error-suggestion {
+            padding: 0.35rem 0.5rem;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.75rem;
             cursor: pointer;
-            font-family: 'Public Pixel', sans-serif;
-            font-size: 0.9rem;
         }
 
-        .suggestion-item:hover, .suggestion-item.highlighted {
-            background-color: #f0f0f0;
-        }
-
-        .suggestion-item.highlighted {
-            background-color: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .no-suggestions, .error-suggestion {
-            padding: 0.5rem;
-            font-family: 'Public Pixel', sans-serif;
-            font-size: 0.9rem;
-            color: #999;
-            font-style: italic;
+        .no-suggestions,
+        .error-suggestion {
             cursor: default;
+            font-style: italic;
         }
 
         .error-suggestion {
-            color: #dc3545;
+            color: var(--mc-red-dark);
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.highlighted {
+            background-color: #e0d3b8;
         }
 
         .selected-product {
-            border-color: #28a745 !important;
-            background-color: #f8fff9;
+            border-color: var(--mc-green) !important;
+            background-color: #f6fff4;
         }
 
         .product-name-input.typing {
-            border-color: var(--premium-color, #007bff);
-        }
-
-        .remove-product {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'Public Pixel', sans-serif;
-            font-size: 0.8rem;
-        }
-
-        .remove-product:hover {
-            background: #c82333;
-        }
-
-        #add-product, #search-recipes, #clear-all {
-            background: var(--premium-color, #007bff);
-            color: white;
-            border: none;
-            padding: 0.75rem 1rem;
-            margin: 0.5rem 0.5rem 0.5rem 0;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'Public Pixel', sans-serif;
-        }
-
-        #add-product:hover, #search-recipes:hover {
-            background: #0056b3;
-        }
-
-        #clear-all {
-            background: #6c757d;
-        }
-
-        #clear-all:hover {
-            background: #545b62;
+            border-color: var(--mc-green);
         }
 
         .recipe-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
         }
 
         .recipe-card {
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-            background: white;
+            border: 3px solid var(--mc-border-soft);
+            background: #faf7ee;
+            box-shadow: 3px 3px 0 #1e1e1e;
+            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
         }
 
         .recipe-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 #1e1e1e;
         }
 
         .recipe-image {
-            height: 150px;
+            height: 130px;
             overflow: hidden;
-            background: #f8f9fa;
+            background: #e0d3b8;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -494,67 +581,78 @@
         }
 
         .no-image {
-            font-size: 3rem;
-            color: #6c757d;
+            font-size: 2.4rem;
+            color: #333;
         }
 
         .recipe-info {
-            padding: 1rem;
+            padding: 0.7rem 0.8rem 0.8rem;
         }
 
         .recipe-name {
             font-family: 'Public Pixel', sans-serif;
-            font-size: 1.1rem;
-            margin: 0 0 0.5rem 0;
-            color: #333;
+            font-size: 0.9rem;
+            margin: 0 0 0.4rem 0;
         }
 
         .recipe-ingredients {
             font-family: 'Public Pixel', sans-serif;
-            font-size: 0.8rem;
-            color: #666;
-            margin: 0 0 1rem 0;
+            font-size: 0.7rem;
+            margin: 0;
             line-height: 1.4;
         }
 
-        .plan-recipe-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'Public Pixel', sans-serif;
-            font-size: 0.9rem;
-            width: 100%;
-        }
-
-        .plan-recipe-btn:hover {
-            background: #218838;
-        }
-
-        .no-recipes, .loading, .error {
+        .no-recipes,
+        .loading,
+        .error {
             text-align: center;
-            padding: 2rem;
+            padding: 1.2rem 0.5rem;
             font-family: 'Public Pixel', sans-serif;
-            color: #666;
+            font-size: 0.75rem;
         }
 
         .error {
-            color: #dc3545;
+            color: var(--mc-red-dark);
         }
 
         @media (max-width: 768px) {
+            .mc-form-wrapper {
+                margin: 1rem;
+                box-shadow: 3px 3px 0 #1e1e1e;
+            }
+
+            .mc-form {
+                padding: 0.9rem;
+            }
+
             .craft-container {
                 flex-direction: column;
             }
 
             .search-section {
                 max-width: none;
+                border-right: none;
+                border-bottom: 3px solid var(--mc-border-soft);
+                padding-right: 0;
+                padding-bottom: 0.75rem;
+                margin-bottom: 0.75rem;
             }
 
-            .recipe-grid {
-                grid-template-columns: 1fr;
+            .recipes-section {
+                padding-left: 0;
+            }
+
+            .product-suggestions {
+                left: 0;
+                right: 0;
+            }
+
+            .search-actions {
+                flex-direction: column;
+            }
+
+            .mc-btn {
+                width: 100%;
             }
         }
     </style>

@@ -1,24 +1,166 @@
 <div th:fragment="dayFragment">
-    <h1 th:text="'Date: ' + ${day}">Date</h1>
+    <div class="day-container">
+        <h2 class="mc-form-title day-title">
+            <span>Date:</span>
+            <span th:text="${day}">Date</span>
+        </h2>
 
-    <div class="info-blocks">
-        <div th:each="slotIdx : ${#numbers.sequence(0,10)}" style="padding: 10px">
+        <div class="info-blocks">
+            <div th:each="slotIdx : ${#numbers.sequence(0,10)}" class="day-slot">
+                <div th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"
+                     th:classappend="${cell != null} ? ' day-slot-filled' : ' day-slot-empty'">
 
-            <a th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"
-               th:text="${cell != null ? (cell.planDate==dayDate ? 'COOK ' : '') + cell.name : ''}"
-               th:style="${cell != null ? 'background-color:' + cell.color : ''} + '; display:block; padding:5px; margin-bottom:0; text-decoration:none; color:black;'"
-               th:href="@{/mealcraft/meals/edit/{id}(id=${cell != null ? cell.id : 0})}">
-            </a>
+                    <a th:if="${cell != null}"
+                       class="day-slot-link"
+                       th:text="${cell.planDate == dayDate ? 'COOK ' + cell.name : cell.name}"
+                       th:href="@{/mealcraft/meals/edit/{id}(id=${cell.id})}"
+                       th:style="${cell != null ? 'background-color:' + cell.color : ''}">
+                    </a>
 
-            <div th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"
-                 th:text="${cell != null ? 'Servings: ' + cell.servings : ''}"
-                 th:style="${cell != null ? 'background-color:' + cell.color : ''} + '; display:block; padding:5px; margin-bottom:2px; text-decoration:none; color:black;'"
-                 th:href="@{/mealcraft/meals/edit/{id}(id=${cell != null ? cell.id : 0})}">
+                    <div th:if="${cell != null}"
+                         class="day-slot-servings"
+                         th:text="${'Servings: ' + cell.servings}"
+                         th:style="${cell != null ? 'background-color:' + cell.color : ''}">
+                    </div>
+
+                    <div th:if="${cell == null}" class="day-slot-empty-label">
+                        Empty slot
+                    </div>
+                </div>
             </div>
+        </div>
 
+        <div class="day-actions">
+            <a th:href="@{/mealcraft/meals/add/{day}(day=${day})}" class="mc-btn">Add dish cooking session</a>
+            <a href="/mealcraft/home" class="mc-btn mc-btn-secondary">Back to Calendar</a>
         </div>
     </div>
 
-    <a th:href="@{/mealcraft/meals/add/{day}(day=${day})}">Add dish cooking session</a>
-    <a href="/mealcraft/home">Back to Calendar</a>
+    <style>
+        .day-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.2rem 1.5rem 1.4rem;
+            background: var(--mc-bg, #f3f0e4);
+            border: 3px solid var(--mc-border-soft, #9c8d75);
+            box-shadow: 4px 4px 0 #1e1e1e;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .day-title {
+            margin: 0 0 1rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .day-title span:first-child {
+            margin-right: 0.5rem;
+        }
+
+        .info-blocks {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .day-slot {
+            width: 100%;
+        }
+
+        .day-slot-filled,
+        .day-slot-empty {
+            border: 3px solid var(--mc-border-soft, #9c8d75);
+            background: var(--mc-panel, #fdfbf3);
+            box-shadow: 2px 2px 0 #1e1e1e;
+            padding: 0.35rem 0.45rem 0.4rem;
+        }
+
+        .day-slot-filled {
+            transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+        }
+
+        .day-slot-filled:hover {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 #1e1e1e;
+        }
+
+        .day-slot-link,
+        .day-slot-servings {
+            display: block;
+            padding: 0.25rem 0.3rem;
+            margin: 0;
+            text-decoration: none;
+            color: #111;
+        }
+
+        .day-slot-link {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .day-slot-servings {
+            font-size: 0.75rem;
+        }
+
+        .day-slot-empty-label {
+            padding: 0.3rem 0.35rem;
+            font-size: 0.7rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .day-actions {
+            margin-top: 1.2rem;
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .day-actions .mc-btn {
+            min-width: 220px;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .day-container {
+                padding: 0.9rem 0.8rem 1.1rem;
+            }
+
+            .day-actions {
+                flex-direction: column;
+            }
+
+            .day-actions .mc-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </div>
+
+<!--<div th:fragment="dayFragment">-->
+<!--    <h1 th:text="'Date: ' + ${day}">Date</h1>-->
+
+<!--    <div class="info-blocks">-->
+<!--        <div th:each="slotIdx : ${#numbers.sequence(0,10)}" style="padding: 10px">-->
+
+<!--            <a th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"-->
+<!--               th:text="${cell != null ? (cell.planDate==dayDate ? 'COOK ' : '') + cell.name : ''}"-->
+<!--               th:style="${cell != null ? 'background-color:' + cell.color : ''} + '; display:block; padding:5px; margin-bottom:0; text-decoration:none; color:black;'"-->
+<!--               th:href="@{/mealcraft/meals/edit/{id}(id=${cell != null ? cell.id : 0})}">-->
+<!--            </a>-->
+
+<!--            <div th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"-->
+<!--                 th:text="${cell != null ? 'Servings: ' + cell.servings : ''}"-->
+<!--                 th:style="${cell != null ? 'background-color:' + cell.color : ''} + '; display:block; padding:5px; margin-bottom:2px; text-decoration:none; color:black;'"-->
+<!--                 th:href="@{/mealcraft/meals/edit/{id}(id=${cell != null ? cell.id : 0})}">-->
+<!--            </div>-->
+
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <a th:href="@{/mealcraft/meals/add/{day}(day=${day})}">Add dish cooking session</a>-->
+<!--    <a href="/mealcraft/home">Back to Calendar</a>-->
+<!--</div>-->
