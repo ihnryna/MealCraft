@@ -499,70 +499,11 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     @Transactional
     public void importRecipe(RecipeDto dto) {
-        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
-        if (currentUser != null) {
-            throw new EntityDoesNotExistException(ENTITY_NAME, "id", "import-not-allowed");
-        }
+        validateImportUser();
+        validateImportHasIngredients(dto);
 
-        if (dto.getIngredients() == null || dto.getIngredients().isEmpty()) {
-            throw new IllegalArgumentException("Imported recipe must contain at least one ingredient");
-        }
-
-        Recipe entity = Recipe.builder()
-                .name(dto.getName())
-                .ownerUser(null)
-                .imageUrl(dto.getImageUrl())
-                .baseRecipe(null)
-                .createdAt(new Date())
-                .build();
-
-        List<RecipeIngredient> ingredients = new ArrayList<>();
-        Set<String> usedProductNames = new java.util.HashSet<>();
-
-        for (RecipeIngredientDto ingDto : dto.getIngredients()) {
-            if (ingDto == null) {
-                continue;
-            }
-
-            String rawName = ingDto.getProductName();
-            Double amount = ingDto.getAmount();
-
-            if ((rawName == null || rawName.isBlank())
-                    && (amount == null || amount <= 0)) {
-                continue;
-            }
-
-            if (rawName == null || rawName.isBlank()) {
-                throw new IllegalArgumentException("Ingredient must have product name");
-            }
-
-            String productName = rawName.trim();
-            String key = productName.toLowerCase();
-
-            if (!usedProductNames.add(key)) {
-                throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
-            }
-
-            if (amount == null || amount <= 0) {
-                throw new IllegalArgumentException("Ingredient amount must be positive");
-            }
-
-            String unitName = ingDto.getUnitName();
-            if (unitName == null || unitName.isBlank()) {
-                unitName = "pc";
-            }
-
-            Unit unit = unitService.getOrCreateUnitByName(unitName);
-            Product product = productService.getOrCreatePublicProduct(productName, unit);
-
-            RecipeIngredient ingredient = RecipeIngredient.builder()
-                    .recipe(entity)
-                    .product(product)
-                    .amount(amount)
-                    .build();
-
-            ingredients.add(ingredient);
-        }
+        Recipe entity = buildImportedRecipe(dto);
+        List<RecipeIngredient> ingredients = buildImportedIngredients(dto.getIngredients(), entity);
 
         if (ingredients.isEmpty()) {
             throw new IllegalArgumentException("Imported recipe must contain at least one ingredient");
@@ -570,6 +511,97 @@ public class RecipeServiceImpl implements RecipeService {
 
         entity.setIngredients(ingredients);
         recipeRepository.save(entity);
+    }
+
+    private void validateImportUser() {
+        User currentUser = currentUserProvider.getCurrentUserOrNullIfAdmin();
+        if (currentUser != null) {
+            throw new EntityDoesNotExistException(ENTITY_NAME, "id", "import-not-allowed");
+        }
+    }
+
+    private void validateImportHasIngredients(RecipeDto dto) {
+        if (dto.getIngredients() == null || dto.getIngredients().isEmpty()) {
+            throw new IllegalArgumentException("Imported recipe must contain at least one ingredient");
+        }
+    }
+
+    private Recipe buildImportedRecipe(RecipeDto dto) {
+        return Recipe.builder()
+                .name(dto.getName())
+                .ownerUser(null)
+                .imageUrl(dto.getImageUrl())
+                .baseRecipe(null)
+                .createdAt(new Date())
+                .build();
+    }
+
+    private List<RecipeIngredient> buildImportedIngredients(List<RecipeIngredientDto> ingredientDtos,
+                                                            Recipe recipe) {
+        List<RecipeIngredient> ingredients = new ArrayList<>();
+        Set<String> usedProductNames = new java.util.HashSet<>();
+
+        for (RecipeIngredientDto ingDto : ingredientDtos) {
+            if (isCompletelyEmpty(ingDto)) {
+                continue;
+            }
+
+            String productName = validateAndNormalizeName(ingDto.getProductName());
+            Double amount = validateAndGetAmount(ingDto.getAmount());
+            validateUniqueProduct(usedProductNames, productName);
+
+            String unitName = normalizeUnitName(ingDto.getUnitName());
+            Unit unit = unitService.getOrCreateUnitByName(unitName);
+            Product product = productService.getOrCreatePublicProduct(productName, unit);
+
+            RecipeIngredient ingredient = RecipeIngredient.builder()
+                    .recipe(recipe)
+                    .product(product)
+                    .amount(amount)
+                    .build();
+
+            ingredients.add(ingredient);
+        }
+
+        return ingredients;
+    }
+
+    private boolean isCompletelyEmpty(RecipeIngredientDto ingDto) {
+        if (ingDto == null) {
+            return true;
+        }
+        String rawName = ingDto.getProductName();
+        Double amount = ingDto.getAmount();
+        return (rawName == null || rawName.isBlank())
+                && (amount == null || amount <= 0);
+    }
+
+    private String validateAndNormalizeName(String rawName) {
+        if (rawName == null || rawName.isBlank()) {
+            throw new IllegalArgumentException("Ingredient must have product name");
+        }
+        return rawName.trim();
+    }
+
+    private Double validateAndGetAmount(Double amount) {
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("Ingredient amount must be positive");
+        }
+        return amount;
+    }
+
+    private void validateUniqueProduct(Set<String> usedProductNames, String productName) {
+        String key = productName.toLowerCase();
+        if (!usedProductNames.add(key)) {
+            throw new IllegalArgumentException("Recipe cannot contain the same product more than once");
+        }
+    }
+
+    private String normalizeUnitName(String unitName) {
+        if (unitName == null || unitName.isBlank()) {
+            return "pc";
+        }
+        return unitName.trim();
     }
 
 }

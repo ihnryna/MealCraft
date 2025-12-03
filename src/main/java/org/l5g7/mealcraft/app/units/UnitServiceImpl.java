@@ -2,7 +2,6 @@ package org.l5g7.mealcraft.app.units;
 
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.user.CurrentUserProvider;
-import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
 import org.l5g7.mealcraft.exception.EntityDoesNotExistException;
 import org.l5g7.mealcraft.logging.LogUtils;
@@ -24,14 +23,12 @@ public class UnitServiceImpl implements UnitService {
 
     private final UnitRepository repository;
     private final ProductRepository productRepository;
-    private final CurrentUserProvider currentUserProvider;
 
     @Autowired
     public UnitServiceImpl(UnitRepository repository,
                            ProductRepository productRepository, CurrentUserProvider currentUserProvider) {
         this.repository = repository;
         this.productRepository = productRepository;
-        this.currentUserProvider = currentUserProvider;
     }
 
     @Cacheable(key = "'allUnits'")

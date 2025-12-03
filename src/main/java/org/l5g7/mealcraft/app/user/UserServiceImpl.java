@@ -114,9 +114,8 @@ public class UserServiceImpl implements UserService {
             if (patch.email() != null) {
                 userToPatch.setEmail(patch.email());
             }
-            if (patch.role() != null) {
-                userToPatch.setRole(patch.role());
-            }
+            userToPatch.setRole(patch.role());
+
             if (patch.password() != null && !patch.password().isEmpty()) {
                 String hashedPassword = passwordHasher.hashPassword(patch.password());
                 userToPatch.setPassword(hashedPassword);

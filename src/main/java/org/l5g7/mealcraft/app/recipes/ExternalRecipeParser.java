@@ -5,8 +5,6 @@ import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ExternalRecipeParser {
 
@@ -44,7 +42,9 @@ public class ExternalRecipeParser {
                 .build();
     }
 
-    public static void fillIngredientFromStrings(RecipeIngredientDto dto, String ingredientName, String rawMeasure) {
+    public static void fillIngredientFromStrings(RecipeIngredientDto dto,
+                                                 String ingredientName,
+                                                 String rawMeasure) {
 
         String normalized = normalizeMeasure(rawMeasure);
         String[] parts = splitAmountAndUnit(normalized);
@@ -85,20 +85,52 @@ public class ExternalRecipeParser {
             return new String[]{null, null};
         }
 
-        String regex = "^([0-9]+/[0-9]+|[0-9]+(?:\\.[0-9]+)?(?:\\s+[0-9]+/[0-9]+)?)\\s*(.*)$";
-        Pattern p = Pattern.compile(regex);
-        Matcher m = p.matcher(normalized);
+        String s = normalized.trim();
+        String[] tokens = s.split("\\s+");
+        if (tokens.length == 0) {
+            return new String[]{null, null};
+        }
 
-        if (m.matches()) {
-            String numberPart = m.group(1);
-            String unitPart = m.group(2).trim();
-            if (unitPart.isEmpty()) {
-                unitPart = null;
-            }
-            return new String[]{numberPart, unitPart};
+        int index = 0;
+        StringBuilder amountBuilder = new StringBuilder();
+
+        if (isNumberOrFraction(tokens[index])) {
+            amountBuilder.append(tokens[index]);
+            index++;
         } else {
             return new String[]{null, normalized};
         }
+
+        if (index < tokens.length && isFraction(tokens[index])) {
+            amountBuilder.append(' ').append(tokens[index]);
+            index++;
+        }
+
+        String unitPart = null;
+        if (index < tokens.length) {
+            StringBuilder unitBuilder = new StringBuilder();
+            for (int i = index; i < tokens.length; i++) {
+                if (i > index) {
+                    unitBuilder.append(' ');
+                }
+                unitBuilder.append(tokens[i]);
+            }
+            unitPart = unitBuilder.toString();
+        }
+
+        return new String[]{amountBuilder.toString(), unitPart};
+    }
+
+    private static boolean isNumberOrFraction(String token) {
+        return isNumber(token) || isFraction(token);
+    }
+
+    private static boolean isNumber(String token) {
+        return token.matches("\\d+(?:\\.\\d+)?");
+    }
+
+    private static boolean isFraction(String token) {
+        return token.matches("\\d+/\\d+");
     }
 
     public static Double parseAmountPart(String numberPart) {

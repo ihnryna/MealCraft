@@ -443,7 +443,8 @@ class RecipeServiceImplTest {
     @Test
     void getRandomRecipe_returnsExternalRecipe() {
         Date now = new Date();
-        ExternalRecipe external = new ExternalRecipe(99L, "Random Recipe", "http://example.com/random.jpg", now.toString(), List.of("Ingredient1", "Ingredient2"), List.of("Measure1", "Measure2"));        when(recipeProvider.getRandomRecipe()).thenReturn(external);
+        ExternalRecipe external = new ExternalRecipe(99L, "Random Recipe", "http://example.com/random.jpg", now.toString(), List.of("Ingredient1", "Ingredient2"), List.of("Measure1", "Measure2"));
+        when(recipeProvider.getRandomRecipe()).thenReturn(external);
 
         RecipeDto result = recipeService.getRandomRecipe();
 

@@ -227,10 +227,8 @@ public class AdminRecipeWebController {
             return REDIRECT_RECIPE_PAGE;
 
         } catch (RestClientResponseException ex) {
-            String body = ex.getResponseBodyAsString();
-            String message = (body != null && !body.isBlank())
-                    ? body
-                    : "Failed to import recipe: " + ex.getStatusCode();
+            String message = ex.getResponseBodyAsString();
+
 
             model.addAttribute(RECIPE, recipeDto);
             model.addAttribute(TITLE, "Import external recipe");

@@ -51,14 +51,4 @@ public class UnitController {
     public List<UnitDto> searchByPrefix(@RequestParam("prefix") String prefix) {
         return unitServiceImpl.searchUnitsByPrefix(prefix);
     }
-
-//    @GetMapping("/cache")
-//    public String cachingTest() {
-//        return unitServiceImpl.cachingTest();
-//    }
-//
-//    @GetMapping("/cache/evict")
-//    public String evictCache() {
-//        return unitServiceImpl.delCachingTest();
-//    }
 }
