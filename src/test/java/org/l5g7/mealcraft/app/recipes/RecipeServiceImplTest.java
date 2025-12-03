@@ -3,6 +3,7 @@ package org.l5g7.mealcraft.app.recipes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
@@ -47,6 +48,9 @@ class RecipeServiceImplTest {
 
     @InjectMocks
     private RecipeServiceImpl recipeService;
+
+    @Mock
+    private MealPlanRepository mealPlanRepository;
 
     private User testUser;
     private Product testProduct1;
@@ -392,10 +396,11 @@ class RecipeServiceImplTest {
         when(currentUserProvider.getCurrentUserOrNullIfAdmin()).thenReturn(null);
         when(recipeRepository.findById(100L)).thenReturn(Optional.of(testRecipe));
         when(recipeRepository.findAllByBaseRecipe(testRecipe)).thenReturn(List.of());
-
+        when(mealPlanRepository.existsByRecipe(testRecipe)).thenReturn(false);
+        when(mealPlanRepository.existsByRecipe(testRecipe)).thenReturn(false);
         recipeService.deleteRecipeById(100L);
 
-        verify(recipeRepository, times(1)).deleteById(100L);
+        verify(recipeRepository).deleteById(100L);
     }
 
     @Test
@@ -409,10 +414,11 @@ class RecipeServiceImplTest {
         when(currentUserProvider.getCurrentUserOrNullIfAdmin()).thenReturn(testUser);
         when(recipeRepository.findById(101L)).thenReturn(Optional.of(userRecipe));
         when(recipeRepository.findAllByBaseRecipe(userRecipe)).thenReturn(List.of());
+        when(mealPlanRepository.existsByRecipe(userRecipe)).thenReturn(false);
 
         recipeService.deleteRecipeById(101L);
 
-        verify(recipeRepository, times(1)).deleteById(101L);
+        verify(recipeRepository).deleteById(101L);
     }
 
     @Test
@@ -423,6 +429,7 @@ class RecipeServiceImplTest {
         when(currentUserProvider.getCurrentUserOrNullIfAdmin()).thenReturn(null);
         when(recipeRepository.findById(100L)).thenReturn(Optional.of(testRecipe));
         when(recipeRepository.findAllByBaseRecipe(testRecipe)).thenReturn(Arrays.asList(child1, child2));
+        when(mealPlanRepository.existsByRecipe(testRecipe)).thenReturn(false);
 
         recipeService.deleteRecipeById(100L);
 
@@ -431,6 +438,7 @@ class RecipeServiceImplTest {
         verify(recipeRepository, times(1)).saveAll(anyList());
         verify(recipeRepository, times(1)).deleteById(100L);
     }
+
 
     @Test
     void deleteRecipeById_throwsWhenNotFound() {

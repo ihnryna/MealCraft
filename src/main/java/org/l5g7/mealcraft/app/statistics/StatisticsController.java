@@ -3,7 +3,11 @@ package org.l5g7.mealcraft.app.statistics;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +51,8 @@ public class StatisticsController {
     }
 
     @PostMapping("/recalculate")
-    public ResponseEntity<Void> recalculateStats(@RequestParam(required = false) String day) throws Exception {
+    public ResponseEntity<Void> recalculateStats(@RequestParam(required = false) String day) throws JobExecutionAlreadyRunningException,
+            JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
         Date targetDay;
 
         if (day == null || day.isBlank()) {

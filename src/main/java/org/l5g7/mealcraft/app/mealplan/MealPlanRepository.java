@@ -1,5 +1,6 @@
 package org.l5g7.mealcraft.app.mealplan;
 
+import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.enums.MealStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,5 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
     List<MealPlan> findMealPlanByUserOwnerAndStatusAndPlanDateBetween(User userOwner, MealStatus status, Date from, Date to);
     List<MealPlan> findMealPlanByUserOwnerAndStatusNotAndPlanDateBetween(User userOwner, MealStatus notStatus, Date from, Date to);
     List<MealPlan> findAllByStatusAndPlanDateBetween(MealStatus status, Date from, Date to);
+    boolean existsByRecipe(Recipe recipe);
 }

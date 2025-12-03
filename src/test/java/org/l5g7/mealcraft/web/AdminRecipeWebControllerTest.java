@@ -111,10 +111,11 @@ class AdminRecipeWebControllerTest {
                         .toBodilessEntity())
                 .thenReturn(ResponseEntity.ok().build());
 
-        mockMvc.perform(get("/mealcraft/admin/recipe/delete/1"))
-                .andExpect(status().is4xxClientError())
+        mockMvc.perform(post("/mealcraft/admin/recipe/delete/1"))
+                .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/mealcraft/admin/recipe"));
     }
+
 
     @Test
     void viewRecipe_displaysRecipeDetails() throws Exception {

@@ -25,9 +25,11 @@ public class AdminRecipeWebController {
     private static final String ADMIN_PAGE = "admin-page";
     private static final String RECIPE = "recipe";
     private static final String REDIRECT_RECIPE_PAGE = "redirect:/mealcraft/admin/recipe";
-    private static final String RECIPE_ID_URI        = "/recipes/{id}";
+    private static final String RECIPE_ID_URI = "/recipes/{id}";
     private static final String RECIPE_FORM_FRAGMENT = "fragments/recipe-form :: content";
     private static final String IMPORT_RECIPE_FORM_FRAGMENT = "fragments/recipe-import-form :: content";
+    private static final String ERROR_MESSAGE = "errorMessage";
+    private static final String RECIPE_URI = "/recipes";
 
     public AdminRecipeWebController(@Qualifier("internalApiClient") RestClient internalApiClient) {
         this.internalApiClient = internalApiClient;
@@ -36,9 +38,10 @@ public class AdminRecipeWebController {
     @GetMapping("/recipe")
     public String recipesPage(Model model) {
         ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
-                .uri("/recipes")
+                .uri(RECIPE_URI)
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
+                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {
+                });
 
         List<RecipeDto> data = response.getBody();
         model.addAttribute("data", data);
@@ -108,7 +111,7 @@ public class AdminRecipeWebController {
             if (recipeDto.getId() == null) {
                 internalApiClient
                         .post()
-                        .uri("/recipes")
+                        .uri(RECIPE_URI)
                         .body(recipeDto)
                         .retrieve()
                         .toBodilessEntity();
@@ -137,22 +140,42 @@ public class AdminRecipeWebController {
             model.addAttribute(RECIPE, recipeDto);
             model.addAttribute(TITLE, title);
             model.addAttribute(FRAGMENT_TO_LOAD, RECIPE_FORM_FRAGMENT);
-            model.addAttribute("errorMessage", message);
+            model.addAttribute(ERROR_MESSAGE, message);
 
             return ADMIN_PAGE;
         }
     }
 
     @PostMapping("/recipe/delete/{id}")
-    public String deleteRecipe(@PathVariable Long id) {
+    public String deleteRecipe(@PathVariable Long id, Model model) {
+        try {
+            internalApiClient
+                    .delete()
+                    .uri(RECIPE_ID_URI, id)
+                    .retrieve()
+                    .toBodilessEntity();
 
-        internalApiClient
-                .delete()
-                .uri(RECIPE_ID_URI, id)
-                .retrieve()
-                .toBodilessEntity();
+            return REDIRECT_RECIPE_PAGE;
 
-        return REDIRECT_RECIPE_PAGE;
+        } catch (RestClientResponseException ex) {
+            String body = ex.getResponseBodyAsString();
+            String message = !body.isBlank()
+                    ? body
+                    : "Failed to delete recipe: " + ex.getStatusCode();
+
+            ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
+                    .uri(RECIPE_URI)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
+
+            List<RecipeDto> data = response.getBody();
+            model.addAttribute("data", data);
+            model.addAttribute(ERROR_MESSAGE, message);
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
+            model.addAttribute(TITLE, "Recipes");
+
+            return ADMIN_PAGE;
+        }
     }
 
     @GetMapping("/recipe/view/{id}")
@@ -181,7 +204,8 @@ public class AdminRecipeWebController {
                         .queryParam("prefix", query)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<ProductDto>>() {});
+                .body(new ParameterizedTypeReference<List<ProductDto>>() {
+                });
     }
 
     @GetMapping("/recipe/unit-suggestions")
@@ -195,7 +219,8 @@ public class AdminRecipeWebController {
                         .queryParam("prefix", query)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<UnitDto>>() {});
+                .body(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
     }
 
     @GetMapping("/recipe/import")
@@ -233,7 +258,7 @@ public class AdminRecipeWebController {
             model.addAttribute(RECIPE, recipeDto);
             model.addAttribute(TITLE, "Import external recipe");
             model.addAttribute(FRAGMENT_TO_LOAD, IMPORT_RECIPE_FORM_FRAGMENT);
-            model.addAttribute("errorMessage", message);
+            model.addAttribute(ERROR_MESSAGE, message);
 
             return ADMIN_PAGE;
         }

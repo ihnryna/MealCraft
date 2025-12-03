@@ -2,6 +2,7 @@ package org.l5g7.mealcraft.unittest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
 import org.l5g7.mealcraft.app.products.Product;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.products.ProductService;
@@ -34,6 +35,7 @@ public class RecipeServiceUnitTests {
     private CurrentUserProvider currentUserProvider;
     private UnitService unitService;
     private ProductService productService;
+    private MealPlanRepository mealPlanRepository;
 
     private RecipeServiceImpl recipeService;
 
@@ -44,6 +46,9 @@ public class RecipeServiceUnitTests {
         userRepository = mock(UserRepository.class);
         recipeProvider = mock(RecipeProvider.class);
         currentUserProvider = mock(CurrentUserProvider.class);
+        unitService = mock(UnitService.class);
+        productService = mock(ProductService.class);
+        mealPlanRepository = mock(MealPlanRepository.class);
 
         recipeService = new RecipeServiceImpl(
                 recipeRepository,
@@ -52,7 +57,10 @@ public class RecipeServiceUnitTests {
                 recipeProvider,
                 currentUserProvider,
                 unitService,
-                productService
+                productService,
+                mealPlanRepository
+
+
         );
     }
 
