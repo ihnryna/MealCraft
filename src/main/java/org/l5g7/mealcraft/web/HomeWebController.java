@@ -248,6 +248,25 @@ public class HomeWebController {
         }
     }
 
+    @GetMapping("/mealcraft/home/recipes/view/{id}")
+    public String viewRecipe(@PathVariable Long id, Model model) {
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri(RECIPE_ID_URI, id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute(RECIPE, recipe);
+        model.addAttribute(TITLE, "Recipe details");
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipe-details :: content");
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
+        return "home";
+    }
+
 
     @PostMapping("/mealcraft/shopping/toggle")
     public String toggleChecked(@RequestParam Long id) {
