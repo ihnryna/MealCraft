@@ -6,7 +6,7 @@
     </div>
 
     <a th:href="@{/mealcraft/admin/recipe/new}">+ Add recipe</a>
-    <a th:href="@{/mealcraft/admin/recipe/import}">+ Add random recipe</a>
+    <a th:href="@{/mealcraft/admin/recipe/import}" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">+ Add random recipe</a>
 
     <table class="table">
         <thead>
@@ -54,3 +54,5 @@
     </table>
 
 </div>
+
+

@@ -102,6 +102,33 @@ public class HomeWebController {
         return "home";
     }
 
+    @GetMapping("/mealcraft/user/recipes")
+    public String showUserRecipeForm(Model model) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
+        model.addAttribute(TITLE, "Your own recipes");
+
+        ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
+                .uri("/recipes")
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
+
+        List<RecipeDto> data = response.getBody();
+        List<RecipeDto> recipes = new ArrayList<>();
+        if(data != null) {
+
+             recipes = data.stream().filter(r -> r.getOwnerUserId()!=null && r.getOwnerUserId().equals(userService.getUserByUsername(username).id()))
+                    .toList();
+        }
+        model.addAttribute("data", recipes);
+        model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
+        model.addAttribute(TITLE, "Your own recipes");
+        return "home";
+    }
+
 
     @PostMapping("/mealcraft/shopping/toggle")
     public String toggleChecked(@RequestParam Long id) {
