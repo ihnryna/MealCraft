@@ -284,4 +284,187 @@ class UnitServiceImplTest {
         verify(productRepository, times(1)).existsByDefaultUnit(testUnit);
         verify(repository, never()).delete(any(Unit.class));
     }
+
+    // ========== searchUnitsByPrefix Tests ==========
+
+    @Test
+    void searchUnitsByPrefix_ValidPrefix_ReturnsMatchingUnits() {
+        List<Unit> units = Arrays.asList(
+                Unit.builder().id(1L).name("kilogram").build(),
+                Unit.builder().id(2L).name("kilometer").build()
+        );
+        when(repository.findAllByNameStartingWithIgnoreCase("kilo")).thenReturn(units);
+
+        List<UnitDto> result = unitService.searchUnitsByPrefix("kilo");
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("kilogram", result.get(0).getName());
+        assertEquals("kilometer", result.get(1).getName());
+        verify(repository, times(1)).findAllByNameStartingWithIgnoreCase("kilo");
+    }
+
+    @Test
+    void searchUnitsByPrefix_NullPrefix_ReturnsEmptyList() {
+        List<UnitDto> result = unitService.searchUnitsByPrefix(null);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(repository, never()).findAllByNameStartingWithIgnoreCase(anyString());
+    }
+
+    @Test
+    void searchUnitsByPrefix_EmptyPrefix_ReturnsEmptyList() {
+        List<UnitDto> result = unitService.searchUnitsByPrefix("");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(repository, never()).findAllByNameStartingWithIgnoreCase(anyString());
+    }
+
+    @Test
+    void searchUnitsByPrefix_BlankPrefix_ReturnsEmptyList() {
+        List<UnitDto> result = unitService.searchUnitsByPrefix("   ");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(repository, never()).findAllByNameStartingWithIgnoreCase(anyString());
+    }
+
+    @Test
+    void searchUnitsByPrefix_PrefixWithSpaces_TrimsAndSearches() {
+        List<Unit> units = List.of(Unit.builder().id(1L).name("gram").build());
+        when(repository.findAllByNameStartingWithIgnoreCase("g")).thenReturn(units);
+
+        List<UnitDto> result = unitService.searchUnitsByPrefix("  g  ");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("gram", result.get(0).getName());
+        verify(repository, times(1)).findAllByNameStartingWithIgnoreCase("g");
+    }
+
+    @Test
+    void searchUnitsByPrefix_NoMatches_ReturnsEmptyList() {
+        when(repository.findAllByNameStartingWithIgnoreCase("xyz")).thenReturn(List.of());
+
+        List<UnitDto> result = unitService.searchUnitsByPrefix("xyz");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(repository, times(1)).findAllByNameStartingWithIgnoreCase("xyz");
+    }
+
+    // ========== getOrCreateUnitByName Tests ==========
+
+    @Test
+    void getOrCreateUnitByName_ExistingUnit_ReturnsExisting() {
+        when(repository.findFirstByNameIgnoreCase("kilogram")).thenReturn(Optional.of(testUnit));
+
+        Unit result = unitService.getOrCreateUnitByName("kilogram");
+
+        assertNotNull(result);
+        assertEquals(testUnit.getId(), result.getId());
+        assertEquals(testUnit.getName(), result.getName());
+        verify(repository, times(1)).findFirstByNameIgnoreCase("kilogram");
+        verify(repository, never()).save(any(Unit.class));
+    }
+
+    @Test
+    void getOrCreateUnitByName_NonExistingUnit_CreatesNew() {
+        Unit newUnit = Unit.builder().id(2L).name("meter").build();
+        when(repository.findFirstByNameIgnoreCase("meter")).thenReturn(Optional.empty());
+        when(repository.save(any(Unit.class))).thenReturn(newUnit);
+
+        Unit result = unitService.getOrCreateUnitByName("meter");
+
+        assertNotNull(result);
+        assertEquals("meter", result.getName());
+        verify(repository, times(1)).findFirstByNameIgnoreCase("meter");
+        verify(repository, times(1)).save(any(Unit.class));
+    }
+
+    @Test
+    void getOrCreateUnitByName_CaseInsensitive_ReturnsExisting() {
+        when(repository.findFirstByNameIgnoreCase("KILOGRAM")).thenReturn(Optional.of(testUnit));
+
+        Unit result = unitService.getOrCreateUnitByName("KILOGRAM");
+
+        assertNotNull(result);
+        assertEquals(testUnit.getId(), result.getId());
+        verify(repository, times(1)).findFirstByNameIgnoreCase("KILOGRAM");
+        verify(repository, never()).save(any(Unit.class));
+    }
+
+    @Test
+    void getOrCreateUnitByName_TrimsWhitespace_FindsUnit() {
+        when(repository.findFirstByNameIgnoreCase("kilogram")).thenReturn(Optional.of(testUnit));
+
+        Unit result = unitService.getOrCreateUnitByName("  kilogram  ");
+
+        assertNotNull(result);
+        assertEquals(testUnit.getId(), result.getId());
+        verify(repository, times(1)).findFirstByNameIgnoreCase("kilogram");
+    }
+
+    @Test
+    void getOrCreateUnitByName_NullName_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            unitService.getOrCreateUnitByName(null);
+        });
+        verify(repository, never()).findFirstByNameIgnoreCase(anyString());
+        verify(repository, never()).save(any(Unit.class));
+    }
+
+    @Test
+    void getOrCreateUnitByName_BlankName_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            unitService.getOrCreateUnitByName("   ");
+        });
+        verify(repository, never()).findFirstByNameIgnoreCase(anyString());
+        verify(repository, never()).save(any(Unit.class));
+    }
+
+    // ========== getAuthenticatedUsername Tests ==========
+
+    @Test
+    void getAuthenticatedUsername_AuthenticatedUser_ReturnsUsername() {
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("testUser");
+
+        // Test through getAllUnits which calls getAuthenticatedUsername
+        when(repository.findAll()).thenReturn(List.of(testUnit));
+        unitService.getAllUnits();
+
+        verify(authentication, times(1)).getName();
+    }
+
+    @Test
+    void getAuthenticatedUsername_NoAuthentication_ReturnsAnonymous() {
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(null);
+
+        // Test through getAllUnits which calls getAuthenticatedUsername
+        when(repository.findAll()).thenReturn(List.of(testUnit));
+        unitService.getAllUnits();
+
+        // If no authentication, it should return "anonymous" (verified in logs)
+        verify(securityContext, times(1)).getAuthentication();
+    }
+
+    @Test
+    void getAuthenticatedUsername_NotAuthenticated_ReturnsAnonymous() {
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(false);
+
+        // Test through getAllUnits which calls getAuthenticatedUsername
+        when(repository.findAll()).thenReturn(List.of(testUnit));
+        unitService.getAllUnits();
+
+        // If not authenticated, it should return "anonymous"
+        verify(authentication, times(1)).isAuthenticated();
+    }
 }

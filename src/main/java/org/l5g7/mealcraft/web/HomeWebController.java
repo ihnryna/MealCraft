@@ -3,6 +3,7 @@ package org.l5g7.mealcraft.web;
 import jakarta.servlet.http.HttpSession;
 import org.l5g7.mealcraft.app.mealplan.EventCell;
 import org.l5g7.mealcraft.app.mealplan.MealPlanDto;
+import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,6 +35,8 @@ public class HomeWebController {
     private static final String FRAGMENT_TO_LOAD = "fragmentToLoad";
     private static final String USERNAME = "username";
     private static final String TITLE = "title";
+    private static final String RECIPE = "recipe";
+    private static final String RECIPE_FORM_FRAGMENT = "fragments/recipe-form :: content";
 
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
@@ -77,6 +80,25 @@ public class HomeWebController {
         addShoppingItemsToModel(model, username);
         model.addAttribute("day", day);
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/day :: dayFragment");
+        return "home";
+    }
+
+    @GetMapping("/mealcraft/home/recipes/create")
+    public String showUserRecipeForm(@RequestParam(value = "month", required = false)
+                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                           LocalDate month,
+                           Model model) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
+        model.addAttribute(TITLE, "Create your own recipe");
+
+        RecipeDto recipe = new RecipeDto();
+        model.addAttribute(RECIPE, recipe);
+        model.addAttribute(FRAGMENT_TO_LOAD, RECIPE_FORM_FRAGMENT);
+
         return "home";
     }
 

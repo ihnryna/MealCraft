@@ -3,6 +3,11 @@ package org.l5g7.mealcraft.springboottest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.l5g7.mealcraft.app.auth.dto.LoginUserDto;
+import org.l5g7.mealcraft.app.mealplan.MealPlanRepository;
+import org.l5g7.mealcraft.app.notification.NotificationRepository;
+import org.l5g7.mealcraft.app.products.ProductRepository;
+import org.l5g7.mealcraft.app.recipes.RecipeRepository;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
 import org.l5g7.mealcraft.app.user.PasswordHasher;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
@@ -37,6 +42,21 @@ class UserIntegrationTest {
     UserRepository userRepository;
 
     @Autowired
+    RecipeRepository recipeRepository;
+
+    @Autowired
+    ProductRepository productRepository;
+
+    @Autowired
+    MealPlanRepository mealPlanRepository;
+
+    @Autowired
+    NotificationRepository notificationRepository;
+
+    @Autowired
+    ShoppingItemRepository shoppingItemRepository;
+
+    @Autowired
     PasswordHasher passwordHasher;
 
     @Value("${jwt.cookie-name}")
@@ -48,6 +68,13 @@ class UserIntegrationTest {
     @BeforeEach
     void setUp() {
         usersBase = "http://localhost:" + port + "/users";
+
+        // Clean up in the correct order to avoid foreign key constraint violations
+        mealPlanRepository.deleteAll();
+        shoppingItemRepository.deleteAll();
+        notificationRepository.deleteAll();
+        recipeRepository.deleteAll();
+        productRepository.deleteAll();
         userRepository.deleteAll();
 
         User admin = User.builder()

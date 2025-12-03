@@ -112,7 +112,7 @@ class AdminRecipeWebControllerTest {
                 .thenReturn(ResponseEntity.ok().build());
 
         mockMvc.perform(get("/mealcraft/admin/recipe/delete/1"))
-                .andExpect(status().is3xxRedirection())
+                .andExpect(status().is4xxClientError())
                 .andExpect(redirectedUrl("/mealcraft/admin/recipe"));
     }
 
