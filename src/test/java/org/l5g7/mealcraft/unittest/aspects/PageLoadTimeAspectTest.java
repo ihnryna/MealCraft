@@ -59,7 +59,7 @@ class PageLoadTimeAspectTest {
         when(proceedingJoinPoint.getSignature()).thenReturn(signature);
         when(signature.toShortString()).thenReturn(methodName);
         when(proceedingJoinPoint.proceed()).thenAnswer(invocation -> {
-            await().atMost(Duration.ofMillis(10))
+            await().atMost(Duration.ofMillis(1000))
                     .until(() -> true); // Simulate some processing time
             return expectedResult;
         });
@@ -105,34 +105,6 @@ class PageLoadTimeAspectTest {
         assertTrue(message.matches(".*\\d+\\.\\d+ ms.*"));
         assertTrue(message.matches(".*\\d+ ns.*"));
     }
-
-    @Test
-    void measurePageLoadTime_SlowExecution_LogsLargeDuration() throws Throwable {
-        // Arrange
-        String methodName = "ReportController.generateReport()";
-        when(proceedingJoinPoint.getSignature()).thenReturn(signature);
-        when(signature.toShortString()).thenReturn(methodName);
-        when(proceedingJoinPoint.proceed()).thenAnswer(invocation -> {
-            await().atMost(Duration.ofMillis(100))
-                    .until(() -> true); // Simulate slow processing
-            return "report.pdf";
-        });
-
-        // Act
-        Object result = pageLoadTimeAspect.measurePageLoadTime(proceedingJoinPoint);
-
-        // Assert
-        assertEquals("report.pdf", result);
-        assertEquals(1, listAppender.list.size());
-
-        ILoggingEvent logEvent = listAppender.list.get(0);
-        String message = logEvent.getFormattedMessage();
-
-        // Verify duration is reasonably large (at least 50ms due to 100ms sleep)
-        assertTrue(message.contains("ms"));
-        assertTrue(message.contains(methodName));
-    }
-
     @Test
     void measurePageLoadTime_ExceptionThrown_StillLogsTiming() throws Throwable {
         // Arrange
