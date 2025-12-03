@@ -43,6 +43,8 @@ class MealPlanServiceImplTest {
     private RecipeRepository recipeRepository;
     @Mock
     private ShoppingItemRepository shoppingItemRepository;
+    @Mock
+    private org.l5g7.mealcraft.app.shoppingitem.ShoppingItemService shoppingItemService;
 
     @InjectMocks
     private MealPlanServiceImpl mealPlanService;
@@ -499,8 +501,23 @@ class MealPlanServiceImplTest {
 
     @Test
     void deleteMealPlan_shouldCallRepositoryDelete() {
+        MealPlan mealPlanToDelete = MealPlan.builder()
+                .id(55L)
+                .userOwner(testUser)
+                .recipe(recipe1) // recipe1 has ingredients set up in @BeforeEach
+                .planDate(new Date())
+                .servings(2)
+                .status(MealStatus.PLANNED)
+                .color(MealPlanColor.BLUE)
+                .build();
+
+        when(mealPlanRepository.findById(55L)).thenReturn(Optional.of(mealPlanToDelete));
+
         mealPlanService.deleteMealPlan(55L);
+
+        verify(mealPlanRepository).findById(55L);
         verify(mealPlanRepository).deleteById(55L);
     }
+
 
 }
