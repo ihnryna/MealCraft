@@ -93,15 +93,15 @@ public class DataInitializer {
                         .name("liter")
                         .build();
 
+                Unit unit2 = Unit.builder()
+                        .name("pc")
+                        .build();
+
                 Product product1 = Product.builder()
                         .name("Milk")
                         .imageUrl(null)
                         .defaultUnit(unit1)
                         .createdAt(yesterday)
-                        .build();
-
-                Unit unit2 = Unit.builder()
-                        .name("pc")
                         .build();
 
                 Product product2 = Product.builder()
@@ -118,11 +118,36 @@ public class DataInitializer {
                         .createdAt(yesterday)
                         .build();
 
+                Product beetroot = Product.builder()
+                        .name("Beetroot")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .createdAt(yesterday)
+                        .build();
+
+                Product water = Product.builder()
+                        .name("Water")
+                        .imageUrl(null)
+                        .defaultUnit(unit1)
+                        .createdAt(yesterday)
+                        .build();
+
+                Product potato = Product.builder()
+                        .name("Potato")
+                        .imageUrl(null)
+                        .defaultUnit(unit2)
+                        .createdAt(yesterday)
+                        .build();
+
                 unitRepository.save(unit1);
                 unitRepository.save(unit2);
                 productRepository.save(product1);
                 productRepository.save(product2);
                 productRepository.save(product3);
+                productRepository.save(beetroot);
+                productRepository.save(water);
+                productRepository.save(potato);
+
 
                 Product userOnlyProduct1 = Product.builder()
                         .name("User secret cheese")
@@ -159,6 +184,34 @@ public class DataInitializer {
                         .createdAt(now)
                         .build();
 
+                RecipeIngredient recipeIngredientU1 = RecipeIngredient.builder()
+                        .product(product3)
+                        .recipe(userRecipe1)
+                        .amount(1d)
+                        .build();
+
+                RecipeIngredient recipeIngredientU12 = RecipeIngredient.builder()
+                        .product(userOnlyProduct1)
+                        .recipe(userRecipe1)
+                        .amount(1d)
+                        .build();
+
+
+                RecipeIngredient recipeIngredientU2 = RecipeIngredient.builder()
+                        .product(product3)
+                        .recipe(userRecipe2)
+                        .amount(1d)
+                        .build();
+
+                RecipeIngredient recipeIngredientU22 = RecipeIngredient.builder()
+                        .product(userOnlyProduct2)
+                        .recipe(userRecipe2)
+                        .amount(1d)
+                        .build();
+
+                userRecipe1.setIngredients(List.of(recipeIngredientU1, recipeIngredientU12));
+                userRecipe2.setIngredients(List.of(recipeIngredientU2, recipeIngredientU22));
+
                 recipeRepository.save(userRecipe1);
                 recipeRepository.save(userRecipe2);
 
@@ -178,13 +231,13 @@ public class DataInitializer {
                         .build();
 
                 RecipeIngredient recipeIngredient1 = RecipeIngredient.builder()
-                        .product(product1)
+                        .product(beetroot)
                         .recipe(recipe1)
                         .amount(1d)
                         .build();
 
                 RecipeIngredient recipeIngredient2 = RecipeIngredient.builder()
-                        .product(product2)
+                        .product(potato)
                         .recipe(recipe1)
                         .amount(1d)
                         .build();
@@ -204,13 +257,13 @@ public class DataInitializer {
                         .build();
 
                 RecipeIngredient recipeIngredient21 = RecipeIngredient.builder()
-                        .product(product1)
+                        .product(beetroot)
                         .recipe(recipe2)
                         .amount(1d)
                         .build();
 
                 RecipeIngredient baseIngredient = RecipeIngredient.builder()
-                        .product(product1)
+                        .product(water)
                         .recipe(baseRecipe)
                         .amount(1d)
                         .build();
@@ -249,9 +302,10 @@ public class DataInitializer {
                 mealPlanRepository.save(mealPlan1);
                 mealPlanRepository.save(mealPlan2);
 
-                for (RecipeIngredient ingredient : mealPlan2.getRecipe().getIngredients()) {
-                    shoppingItemRepository.save(new ShoppingItem(null, mealPlan2.getUserOwner(), ingredient.getProduct(), ingredient.getAmount(), false, null));
+                for (RecipeIngredient ingredient : mealPlan1.getRecipe().getIngredients()) {
+                    shoppingItemRepository.save(new ShoppingItem(null, mealPlan1.getUserOwner(), ingredient.getProduct(), ingredient.getAmount(), false, null));
                 }
+
                 Calendar startCal = Calendar.getInstance();
                 startCal.setTime(yesterday);
                 startCal.set(Calendar.HOUR_OF_DAY, 0);

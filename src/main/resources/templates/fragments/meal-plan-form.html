@@ -34,7 +34,8 @@
                        id="recipe-input-box"
                        placeholder="Start typing here"
                        autocomplete="off"
-                       th:value="${mealPlan.id != null ? mealPlan.name : ''}">
+                       th:value="${mealPlan.id != null ? mealPlan.name : ''}"
+                       th:readonly="${mealPlan.id != null}">
                 <div class="result-box"></div>
             </div>
 
@@ -71,7 +72,7 @@
                                th:value="${c.hex}"
                                th:field="*{color}"
                                class="color-radio">
-
+                        ㅤ
                         <span class="color-circle"
                               th:style="'background-color:' + ${c.hex}"></span>
                     </label>

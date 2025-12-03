@@ -187,25 +187,17 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 deleteShoppingItemById(item.getId());
             }
         }
-
         userShoppingItems = shoppingItemRepository.findByUserOwnerId(shoppingItemDto.getUserOwnerId());
 
         for(ShoppingItem item: userShoppingItems){
             if(item.getProduct().equals(product)){
 
-                System.out.println(shoppingItemDto.getName()+" "+item.getRequiredQty());
+                setQty(item, found,shoppingItemDto, remember);
 
-                if(found){
-                    item.setRequiredQty(shoppingItemDto.getRequiredQty() + remember);
-                } else {
-                    item.setRequiredQty(shoppingItemDto.getRequiredQty() + item.getRequiredQty());
-                }
                 if(item.getRequiredQty()<0.01){
-                    System.out.println(shoppingItemDto.getRequiredQty());
                     shoppingItemRepository.delete(item);
                     return;
                 }
-
                 if(shoppingItemDto.getRequiredQty()>0){
                     item.setStatus(false);
                 }
@@ -213,22 +205,29 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 return;
             }
         }
+        finalActions(found, remember, shoppingItemDto);
+    }
+
+    private void finalActions(boolean found, Double remember, ShoppingItemDto shoppingItemDto) {
         if(found){
-            System.out.println("found");
             double newCount = remember+shoppingItemDto.getRequiredQty();
-            System.out.println(newCount);
             if(newCount<=remember){
                 return;
             } else {
-                System.out.println(shoppingItemDto.getRequiredQty());
                 shoppingItemDto.setRequiredQty(remember-shoppingItemDto.getRequiredQty());
-                System.out.println(shoppingItemDto.getRequiredQty());
-                System.out.println(remember);
             }
             createShoppingItem(shoppingItemDto);
             return;
         }
         createShoppingItem(shoppingItemDto);
+    }
+
+    private void setQty(ShoppingItem item, boolean found, ShoppingItemDto shoppingItemDto, Double remember) {
+        if(found){
+            item.setRequiredQty(shoppingItemDto.getRequiredQty() + remember);
+        } else {
+            item.setRequiredQty(shoppingItemDto.getRequiredQty() + item.getRequiredQty());
+        }
     }
 
     @Override

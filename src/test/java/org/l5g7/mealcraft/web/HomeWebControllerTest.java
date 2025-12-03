@@ -2,7 +2,9 @@ package org.l5g7.mealcraft.web;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.l5g7.mealcraft.app.user.UserResponseDto;
 import org.l5g7.mealcraft.app.user.UserService;
+import org.l5g7.mealcraft.enums.Role;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -130,6 +132,8 @@ class HomeWebControllerTest {
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContext securityContext = Mockito.mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(auth);
+        UserResponseDto user = new UserResponseDto(1L,"testUser","testUser@gmail.com", Role.USER, null);
+        when(userService.getUserByUsername("testUser")).thenReturn(user);
         SecurityContextHolder.setContext(securityContext);
 
         mockMvc.perform(get("/mealcraft/craft"))

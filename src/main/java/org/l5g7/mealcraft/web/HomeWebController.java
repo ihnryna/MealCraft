@@ -476,6 +476,7 @@ public class HomeWebController {
         model.addAttribute(TITLE, "MealCraft — Recipe Craft");
         model.addAttribute(FRAGMENT_TO_LOAD, "craft-page :: content");
 
+        addShoppingItemsToModel(model, username);
         return "home";
     }
 
