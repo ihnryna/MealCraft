@@ -1,6 +1,7 @@
 package org.l5g7.mealcraft.app.statistics;
 
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -50,7 +51,7 @@ public class StatisticsJobConfig {
     public Step calculateDailyStatsStep() {
         return new StepBuilder("calculateDailyStatsStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
-                    var params = contribution.getStepExecution().getJobParameters();
+                    JobParameters params = contribution.getStepExecution().getJobParameters();
                     Long millis = params.getLong("targetDate");
                     Date targetDay;
 
