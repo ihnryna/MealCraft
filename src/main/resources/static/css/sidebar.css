@@ -1,5 +1,4 @@
 .sidebar {
-    width: 220px;
     min-height: 100vh;
     background: var(--mc-bg);
     border-right: 3px solid var(--mc-border);
