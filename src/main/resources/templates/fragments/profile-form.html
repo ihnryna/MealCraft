@@ -8,12 +8,64 @@
 
     <div id="clientErrorMessage"
          class="mc-form-message mc-form-message-error"
-         style="display: none;"></div>
+         style="display:none;"></div>
 
-    <form th:action="@{/mealcraft/profile}"
+    <form th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+          th:action="@{/mealcraft/admin/profile}"
           th:object="${user}"
           method="post"
-          id="profileForm"
+          id="profileFormAdmin"
+          class="mc-form">
+
+        <input type="hidden" th:field="*{id}" id="userId">
+
+        <div class="mc-form-group">
+            <label>Username:</label>
+            <span th:text="*{username}">username</span>
+        </div>
+
+        <div class="mc-form-group">
+            <label>Email:</label>
+            <span th:text="*{email}">email</span>
+        </div>
+
+        <div class="mc-form-group">
+            <label for="password">Password:</label>
+            <input id="password"
+                   type="password"
+                   class="mc-input">
+        </div>
+
+        <div class="mc-form-group">
+            <label for="secondPassword">Type new password again:</label>
+            <input id="secondPassword"
+                   type="password"
+                   class="mc-input">
+        </div>
+
+        <div class="mc-form-group">
+            <label for="avatarUrl">Avatar URL:</label>
+            <input id="avatarUrl"
+                   type="text"
+                   th:field="*{avatarUrl}"
+                   class="mc-input">
+        </div>
+
+        <div class="mc-form-actions">
+            <button type="submit" class="mc-btn">Save</button>
+            <button type="button"
+                    class="mc-btn mc-btn-secondary"
+                    onclick="window.location.href='/mealcraft/admin/user'">
+                Back
+            </button>
+        </div>
+    </form>
+
+    <form th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+          th:action="@{/mealcraft/profile}"
+          th:object="${user}"
+          method="post"
+          id="profileFormUser"
           class="mc-form">
 
         <input type="hidden" th:field="*{id}" id="userId">
@@ -61,66 +113,72 @@
     </form>
 
     <script th:inline="javascript">
-        const form = document.getElementById('profileForm');
+        const adminForm = document.getElementById('profileFormAdmin');
+        const userForm = document.getElementById('profileFormUser');
+        const form = adminForm || userForm;
         const errorDiv = document.getElementById('clientErrorMessage');
+        const isAdmin = /*[[${#authorization.expression('hasRole(''ROLE_ADMIN'')')}]]*/ false;
+        const redirectUrl = isAdmin ? '/mealcraft/admin/user' : '/mealcraft/home';
 
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
 
-            const password = document.getElementById('password').value;
-            const secondPassword = document.getElementById('secondPassword').value;
-            const userId = document.getElementById('userId').value;
-            const avatarUrl = document.getElementById('avatarUrl').value;
-            const username = /*[[${user.username}]]*/ '';
-            const email = /*[[${user.email}]]*/ '';
-            const role = /*[[${user.role}]]*/ '';
+                const password = document.getElementById('password').value;
+                const secondPassword = document.getElementById('secondPassword').value;
+                const userId = document.getElementById('userId').value;
+                const avatarUrl = document.getElementById('avatarUrl').value;
+                const username = /*[[${user.username}]]*/ '';
+                const email = /*[[${user.email}]]*/ '';
+                const role = /*[[${user.role}]]*/ '';
 
-            errorDiv.style.display = 'none';
-            errorDiv.textContent = '';
+                errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
 
-            if (!password || !secondPassword) {
-                errorDiv.textContent = 'Both password fields are required';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (password !== secondPassword) {
-                errorDiv.textContent = 'Passwords do not match';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            const requestBody = {
-                username: username,
-                email: email,
-                role: role,
-                avatarUrl: avatarUrl
-            };
-
-            if (password) {
-                requestBody.password = password;
-            }
-
-            fetch(`/users/${userId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = '/mealcraft/home';
-                    } else {
-                        return response.text().then(text => {
-                            throw new Error(text || 'Failed to update profile');
-                        });
-                    }
-                })
-                .catch(error => {
-                    errorDiv.textContent = error.message;
+                if (!password || !secondPassword) {
+                    errorDiv.textContent = 'Both password fields are required';
                     errorDiv.style.display = 'block';
-                });
-        });
+                    return;
+                }
+
+                if (password !== secondPassword) {
+                    errorDiv.textContent = 'Passwords do not match';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                const requestBody = {
+                    username: username,
+                    email: email,
+                    role: role,
+                    avatarUrl: avatarUrl
+                };
+
+                if (password) {
+                    requestBody.password = password;
+                }
+
+                fetch(`/users/${userId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = redirectUrl;
+                        } else {
+                            return response.text().then(text => {
+                                throw new Error(text || 'Failed to update profile');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        errorDiv.textContent = error.message;
+                        errorDiv.style.display = 'block';
+                    });
+            });
+        }
     </script>
 </div>

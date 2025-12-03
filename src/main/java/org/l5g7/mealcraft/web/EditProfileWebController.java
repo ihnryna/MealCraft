@@ -47,9 +47,7 @@ public class EditProfileWebController {
         model.addAttribute("username", username);
         addShoppingItemsToModel(model, username);
 
-        model.addAttribute("user", userDTO); // Add the whole object
-
-
+        model.addAttribute("user", userDTO);
         return PROFILE_PAGE;
     }
 

@@ -1,6 +1,6 @@
 <div th:fragment="header" class="header">
     <div class="header-left">
-        <a href="/mealcraft/home" class="logo">
+        <a th:href="@{/mealcraft/admin}" class="logo">
             <span>MealCraft ADMIN PAGE</span>
         </a>
     </div>
@@ -9,7 +9,8 @@
         <div class="user-menu">
             <span class="username" th:text="${username} ?: 'admin'"></span>
             <div class="dropdown">
-                <a href="/mealcraft/logout">Logout</a>
+                <a th:href="@{/mealcraft/admin/profile}">Profile</a>
+                <a th:href="@{/mealcraft/logout}">Logout</a>
             </div>
         </div>
     </div>
