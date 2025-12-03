@@ -5,7 +5,9 @@ import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredient;
 import org.l5g7.mealcraft.app.recipes.Recipe;
 import org.l5g7.mealcraft.app.recipes.RecipeRepository;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItem;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemRepository;
+import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemService;
 import org.l5g7.mealcraft.app.user.User;
 import org.l5g7.mealcraft.app.user.UserRepository;
 import org.l5g7.mealcraft.enums.MealPlanColor;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -27,12 +30,14 @@ public class MealPlanServiceImpl implements MealPlanService {
     private static final String ENTITY_RECIPE = "Recipe";
     private static final String ENTITY_USER= "User";
     private final ShoppingItemRepository shoppingItemRepository;
+    private final ShoppingItemService shoppingItemService;
 
-    public MealPlanServiceImpl(MealPlanRepository mealPlanRepository, UserRepository userRepository, RecipeRepository recipeRepository, ShoppingItemRepository shoppingItemRepository) {
+    public MealPlanServiceImpl(MealPlanRepository mealPlanRepository, UserRepository userRepository, RecipeRepository recipeRepository, ShoppingItemRepository shoppingItemRepository, ShoppingItemService shoppingItemService) {
         this.mealPlanRepository = mealPlanRepository;
         this.userRepository = userRepository;
         this.recipeRepository = recipeRepository;
         this.shoppingItemRepository = shoppingItemRepository;
+        this.shoppingItemService = shoppingItemService;
     }
 
     @Override
@@ -175,7 +180,7 @@ public class MealPlanServiceImpl implements MealPlanService {
         mealPlanRepository.save(entity);
 
         for(RecipeIngredient ingredient : recipe.getIngredients()){
-            shoppingItemRepository.save(new ShoppingItem(null,userOwner,ingredient.getProduct(),ingredient.getAmount(),false,null));
+            shoppingItemService.addShoppingItem(new ShoppingItemDto(null, ingredient.getProduct().getName(), userOwner.getId(), ingredient.getProduct().getId(),ingredient.getAmount()*entity.getServings(),false,null,null));
         }
     }
 
@@ -192,16 +197,19 @@ public class MealPlanServiceImpl implements MealPlanService {
         Recipe recipe = recipeRepository.findById(mealPlanDto.getRecipeId())
                 .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_RECIPE, String.valueOf(mealPlanDto.getRecipeId())));
 
+        for(RecipeIngredient ingredient : recipe.getIngredients()){
+            if(!Objects.equals(mealPlanDto.getServings(), existing.get().getServings())){
+                double newAmount = ingredient.getAmount()*(mealPlanDto.getServings()-existing.get().getServings());
+                shoppingItemService.addShoppingItem(new ShoppingItemDto(null, ingredient.getProduct().getName(), userOwner.getId(), ingredient.getProduct().getId(),newAmount,false,null,null));
+            }
+        }
+
         existing.get().setUserOwner(userOwner);
         existing.get().setRecipe(recipe);
         existing.get().setPlanDate(mealPlanDto.getPlanDate());
         existing.get().setServings(mealPlanDto.getServings());
         existing.get().setStatus(mealPlanDto.getStatus());
         existing.get().setColor(MealPlanColor.fromHex(mealPlanDto.getColor()));
-
-        for(RecipeIngredient ingredient : recipe.getIngredients()){
-            shoppingItemRepository.save(new ShoppingItem(null,userOwner,ingredient.getProduct(),ingredient.getAmount(),false,null));
-        }
 
         mealPlanRepository.save(existing.get());
     }
@@ -250,6 +258,14 @@ public class MealPlanServiceImpl implements MealPlanService {
 
     @Override
     public void deleteMealPlan(Long id){
+        Optional<MealPlan> existing = mealPlanRepository.findById(id);
+        if (existing.isEmpty()) {
+            throw new EntityDoesNotExistException(ENTITY_NAME, String.valueOf(id));
+        }
+        for(RecipeIngredient ingredient : existing.get().getRecipe().getIngredients()){
+            shoppingItemService.removeShoppingItem(new ShoppingItemDto(null, ingredient.getProduct().getName(), existing.get().getUserOwner().getId(), ingredient.getProduct().getId(), existing.get().getServings()*ingredient.getAmount(),false,null,null));
+        }
+
         mealPlanRepository.deleteById(id);
     }
 }
