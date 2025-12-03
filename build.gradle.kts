@@ -32,6 +32,9 @@ repositories {
 }
 
 dependencies {
+    implementation ("org.thymeleaf.extras:thymeleaf-extras-springsecurity6:$thymeleafExtrasVersion")
+    implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation ("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-web") // Logback is included automatically here, we don't need any async logs, because app is small
     implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("com.h2database:h2")
@@ -44,7 +47,6 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation ("org.thymeleaf.extras:thymeleaf-extras-springsecurity6:$thymeleafExtrasVersion")
     testImplementation ("org.springframework.security:spring-security-test")
     testImplementation ("org.junit.platform:junit-platform-suite:$junitVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -52,8 +54,6 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     annotationProcessor("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("org.springframework.boot:spring-boot-starter-batch")
-    implementation ("org.springframework.boot:spring-boot-starter-mail")
 }
 
 tasks.withType<Test> {

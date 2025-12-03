@@ -2,11 +2,8 @@ package org.l5g7.mealcraft.web;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.l5g7.mealcraft.app.user.UserResponseDto;
 import org.l5g7.mealcraft.app.user.UserService;
-import org.l5g7.mealcraft.enums.Role;
 import org.mockito.Mockito;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

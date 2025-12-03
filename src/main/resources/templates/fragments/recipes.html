@@ -33,7 +33,7 @@
             <td>
                 <img th:if="${r.imageUrl != null}"
                      th:src="${r.imageUrl}"
-                     alt="recipe image"
+                     alt="recipe"
                      height="50">
             </td>
 
@@ -42,10 +42,12 @@
                 |
                 <a th:href="@{|/mealcraft/admin/recipe/edit/${r.id}|}">Edit</a>
                 |
-                <a th:href="@{|/mealcraft/admin/recipe/delete/${r.id}|}"
-                   onclick="return confirm('Are you sure you want to delete this recipe?');">
-                    Delete
-                </a>
+                <form th:action="@{|/mealcraft/admin/recipe/delete/${r.id}|}"
+                      method="post"
+                      style="display:inline;"
+                      onsubmit="return confirm('Are you sure you want to delete this recipe?');">
+                    <button type="submit">Delete</button>
+                </form>
             </td>
         </tr>
         </tbody>
