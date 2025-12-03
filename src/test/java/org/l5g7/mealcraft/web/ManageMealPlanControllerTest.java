@@ -132,37 +132,6 @@ class ManageMealPlanControllerTest {
                 .andExpect(redirectedUrl("/mealcraft/home"));
     }
 
-//    @Test
-//    void saveMealPlan_error_showsFormWithError() throws Exception {
-//        UserResponseDto userDto = new UserResponseDto(1L, "testUser", "test@example.com", Role.USER, null);
-//        when(userService.getUserByUsername("testUser")).thenReturn(userDto);
-//
-//        when(internalApiClient.post()
-//                        .uri("/meal-plans")
-//                        .body(Mockito.any())
-//                        .retrieve()
-//                        .toBodilessEntity())
-//                .thenThrow(Mockito.mock(RestClientResponseException.class));
-//
-//        when(internalApiClient.get()
-//                        .uri("/recipes")
-//                        .retrieve()
-//                        .toEntity(Mockito.any(ParameterizedTypeReference.class)))
-//                .thenReturn(ResponseEntity.ok(List.of()));
-//
-//        when(internalApiClient.get()
-//                        .uri("/shopping-items/getUserShoppingItems/{id}", 1L)
-//                        .retrieve()
-//                        .toEntity(Mockito.any(ParameterizedTypeReference.class)))
-//                .thenReturn(ResponseEntity.ok(List.of()));
-//
-//        mockMvc.perform(post("/mealcraft/meals/save")
-//                        .param("name", "Bad Meal"))
-//                .andExpect(status().isOk())
-//                .andExpect(view().name("home"))
-//                .andExpect(model().attributeExists("errorMessage"));
-//    }
-
     @Test
     void deleteMealPlan_redirectsToHome() throws Exception {
         when(internalApiClient.delete()

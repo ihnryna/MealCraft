@@ -4,6 +4,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.l5g7.mealcraft.app.products.ProductRepository;
 import org.l5g7.mealcraft.app.units.*;
 import org.l5g7.mealcraft.exception.EntityAlreadyExistsException;
@@ -304,27 +307,11 @@ class UnitServiceImplTest {
         verify(repository, times(1)).findAllByNameStartingWithIgnoreCase("kilo");
     }
 
-    @Test
-    void searchUnitsByPrefix_NullPrefix_ReturnsEmptyList() {
-        List<UnitDto> result = unitService.searchUnitsByPrefix(null);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(repository, never()).findAllByNameStartingWithIgnoreCase(anyString());
-    }
-
-    @Test
-    void searchUnitsByPrefix_EmptyPrefix_ReturnsEmptyList() {
-        List<UnitDto> result = unitService.searchUnitsByPrefix("");
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(repository, never()).findAllByNameStartingWithIgnoreCase(anyString());
-    }
-
-    @Test
-    void searchUnitsByPrefix_BlankPrefix_ReturnsEmptyList() {
-        List<UnitDto> result = unitService.searchUnitsByPrefix("   ");
+    @ParameterizedTest
+    @NullAndEmptySource  // включає null та ""
+    @ValueSource(strings = {"   "}) // пробіли
+    void searchUnitsByPrefix_invalidPrefix_ReturnsEmptyList(String prefix) {
+        List<UnitDto> result = unitService.searchUnitsByPrefix(prefix);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());

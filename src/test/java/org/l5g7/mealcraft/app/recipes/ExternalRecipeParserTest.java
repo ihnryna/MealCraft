@@ -1,6 +1,8 @@
 package org.l5g7.mealcraft.app.recipes;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.l5g7.mealcraft.app.recipeingredient.RecipeIngredientDto;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 
@@ -239,22 +241,15 @@ class ExternalRecipeParserTest {
         assertEquals(0.666666, ExternalRecipeParser.parseFraction("2/3"), 0.00001);
     }
 
-    @Test
-    void parseFraction_handlesDivisionByZero() {
-        Double result = ExternalRecipeParser.parseFraction("1/0");
-        assertEquals(0.0, result);
-    }
-
-    @Test
-    void parseFraction_handlesInvalidFormat() {
-        Double result = ExternalRecipeParser.parseFraction("invalid");
-        assertEquals(0.0, result);
-    }
-
-    @Test
-    void parseFraction_handlesNoSlash() {
-        Double result = ExternalRecipeParser.parseFraction("5");
-        assertEquals(0.0, result);
+    @ParameterizedTest
+    @CsvSource({
+            "1/0, 0.0",
+            "invalid, 0.0",
+            "5, 0.0"
+    })
+    void parseFraction_returnsZeroForInvalidInput(String input, double expected) {
+        Double result = ExternalRecipeParser.parseFraction(input);
+        assertEquals(expected, result);
     }
 
     @Test

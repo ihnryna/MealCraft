@@ -15,6 +15,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -56,7 +59,8 @@ class PageLoadTimeAspectTest {
         when(proceedingJoinPoint.getSignature()).thenReturn(signature);
         when(signature.toShortString()).thenReturn(methodName);
         when(proceedingJoinPoint.proceed()).thenAnswer(invocation -> {
-            Thread.sleep(10); // Simulate some processing time
+            await().atMost(Duration.ofMillis(10))
+                    .until(() -> true); // Simulate some processing time
             return expectedResult;
         });
 
@@ -109,7 +113,8 @@ class PageLoadTimeAspectTest {
         when(proceedingJoinPoint.getSignature()).thenReturn(signature);
         when(signature.toShortString()).thenReturn(methodName);
         when(proceedingJoinPoint.proceed()).thenAnswer(invocation -> {
-            Thread.sleep(100); // Simulate slow processing
+            await().atMost(Duration.ofMillis(100))
+                    .until(() -> true); // Simulate slow processing
             return "report.pdf";
         });
 
