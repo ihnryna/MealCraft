@@ -301,7 +301,7 @@ class RecipeServiceImplTest {
                 .imageUrl("http://example.com/image.jpg")
                 .ingredients(new java.util.ArrayList<>())
                 .build();
-
+        
         when(currentUserProvider.getCurrentUserOrNullIfAdmin()).thenReturn(null);
         when(recipeRepository.findById(100L)).thenReturn(Optional.of(recipeToUpdate));
         when(productRepository.findById(10L)).thenReturn(Optional.of(testProduct1));
@@ -357,7 +357,7 @@ class RecipeServiceImplTest {
                 .imageUrl("http://example.com/image.jpg")
                 .ingredients(new java.util.ArrayList<>())
                 .build();
-
+        
         RecipeDto patch = RecipeDto.builder()
                 .ingredients(List.of(
                         RecipeIngredientDto.builder().productId(10L).amount(5.0).build()
@@ -443,7 +443,7 @@ class RecipeServiceImplTest {
     @Test
     void getRandomRecipe_returnsExternalRecipe() {
         Date now = new Date();
-        ExternalRecipe external = new ExternalRecipe(99L, "Random Recipe", "http://example.com/random.jpg", now.toString());
+        ExternalRecipe external = new ExternalRecipe(99L, "Random Recipe", "http://example.com/random.jpg", now.toString(), List.of("Ingredient1", "Ingredient2"), List.of("Measure1", "Measure2"));
         when(recipeProvider.getRandomRecipe()).thenReturn(external);
 
         RecipeDto result = recipeService.getRandomRecipe();
