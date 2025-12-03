@@ -113,6 +113,23 @@
         }
 
         function display(result) {
+
+            if (result.length === 0 && inputBox.value.length > 0) {
+                resultsBox.innerHTML = `
+            <ul>
+                <li class="no-result">
+                    <button type="button"
+                            onclick="createCustomRecipe()"
+                            style="width: 100%; padding: 6px; cursor: pointer;">
+                        + Create your own recipe
+                    </button>
+                </li>
+            </ul>
+        `;
+                return;
+            }
+
+
             const content = result.map((oneRecipe) => {
                 return `<li onclick="selectRecipe(this)" data-id="${oneRecipe.id}">${oneRecipe.name}</li>`;
             });
@@ -155,6 +172,9 @@
             document.querySelector('input[name="color"]').value = circle.dataset.value;
         }
 
+        function createCustomRecipe() {
+            globalThis.location.href = '/mealcraft/home/recipes/create';
+        }
 
     </script>
 </div>
