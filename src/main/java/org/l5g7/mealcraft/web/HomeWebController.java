@@ -3,12 +3,15 @@ package org.l5g7.mealcraft.web;
 import jakarta.servlet.http.HttpSession;
 import org.l5g7.mealcraft.app.mealplan.EventCell;
 import org.l5g7.mealcraft.app.mealplan.MealPlanDto;
+import org.l5g7.mealcraft.app.products.ProductDto;
 import org.l5g7.mealcraft.app.recipes.RecipeDto;
 import org.l5g7.mealcraft.app.shoppingitem.ShoppingItemDto;
+import org.l5g7.mealcraft.app.units.UnitDto;
 import org.l5g7.mealcraft.app.user.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -38,8 +42,17 @@ public class HomeWebController {
     private static final String REDIRECT_HOME_PAGE = "redirect:/mealcraft/home";
     private static final String RECIPE_ID_URI = "/recipes/{id}";
     private static final String REDIRECT_RECIPE_PAGE = "redirect:/mealcraft/user/recipes";
+    private static final String REDIRECT_PRODUCTS_URI = "redirect:/mealcraft/user/products";
     private static final String ERROR_MESSAGE = "errorMessage";
     private static final String RECIPE_URI = "/recipes";
+    private static final String PRODUCTS_URI = "/products";
+    private static final String PRODUCT_ID_URI = "/products/{id}";
+    private static final String PRODUCT_MODEL_ATTR = "product";
+    private static final String PRODUCT_FORM_FRAGMENT = "fragments/product-form :: content";
+    private static final String PRODUCTS_FRAGMENT = "fragments/products :: content";
+    private static final String UNITS_URI = "/units";
+    private static final String UNITS_MODEL_ATTR = "units";
+
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
@@ -104,8 +117,34 @@ public class HomeWebController {
         return "home";
     }
 
+    @GetMapping("/mealcraft/home/products/create")
+    public String showCreateProductForm(Model model) {
+        ProductDto product = new ProductDto();
+
+        ResponseEntity<List<UnitDto>> unitsResponse = internalApiClient
+                .get()
+                .uri(UNITS_URI)
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
+
+        List<UnitDto> units = unitsResponse.getBody();
+
+        model.addAttribute(PRODUCT_MODEL_ATTR, product);
+        model.addAttribute(UNITS_MODEL_ATTR, units);
+        model.addAttribute(TITLE, "Create your own product");
+        model.addAttribute(FRAGMENT_TO_LOAD, PRODUCT_FORM_FRAGMENT);
+
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
+        return "home";
+    }
+
     @GetMapping("/mealcraft/user/recipes")
-    public String showUserRecipeForm(Model model) {
+    public String showUserRecipePage(Model model) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
@@ -130,6 +169,30 @@ public class HomeWebController {
         return "home";
     }
 
+    @GetMapping("/mealcraft/user/products")
+    public String showUserProductsPage(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
+
+        ResponseEntity<List<ProductDto>> response = internalApiClient.get()
+                .uri(PRODUCTS_URI)
+                .retrieve()
+                .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {});
+
+        List<ProductDto> data = response.getBody();
+        List<ProductDto> products = new ArrayList<>();
+        if(data != null) {
+            products = data.stream().filter(r -> r.getOwnerUserId()!=null && r.getOwnerUserId().equals(userService.getUserByUsername(username).id()))
+                    .toList();
+        }
+        model.addAttribute("data", products);
+        model.addAttribute(FRAGMENT_TO_LOAD, PRODUCTS_FRAGMENT);
+        model.addAttribute(TITLE, "Your own products");
+        return "home";
+    }
+
     @GetMapping("/mealcraft/home/recipes/edit/{id}")
     public String showUserEditRecipeForm(@PathVariable Long id, Model model) {
 
@@ -143,6 +206,34 @@ public class HomeWebController {
         model.addAttribute(TITLE, "Edit your own recipe");
         model.addAttribute(FRAGMENT_TO_LOAD, RECIPE_FORM_FRAGMENT);
 
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
+        return "home";
+    }
+
+    @GetMapping("/mealcraft/home/products/edit/{id}")
+    public String showEditProductForm(@PathVariable Long id, Model model) {
+
+        ProductDto product = internalApiClient
+                .get()
+                .uri(PRODUCT_ID_URI, id)
+                .retrieve()
+                .body(ProductDto.class);
+
+        List<UnitDto> units = internalApiClient
+                .get()
+                .uri(UNITS_URI)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<UnitDto>>() {
+                });
+
+        model.addAttribute(PRODUCT_MODEL_ATTR, product);
+        model.addAttribute(UNITS_MODEL_ATTR, units);
+        model.addAttribute(TITLE, "Edit your own product");
+        model.addAttribute(FRAGMENT_TO_LOAD, PRODUCT_FORM_FRAGMENT);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
@@ -203,6 +294,56 @@ public class HomeWebController {
         }
     }
 
+    @PostMapping("/mealcraft/user/product")
+    public String saveProduct(@ModelAttribute("product") ProductDto productDto,
+                              Model model) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        productDto.setOwnerUserId(userService.getUserByUsername(username).id());
+
+        try {
+            if (productDto.getId() == null) {
+                internalApiClient
+                        .post()
+                        .uri(PRODUCTS_URI)
+                        .body(productDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            } else {
+                internalApiClient
+                        .put()
+                        .uri(PRODUCT_ID_URI, productDto.getId())
+                        .body(productDto)
+                        .retrieve()
+                        .toBodilessEntity();
+            }
+            return REDIRECT_PRODUCTS_URI;
+
+        } catch (HttpClientErrorException e) {
+
+            if (e.getStatusCode() == HttpStatus.CONFLICT) {
+                List<UnitDto> units = internalApiClient
+                        .get()
+                        .uri(UNITS_URI)
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<List<UnitDto>>() {
+                        });
+
+                model.addAttribute(PRODUCT_MODEL_ATTR, productDto);
+                model.addAttribute(UNITS_MODEL_ATTR, units);
+                model.addAttribute(TITLE, productDto.getId() == null ? "Create product" : "Edit product");
+                model.addAttribute(FRAGMENT_TO_LOAD, PRODUCT_FORM_FRAGMENT);
+
+                model.addAttribute(USERNAME, username);
+                addShoppingItemsToModel(model, username);
+                model.addAttribute(ERROR_MESSAGE, "Product with this name already exists");
+                return "home";
+            }
+            throw e;
+        }
+    }
+
     @PostMapping("/mealcraft/home/recipes/delete/{id}")
     public String deleteRecipe(@PathVariable Long id, Model model) {
 
@@ -240,6 +381,44 @@ public class HomeWebController {
             model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
             model.addAttribute(TITLE, "Recipes");
 
+
+            model.addAttribute(USERNAME, username);
+            addShoppingItemsToModel(model, username);
+            model.addAttribute(ERROR_MESSAGE, message);
+            return "home";
+        }
+    }
+
+    @GetMapping("/mealcraft/home/products/delete/{id}")
+    public String deleteProduct(@PathVariable Long id, Model model) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        try {
+            internalApiClient
+                    .delete()
+                    .uri(PRODUCT_ID_URI, id)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            return REDIRECT_PRODUCTS_URI;
+
+        } catch (HttpClientErrorException e) {
+            String message = e.getResponseBodyAsString();
+            ResponseEntity<List<ProductDto>> response = internalApiClient
+                    .get()
+                    .uri(PRODUCTS_URI)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<ProductDto>>() {
+                    });
+
+            List<ProductDto> data = response.getBody();
+
+            model.addAttribute("data", data);
+            model.addAttribute(ERROR_MESSAGE, message);
+            model.addAttribute(FRAGMENT_TO_LOAD, PRODUCTS_FRAGMENT);
+            model.addAttribute(TITLE, "Products");
 
             model.addAttribute(USERNAME, username);
             addShoppingItemsToModel(model, username);

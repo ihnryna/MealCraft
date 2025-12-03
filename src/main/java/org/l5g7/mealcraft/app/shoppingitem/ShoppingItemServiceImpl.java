@@ -87,15 +87,17 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         Product product = productRepository.findById(shoppingItemDto.getProductId())
                 .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
 
+        double roundedQty = Math.round(shoppingItemDto.getRequiredQty() * 100.0) / 100.0;
 
         ShoppingItem entity = ShoppingItem.builder()
                 .id(shoppingItemDto.getId())
                 .userOwner(user)
                 .product(product)
-                .requiredQty(shoppingItemDto.getRequiredQty())
+                .requiredQty(roundedQty)
                 .status(shoppingItemDto.getStatus())
                 .boughtAt(shoppingItemDto.getBoughtAt())
                 .build();
+
 
         shoppingItemRepository.save(entity);
 
@@ -112,10 +114,12 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         Product product = productRepository.findById(shoppingItemDto.getProductId())
                 .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
 
+        double roundedQty = Math.round(shoppingItemDto.getRequiredQty() * 100.0) / 100.0;
+
         existing.ifPresent(shoppingItem -> {
             shoppingItem.setProduct(product);
             shoppingItem.setUserOwner(user);
-            shoppingItem.setRequiredQty(shoppingItemDto.getRequiredQty());
+            shoppingItem.setRequiredQty(roundedQty);
             shoppingItem.setStatus(shoppingItemDto.getStatus());
             shoppingItemRepository.save(shoppingItem);
         });
@@ -129,7 +133,8 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         }
         existing.ifPresent(shoppingItem -> {
             if (patch.getRequiredQty() != null) {
-                shoppingItem.setRequiredQty(patch.getRequiredQty());
+                double roundedQty = Math.round(patch.getRequiredQty() * 100.0) / 100.0;
+                shoppingItem.setRequiredQty(roundedQty);
             }
             if (patch.getStatus() != null) {
                 shoppingItem.setStatus(patch.getStatus());
@@ -173,8 +178,12 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         Product product = productRepository.findById(shoppingItemDto.getProductId())
                 .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
 
+        Double remember = 0D;
+        boolean found = false;
         for(ShoppingItem item: userShoppingItems){
             if(item.getProduct().equals(product) && Boolean.TRUE.equals(item.getStatus())) {
+                remember = item.getRequiredQty();
+                found = true;
                 deleteShoppingItemById(item.getId());
             }
         }
@@ -184,8 +193,15 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         for(ShoppingItem item: userShoppingItems){
             if(item.getProduct().equals(product)){
 
-                item.setRequiredQty(shoppingItemDto.getRequiredQty() + item.getRequiredQty());
-                if(item.getRequiredQty()<=0){
+                System.out.println(shoppingItemDto.getName()+" "+item.getRequiredQty());
+
+                if(found){
+                    item.setRequiredQty(shoppingItemDto.getRequiredQty() + remember);
+                } else {
+                    item.setRequiredQty(shoppingItemDto.getRequiredQty() + item.getRequiredQty());
+                }
+                if(item.getRequiredQty()<0.01){
+                    System.out.println(shoppingItemDto.getRequiredQty());
                     shoppingItemRepository.delete(item);
                     return;
                 }
@@ -196,6 +212,21 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 shoppingItemRepository.save(item);
                 return;
             }
+        }
+        if(found){
+            System.out.println("found");
+            double newCount = remember+shoppingItemDto.getRequiredQty();
+            System.out.println(newCount);
+            if(newCount<=remember){
+                return;
+            } else {
+                System.out.println(shoppingItemDto.getRequiredQty());
+                shoppingItemDto.setRequiredQty(remember-shoppingItemDto.getRequiredQty());
+                System.out.println(shoppingItemDto.getRequiredQty());
+                System.out.println(remember);
+            }
+            createShoppingItem(shoppingItemDto);
+            return;
         }
         createShoppingItem(shoppingItemDto);
     }

@@ -5,7 +5,10 @@
         <p th:text="${errorMessage}" style="color: red;"></p>
     </div>
 
-    <form th:action="@{/mealcraft/admin/product}"
+    <form th:with="formAction=${#authorization.expression('hasRole(''ROLE_ADMIN'')')}
+               ? '/mealcraft/admin/product'
+               : '/mealcraft/user/product'"
+          th:action="@{${formAction}}"
           th:object="${product}"
           method="post">
 
