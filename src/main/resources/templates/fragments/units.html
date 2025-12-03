@@ -1,10 +1,14 @@
 <div th:fragment="content">
     <h2 th:text="${title}">Units</h2>
 
-    <a th:href="@{/mealcraft/admin/unit/new}">+ Add unit</a>
+    <a th:href="@{/mealcraft/admin/unit/new}"
+       class="mc-table-top-link">
+        + Add unit
+    </a>
 
-    <div th:if="${errorMessage}">
-        <p th:text="${errorMessage}" style="color: red;"></p>
+    <div th:if="${errorMessage}" class="mc-error-banner">
+        <strong>Error:</strong>
+        <span th:text="${errorMessage}"></span>
     </div>
 
     <table class="table">
@@ -21,12 +25,16 @@
             <td th:text="${u.id}"></td>
             <td th:text="${u.name}"></td>
             <td>
-                <a th:href="@{|/mealcraft/admin/unit/edit/${u.id}|}">Edit</a>
+                <a th:href="@{|/mealcraft/admin/unit/edit/${u.id}|}"
+                   class="mc-table-btn mc-table-btn-secondary">
+                    Edit
+                </a>
                 |
                 <form th:action="@{|/mealcraft/admin/unit/delete/${u.id}|}"
                       method="get"
                       style="display:inline;">
                     <button type="submit"
+                            class="mc-table-btn mc-table-btn-danger"
                             onclick="return confirm('Are you sure you want to delete this unit?');">
                         Delete
                     </button>

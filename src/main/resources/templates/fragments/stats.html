@@ -1,14 +1,32 @@
 <div th:fragment="content">
     <h2 th:text="${title}">Statistics</h2>
 
-    <form th:action="@{/mealcraft/admin/stats}" method="get" style="margin-bottom: 1rem;">
+    <form th:action="@{/mealcraft/admin/stats}" method="get" class="stats-controls">
         <label>
             Day:
-            <input type="date" name="day" th:value="${searchDay}">
+            <input type="date" name="day" th:value="${searchDay}" class="stats-date-input">
         </label>
-        <button type="submit" name="action" value="search">Search</button>
-        <button type="submit" name="action" value="recalculate">Recalculate</button>
-        <button type="submit" name="action" value="all">Show all</button>
+
+        <button type="submit"
+                name="action"
+                value="search"
+                class="stats-btn stats-btn-main">
+            Search
+        </button>
+
+        <button type="submit"
+                name="action"
+                value="recalculate"
+                class="stats-btn stats-btn-secondary">
+            Recalculate
+        </button>
+
+        <button type="submit"
+                name="action"
+                value="all"
+                class="stats-btn stats-btn-main">
+            Show all
+        </button>
     </form>
 
     <table class="table">
@@ -30,4 +48,97 @@
         </tr>
         </tbody>
     </table>
+
+    <style>
+        .stats-controls {
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .stats-controls label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #333;
+        }
+
+        .stats-date-input {
+            padding: 0.35rem 0.5rem;
+            border: 3px solid var(--mc-border-soft);
+            background: #faf7ee;
+            border-radius: 0;
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.8rem;
+            outline: none;
+            transition:
+                    border-color 0.1s ease-out,
+                    box-shadow 0.1s ease-out,
+                    background 0.1s ease-out;
+        }
+
+        .stats-date-input:hover {
+            box-shadow: 2px 2px 0 #b0a082;
+        }
+
+        .stats-date-input:focus {
+            border-color: var(--mc-green);
+            background: #f6fff4;
+            box-shadow: 2px 2px 0 #2e7d32;
+        }
+
+        .stats-btn {
+            font-family: 'Public Pixel', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.4rem 0.9rem;
+            border-radius: 0;
+            border: 3px solid var(--mc-border);
+            cursor: pointer;
+            box-shadow: 2px 2px 0 #1e1e1e;
+            text-decoration: none;
+            background: var(--mc-green);
+            color: #fff;
+            transition:
+                    transform 0.05s ease-out,
+                    box-shadow 0.05s ease-out,
+                    background 0.1s ease-out;
+        }
+
+        .stats-btn:hover {
+            background: var(--mc-green-dark);
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 #1e1e1e;
+        }
+
+        .stats-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 #1e1e1e;
+        }
+
+        .stats-btn-secondary {
+            background: var(--mc-gray);
+        }
+
+        .stats-btn-secondary:hover {
+            background: #545b62;
+        }
+
+        @media (max-width: 600px) {
+            .stats-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
 </div>
