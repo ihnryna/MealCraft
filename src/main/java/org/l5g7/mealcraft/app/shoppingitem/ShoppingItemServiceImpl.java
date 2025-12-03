@@ -167,4 +167,45 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         });
     }
 
+    @Override
+    public void addShoppingItem(ShoppingItemDto shoppingItemDto){
+        List<ShoppingItem> userShoppingItems = shoppingItemRepository.findByUserOwnerId(shoppingItemDto.getUserOwnerId());
+        Product product = productRepository.findById(shoppingItemDto.getProductId())
+                .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
+
+        for(ShoppingItem item: userShoppingItems){
+            if(item.getProduct().equals(product)){
+                item.setRequiredQty(shoppingItemDto.getRequiredQty() + item.getRequiredQty());
+                if(item.getRequiredQty()<=0){
+                    shoppingItemRepository.delete(item);
+                    return;
+                }
+                shoppingItemRepository.save(item);
+                return;
+            }
+        }
+        createShoppingItem(shoppingItemDto);
+    }
+
+    @Override
+    public void removeShoppingItem(ShoppingItemDto shoppingItemDto){
+        List<ShoppingItem> userShoppingItems = shoppingItemRepository.findByUserOwnerId(shoppingItemDto.getUserOwnerId());
+        Product product = productRepository.findById(shoppingItemDto.getProductId())
+                .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
+
+        for(ShoppingItem item: userShoppingItems){
+            if(item.getProduct().equals(product)){
+                if(item.getRequiredQty() <= shoppingItemDto.getRequiredQty()){
+                    shoppingItemRepository.delete(item);
+                } else {
+                    item.setRequiredQty(item.getRequiredQty() - shoppingItemDto.getRequiredQty());
+                    shoppingItemRepository.save(item);
+                }
+                return;
+            }
+        }
+    }
+
+
+
 }

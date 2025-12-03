@@ -12,5 +12,7 @@ public interface ShoppingItemService {
     void deleteShoppingItemById(Long id);
     void toggleStatus(Long id);
 
+    void addShoppingItem(ShoppingItemDto shoppingItemDto);
+    void removeShoppingItem(ShoppingItemDto shoppingItemDto);
 }
 
