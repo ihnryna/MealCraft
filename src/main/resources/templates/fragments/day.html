@@ -6,7 +6,8 @@
         </h2>
 
         <div class="info-blocks">
-            <div th:each="slotIdx : ${#numbers.sequence(0,10)}" class="day-slot">
+            <div th:each="slotIdx : ${#numbers.sequence(0,10)}" class="day-slot"
+            th:if="${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx}">
                 <div th:with="cell=${day != null and dayEventMapForDay.containsKey(day) and dayEventMapForDay.get(day).size() > slotIdx ? dayEventMapForDay.get(day).get(slotIdx) : null}"
                      th:classappend="${cell != null} ? ' day-slot-filled' : ' day-slot-empty'">
 
