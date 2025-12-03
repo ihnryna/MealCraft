@@ -27,7 +27,11 @@
             <td th:text="${r.id}"></td>
 
             <td>
-                <a th:href="@{|/mealcraft/admin/recipe/view/${r.id}|}"
+                <a th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                   th:href="@{|/mealcraft/admin/recipe/view/${r.id}|}"
+                   th:text="${r.name}">Recipe name</a>
+                <a th:unless="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                   th:href="@{|/mealcraft/home/recipes/view/${r.id}|}"
                    th:text="${r.name}">Recipe name</a>
             </td>
 
