@@ -45,17 +45,29 @@
                        th:name="|ingredients[${iter.index}].productId|"
                        th:value="${ing.productId}">
 
-                <label>Product:</label>
-                <input type="text"
+                <label for="productName_0"
+                       th:for="|productName_${iter.index}|">
+                    Product:
+                </label>
+
+                <input id="productName_0"
+                       th:id="|productName_${iter.index}|"
+                       type="text"
                        class="product-name-input"
+                       th:name="|ingredients[${iter.index}].productName|"
                        th:value="${ing.productName}"
                        autocomplete="off"
                        required>
 
                 <ul class="product-suggestions"></ul>
 
-                <label>Amount:</label>
-                <input type="number"
+                <label for="amount_0"
+                       th:for="|amount_${iter.index}|">
+                    Amount:
+                </label>
+                <input id="amount_0"
+                       th:id="|amount_${iter.index}|"
+                       type="number"
                        step="0.1"
                        min="0.1"
                        th:name="|ingredients[${iter.index}].amount|"
@@ -83,7 +95,7 @@
             const container = document.getElementById('ingredients-container');
             const form = document.getElementById('recipe-form');
 
-            let ingredientIndex = parseInt(container.dataset.initialCount || '0', 10);
+            let ingredientIndex = Number.parseInt(container.dataset.initialCount || '0', 10);
             const addButton = document.getElementById('add-ingredient');
 
             function createIngredientRow(index) {
@@ -95,16 +107,18 @@
                     <input type="hidden" name="ingredients[${index}].id">
                     <input type="hidden" name="ingredients[${index}].productId">
 
-                    <label>Product:</label>
-                    <input type="text"
+                    <label for="productName_${index}">Product:</label>
+                    <input id="productName_${index}"
+                           type="text"
                            class="product-name-input"
                            autocomplete="off"
                            required>
 
                     <ul class="product-suggestions"></ul>
 
-                    <label>Amount:</label>
-                    <input type="number"
+                    <label for="amount_${index}">Amount:</label>
+                    <input id="amount_${index}"
+                           type="number"
                            step="0.1"
                            min="0.1"
                            name="ingredients[${index}].amount"
@@ -116,6 +130,71 @@
                 `;
 
                 return row;
+            }
+
+            function getRowElements(row) {
+                const nameInput = row.querySelector('.product-name-input');
+                const productIdInput = row.querySelector('input[name$=".productId"]');
+                const amountInput = row.querySelector('input[name$=".amount"]');
+                const errorBox = row.querySelector('.ingredient-error');
+
+                return { nameInput, productIdInput, amountInput, errorBox };
+            }
+
+            function readTrimmedValues(nameInput, productIdInput, amountInput) {
+                const name = nameInput ? nameInput.value.trim() : '';
+                const productId = productIdInput ? productIdInput.value.trim() : '';
+                const amountStr = amountInput ? amountInput.value.trim() : '';
+                return { name, productId, amountStr };
+            }
+
+            function clearError(errorBox) {
+                if (errorBox) {
+                    errorBox.textContent = '';
+                }
+            }
+
+            function isRowEmpty(name, productId, amountStr) {
+                return name === '' && productId === '' && amountStr === '';
+            }
+
+            function isAmountInvalid(amountStr) {
+                if (amountStr === '') {
+                    return true;
+                }
+                const amount = Number.parseFloat(amountStr);
+                return Number.isNaN(amount) || amount <= 0;
+            }
+
+            function setError(errorBox, message) {
+                if (errorBox) {
+                    errorBox.textContent = message;
+                }
+            }
+
+            function validateIngredientRow(row) {
+                const { nameInput, productIdInput, amountInput, errorBox } = getRowElements(row);
+
+                clearError(errorBox);
+
+                const { name, productId, amountStr } =
+                    readTrimmedValues(nameInput, productIdInput, amountInput);
+
+                if (isRowEmpty(name, productId, amountStr)) {
+                    return false;
+                }
+
+                if (isAmountInvalid(amountStr)) {
+                    setError(errorBox, 'Amount must be greater than zero.');
+                    return true;
+                }
+
+                if (productId === '') {
+                    setError(errorBox, 'Please select a product from the list.');
+                    return true;
+                }
+
+                return false;
             }
 
             if (ingredientIndex === 0) {
@@ -134,7 +213,7 @@
                 if (e.target.classList.contains('remove-ingredient')) {
                     const row = e.target.closest('.ingredient-row');
                     if (row) {
-                        container.removeChild(row);
+                        row.remove();
                     }
                 }
             });
@@ -152,9 +231,7 @@
                     if (productIdInput) {
                         productIdInput.value = '';
                     }
-                    if (errorBox) {
-                        errorBox.textContent = '';
-                    }
+                    clearError(errorBox);
 
                     if (query.length < 1) {
                         suggestionsList.innerHTML = '';
@@ -165,13 +242,13 @@
                         .then(response => response.json())
                         .then(products => {
                             suggestionsList.innerHTML = '';
-                            products.forEach(p => {
+                            for (const p of products) {
                                 const li = document.createElement('li');
                                 li.textContent = p.name + ' (' + p.defaultUnitName + ')';
                                 li.dataset.productId = p.id;
                                 li.classList.add('suggestion-item');
                                 suggestionsList.appendChild(li);
-                            });
+                            }
                         })
                         .catch(err => {
                             console.error('Error loading product suggestions', err);
@@ -191,51 +268,20 @@
                     input.value = li.textContent;
                     productIdInput.value = li.dataset.productId;
 
-                    if (errorBox) {
-                        errorBox.textContent = '';
-                    }
-
+                    clearError(errorBox);
                     suggestionsList.innerHTML = '';
                 }
             });
 
             form.addEventListener('submit', function (e) {
+                const rows = container.querySelectorAll('.ingredient-row');
                 let hasError = false;
 
-                const rows = container.querySelectorAll('.ingredient-row');
-                rows.forEach(row => {
-                    const nameInput = row.querySelector('.product-name-input');
-                    const productIdInput = row.querySelector('input[name$=".productId"]');
-                    const amountInput = row.querySelector('input[name$=".amount"]');
-                    const errorBox = row.querySelector('.ingredient-error');
-
-                    if (errorBox) {
-                        errorBox.textContent = '';
-                    }
-
-                    const name = nameInput ? nameInput.value.trim() : '';
-                    const productId = productIdInput ? productIdInput.value.trim() : '';
-                    const amountStr = amountInput ? amountInput.value.trim() : '';
-
-                    if (name === '' && productId === '' && amountStr === '') {
-                        return;
-                    }
-
-                    if (amountStr === '' || isNaN(parseFloat(amountStr)) || parseFloat(amountStr) <= 0) {
+                for (const row of rows) {
+                    if (validateIngredientRow(row)) {
                         hasError = true;
-                        if (errorBox) {
-                            errorBox.textContent = 'Amount must be greater than zero.';
-                        }
-                        return;
                     }
-
-                    if (productId === '') {
-                        hasError = true;
-                        if (errorBox) {
-                            errorBox.textContent = 'Please select a product from the list.';
-                        }
-                    }
-                });
+                }
 
                 if (hasError) {
                     e.preventDefault();
