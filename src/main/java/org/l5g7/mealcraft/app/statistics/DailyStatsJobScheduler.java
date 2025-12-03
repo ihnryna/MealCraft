@@ -1,6 +1,7 @@
 package org.l5g7.mealcraft.app.statistics;
 
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -22,7 +23,7 @@ public class DailyStatsJobScheduler {
     }
 
     @Scheduled(cron = "0 0 0 * * *")
-    public void runDailyStatsJobForYesterday() throws Exception {
+    public void runDailyStatsJobForYesterday() throws JobExecutionException {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
         Date yesterday = cal.getTime();

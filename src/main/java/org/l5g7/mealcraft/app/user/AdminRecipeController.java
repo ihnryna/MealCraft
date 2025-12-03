@@ -15,7 +15,7 @@ public class AdminRecipeController {
     }
 
     @GetMapping("/random")
-    public RecipeDto getRandomRecipe() throws Exception {
+    public RecipeDto getRandomRecipe() {
         return recipeService.getRandomRecipe();
     }
 

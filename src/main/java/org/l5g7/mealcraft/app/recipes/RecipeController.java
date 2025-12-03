@@ -3,7 +3,6 @@ package org.l5g7.mealcraft.app.recipes;
 import jakarta.validation.Valid;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipe;
 import org.l5g7.mealcraft.mealcraftstarterexternalrecipes.ExternalRecipeService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
