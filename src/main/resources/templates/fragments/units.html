@@ -1,5 +1,5 @@
 <div th:fragment="content">
-    <h2 th:text="${title}">Users</h2>
+    <h2 th:text="${title}">Units</h2>
 
     <a th:href="@{/mealcraft/admin/unit/new}">+ Add unit</a>
 
@@ -23,11 +23,16 @@
             <td>
                 <a th:href="@{|/mealcraft/admin/unit/edit/${u.id}|}">Edit</a>
                 |
-                <a th:href="@{|/mealcraft/admin/unit/delete/${u.id}|}"
-                   onclick="return confirm('Are you sure you want to delete this unit?');">Delete</a>
+                <form th:action="@{|/mealcraft/admin/unit/delete/${u.id}|}"
+                      method="get"
+                      style="display:inline;">
+                    <button type="submit"
+                            onclick="return confirm('Are you sure you want to delete this unit?');">
+                        Delete
+                    </button>
+                </form>
             </td>
         </tr>
         </tbody>
     </table>
-
 </div>

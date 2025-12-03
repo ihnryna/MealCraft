@@ -31,7 +31,7 @@
   <p><strong>Image:</strong>
     <img th:if="${recipe.imageUrl != null}"
          th:src="${recipe.imageUrl}"
-         alt="recipe image"
+         th:alt="${recipe.name}"
          height="100">
   </p>
 

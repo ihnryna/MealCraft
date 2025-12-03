@@ -143,7 +143,7 @@ public class AdminRecipeWebController {
         }
     }
 
-    @GetMapping("/recipe/delete/{id}")
+    @PostMapping("/recipe/delete/{id}")
     public String deleteRecipe(@PathVariable Long id) {
 
         internalApiClient
