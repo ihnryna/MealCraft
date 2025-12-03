@@ -36,6 +36,10 @@ public class HomeWebController {
     private static final String RECIPE = "recipe";
     private static final String RECIPE_FORM_FRAGMENT = "fragments/recipe-form :: content";
     private static final String REDIRECT_HOME_PAGE = "redirect:/mealcraft/home";
+    private static final String RECIPE_ID_URI = "/recipes/{id}";
+    private static final String REDIRECT_RECIPE_PAGE = "redirect:/mealcraft/user/recipes";
+    private static final String ERROR_MESSAGE = "errorMessage";
+    private static final String RECIPE_URI = "/recipes";
 
     public HomeWebController(@Qualifier("internalApiClient") RestClient internalApiClient, UserService userService) {
         this.internalApiClient = internalApiClient;
@@ -110,20 +114,40 @@ public class HomeWebController {
         model.addAttribute(TITLE, "Your own recipes");
 
         ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
-                .uri("/recipes")
+                .uri(RECIPE_URI)
                 .retrieve()
                 .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
 
         List<RecipeDto> data = response.getBody();
         List<RecipeDto> recipes = new ArrayList<>();
         if(data != null) {
-
              recipes = data.stream().filter(r -> r.getOwnerUserId()!=null && r.getOwnerUserId().equals(userService.getUserByUsername(username).id()))
                     .toList();
         }
         model.addAttribute("data", recipes);
         model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
         model.addAttribute(TITLE, "Your own recipes");
+        return "home";
+    }
+
+    @GetMapping("/mealcraft/home/recipes/edit/{id}")
+    public String showUserEditRecipeForm(@PathVariable Long id, Model model) {
+
+        RecipeDto recipe = internalApiClient
+                .get()
+                .uri(RECIPE_ID_URI, id)
+                .retrieve()
+                .body(RecipeDto.class);
+
+        model.addAttribute(RECIPE, recipe);
+        model.addAttribute(TITLE, "Edit your own recipe");
+        model.addAttribute(FRAGMENT_TO_LOAD, RECIPE_FORM_FRAGMENT);
+
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        model.addAttribute(USERNAME, username);
+        addShoppingItemsToModel(model, username);
         return "home";
     }
 
@@ -142,14 +166,14 @@ public class HomeWebController {
             if (recipeDto.getId() == null) {
                 internalApiClient
                         .post()
-                        .uri("/recipes")
+                        .uri(RECIPE_URI)
                         .body(recipeDto)
                         .retrieve()
                         .toBodilessEntity();
             } else {
                 internalApiClient
                         .put()
-                        .uri("/recipes/{id}", recipeDto.getId())
+                        .uri(RECIPE_ID_URI, recipeDto.getId())
                         .body(recipeDto)
                         .retrieve()
                         .toBodilessEntity();
@@ -171,10 +195,55 @@ public class HomeWebController {
             model.addAttribute(RECIPE, recipeDto);
             model.addAttribute(TITLE, title);
             model.addAttribute(FRAGMENT_TO_LOAD, RECIPE_FORM_FRAGMENT);
+
             model.addAttribute(USERNAME, username);
             addShoppingItemsToModel(model, username);
-            model.addAttribute("errorMessage", message);
+            model.addAttribute(ERROR_MESSAGE, message);
+            return "home";
+        }
+    }
 
+    @PostMapping("/mealcraft/home/recipes/delete/{id}")
+    public String deleteRecipe(@PathVariable Long id, Model model) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        try {
+            internalApiClient
+                    .delete()
+                    .uri(RECIPE_ID_URI, id)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            return REDIRECT_RECIPE_PAGE;
+
+        } catch (RestClientResponseException ex) {
+            String body = ex.getResponseBodyAsString();
+            String message = !body.isBlank()
+                    ? body
+                    : "Failed to delete recipe: " + ex.getStatusCode();
+
+            ResponseEntity<List<RecipeDto>> response = internalApiClient.get()
+                    .uri(RECIPE_URI)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<RecipeDto>>() {});
+
+            List<RecipeDto> data = response.getBody();
+            List<RecipeDto> recipes = new ArrayList<>();
+            if(data != null) {
+                recipes = data.stream().filter(r -> r.getOwnerUserId()!=null && r.getOwnerUserId().equals(userService.getUserByUsername(username).id()))
+                        .toList();
+            }
+            model.addAttribute("data", recipes);
+            model.addAttribute(ERROR_MESSAGE, message);
+            model.addAttribute(FRAGMENT_TO_LOAD, "fragments/recipes :: content");
+            model.addAttribute(TITLE, "Recipes");
+
+
+            model.addAttribute(USERNAME, username);
+            addShoppingItemsToModel(model, username);
+            model.addAttribute(ERROR_MESSAGE, message);
             return "home";
         }
     }
