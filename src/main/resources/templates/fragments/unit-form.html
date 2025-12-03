@@ -1,26 +1,30 @@
-<div th:fragment="content">
-    <h2 th:text="${title}">Unit</h2>
+<div th:fragment="content" class="mc-form-wrapper">
+    <h2 class="mc-form-title" th:text="${title}">Unit</h2>
 
-    <div th:if="${errorMessage}">
-        <p th:text="${errorMessage}" style="color: red;"></p>
+    <div th:if="${errorMessage}"
+         class="mc-form-message mc-form-message-error">
+        <p th:text="${errorMessage}"></p>
     </div>
 
     <form th:action="@{/mealcraft/admin/unit}"
           th:object="${unit}"
-          method="post">
+          method="post"
+          class="mc-form">
 
         <input type="hidden" th:field="*{id}"/>
 
-        <div>
+        <div class="mc-form-group">
             <label for="name">Unit name:</label>
             <input id="name"
                    type="text"
                    th:field="*{name}"
+                   class="mc-input"
                    required/>
         </div>
 
-        <div>
+        <div class="mc-form-actions">
             <button type="submit"
+                    class="mc-btn"
                     th:text="${unit.id} == null ? 'Add' : 'Save'">
                 Add
             </button>

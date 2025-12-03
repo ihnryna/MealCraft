@@ -1,35 +1,40 @@
-<div th:fragment="content">
-    <h2 th:text="${title}">Create product</h2>
+<div th:fragment="content" class="mc-form-wrapper">
+    <h2 class="mc-form-title" th:text="${title}">Create product</h2>
 
-    <div th:if="${errorMessage}">
-        <p th:text="${errorMessage}" style="color: red;"></p>
+    <div th:if="${errorMessage}"
+         class="mc-form-message mc-form-message-error">
+        <p th:text="${errorMessage}"></p>
     </div>
 
     <form th:action="@{/mealcraft/admin/product}"
           th:object="${product}"
-          method="post">
+          method="post"
+          class="mc-form">
 
         <input type="hidden" th:field="*{id}">
 
-        <div>
+        <div class="mc-form-group">
             <label for="name">Product name:</label>
             <input id="name"
                    type="text"
                    th:field="*{name}"
+                   class="mc-input"
                    required>
         </div>
 
-        <div>
+        <div class="mc-form-group">
             <label for="imageUrl">Image URL:</label>
             <input id="imageUrl"
                    type="text"
-                   th:field="*{imageUrl}">
+                   th:field="*{imageUrl}"
+                   class="mc-input">
         </div>
 
-        <div>
+        <div class="mc-form-group">
             <label for="defaultUnit">Default unit:</label>
             <select id="defaultUnit"
-                    th:field="*{defaultUnitId}">
+                    th:field="*{defaultUnitId}"
+                    class="mc-select">
                 <option th:each="u : ${units}"
                         th:value="${u.id}"
                         th:text="${u.name}">
@@ -37,8 +42,9 @@
             </select>
         </div>
 
-        <div>
+        <div class="mc-form-actions">
             <button type="submit"
+                    class="mc-btn"
                     th:text="${product.id} == null ? 'Add' : 'Save'">
                 Add
             </button>
