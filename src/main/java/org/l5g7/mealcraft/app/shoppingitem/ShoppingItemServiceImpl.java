@@ -174,11 +174,24 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 .orElseThrow(() -> new EntityDoesNotExistException(ENTITY_NAME_PRODUCT, String.valueOf(shoppingItemDto.getProductId())));
 
         for(ShoppingItem item: userShoppingItems){
+            if(item.getProduct().equals(product) && Boolean.TRUE.equals(item.getStatus())) {
+                deleteShoppingItemById(item.getId());
+            }
+        }
+
+        userShoppingItems = shoppingItemRepository.findByUserOwnerId(shoppingItemDto.getUserOwnerId());
+
+        for(ShoppingItem item: userShoppingItems){
             if(item.getProduct().equals(product)){
+
                 item.setRequiredQty(shoppingItemDto.getRequiredQty() + item.getRequiredQty());
                 if(item.getRequiredQty()<=0){
                     shoppingItemRepository.delete(item);
                     return;
+                }
+
+                if(shoppingItemDto.getRequiredQty()>0){
+                    item.setStatus(false);
                 }
                 shoppingItemRepository.save(item);
                 return;
